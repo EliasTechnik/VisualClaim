@@ -1,0 +1,55 @@
+package dev.ewio
+
+import dev.ewio.claim.ClaimService
+import dev.ewio.claim.VCChunk
+import dev.ewio.claim.VCClaim
+import dev.ewio.claim.VCPlayer
+import dev.ewio.claim.repository.adapter.InMemoryRepository
+import dev.ewio.command.ClaimCommand
+import dev.ewio.map.MapService
+import dev.ewio.map.NoopMapService
+import dev.ewio.map.Pl3xMapService
+import org.bukkit.Bukkit
+import org.bukkit.configuration.file.FileConfiguration
+import org.bukkit.plugin.java.JavaPlugin
+
+
+class VisualClaim : JavaPlugin() {
+    lateinit var mapService: MapService
+    lateinit var claimService: ClaimService
+    lateinit var cfg: FileConfiguration
+
+    override fun onEnable() {
+        // Plugin startup logic
+        saveDefaultConfig()
+        cfg = config
+
+        //services
+        this.claimService = ClaimService(
+            claimRepository = InMemoryRepository<VCClaim>(extractKey = { it.key }),
+            playerRepository = InMemoryRepository<VCPlayer>(extractKey = { it.key }),
+            chunkRepository = InMemoryRepository<VCChunk>(extractKey = { it.key }),
+            plugin = this
+        )
+        this.mapService = if(isPl3xMapPresent()) {
+            Pl3xMapService(this)
+        } else {
+            NoopMapService()
+        }
+
+        // Commands
+        getCommand("claim")!!.setExecutor(ClaimCommand(this, this.claimService))
+
+        logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
+        logger.info("VisualClaim activated.")
+    }
+
+    override fun onDisable() {
+        // Plugin shutdown logic
+        mapService.shutdown();
+    }
+
+    fun isPl3xMapPresent(): Boolean {
+        return Bukkit.getPluginManager().getPlugin("Pl3xMap") != null
+    }
+}

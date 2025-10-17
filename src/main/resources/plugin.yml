@@ -1,0 +1,29 @@
+name: VisualClaim
+version: '0.1-SNAPSHOT'
+main: dev.ewio.VisualClaim
+api-version: '1.21'
+author: Elias_Technik
+softdepend:
+  - Pl3xMap
+
+commands:
+  claim:
+    description: Claim a chunk
+    usage: /claim ["name"]
+    permission: visualclaim.command.claim
+  unclaim:
+    description: Unclaim a chunk
+    usage: /unclaim ["name"]
+    permission: visualclaim.command.unclaim
+  autoclaim:
+    description: Toggle autoclaim
+    usage: /autoclaim <on|off> ["name"]
+    permission: visualclaim.command.autoclaim
+  whos:
+    description: See who claimed a chunk
+    usage: /whois ["name"]
+    permission: visualclaim.command.whois
+
+permissions:
+  visualclaim.use:
+    default: true

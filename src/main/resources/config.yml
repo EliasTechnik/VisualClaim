@@ -1,0 +1,28 @@
+# Standard-Name, wenn kein Name in Anführungszeichen angegeben ist
+default-claim-name: "vc"
+
+Pl3xMap-layer-name: "Claims"
+
+
+# Limits (0 oder negativ = deaktiviert)
+limits:
+max-claims-per-player: 0
+
+
+# Farben für Kartenmarker (ARGB Integer)
+marker:
+stroke-color: 4278255360 # 0xFF00FF00 (grün)
+stroke-weight: 2
+fill-color: 1711276032 # 0x6600FF00 (halbtransparent grün)
+
+
+# Messages (MiniMessage/§-Farben nicht notwendig – plain text reicht hier)
+messages:
+claim-success: "Chunk <x>,<z> in <world> wurde für <player> (Gruppe: <name>) geclaimt."
+claim-already: "Dieser Chunk ist bereits geclaimt (Besitzer: <owner>, Gruppe: <name>)."
+unclaim-success: "Claim entfernt: <x>,<z> in <world> (Gruppe: <name>)."
+unclaim-none: "Hier ist kein Claim gesetzt (Gruppe: <name>)."
+whois-free: "Dieser Chunk ist frei (Gruppe: <name>)."
+whois-claimed: "Chunk gehört <owner> seit <since> (Gruppe: <name>)."
+autoclaim-on: "AutoClaim EIN für Gruppe <name>."
+autoclaim-off: "AutoClaim AUS für Gruppe <name>."
