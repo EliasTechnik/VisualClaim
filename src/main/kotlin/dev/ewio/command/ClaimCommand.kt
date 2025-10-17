@@ -22,7 +22,7 @@ class ClaimCommand(
         args: Array<out String>
     ): Boolean {
         // TODO: check permissions and limits
-
+        //plugin.logger.info("Args: ${args.asList().toString()}")
         registerAndGetVCPlayerAndRealPlayer(sender, db)?.let{
             val (vcPlayer, realPlayer) = it
             val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
@@ -31,8 +31,15 @@ class ClaimCommand(
                 val result = db.createClaim(vcPlayer, listOf(chunk))
                 when(result.first) {
                     VCExceptionType.NONE -> {
-                        realPlayer.sendMessage("§aClaim created successfully!")
-                        plugin.mapService.upsertClaimMarker(result.second!!)
+                        realPlayer.sendMessage(
+                            plugin.config.get("messages.claim-success")
+                                .toString()
+                                .replace("<x>", chunk.x.toString())
+                                .replace("<z>", chunk.z.toString())
+                                .replace("<player>",vcPlayer.name)
+                                .replace("<claim-name>",result.second!!.displayName.getPlain())
+                        )
+                        plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {
@@ -40,18 +47,24 @@ class ClaimCommand(
                         return false
                     }
                 }
-
             }
             else{
                 val result = db.createClaim(
                     player = vcPlayer,
-                    chunks =listOf(chunk),
-                    name = CMDStringWrapper(args.asList(),1),
+                    chunks = listOf(chunk),
+                    name = CMDStringWrapper(args.asList(),0),
                     useDefault = false)
                 when(result.first) {
                     VCExceptionType.NONE -> {
-                        realPlayer.sendMessage("§aClaim ${result.second!!.displayName.getPlain()} created successfully!")
-                        plugin.mapService.upsertClaimMarker(result.second!!)
+                        realPlayer.sendMessage(
+                            plugin.config.get("messages.claim-success")
+                                .toString()
+                                .replace("<x>", chunk.x.toString())
+                                .replace("<z>", chunk.z.toString())
+                                .replace("<player>",vcPlayer.name)
+                                .replace("<claim-name>",result.second!!.displayName.getPlain())
+                        )
+                        plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {

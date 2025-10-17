@@ -17,7 +17,9 @@ class ClaimService(
     val claimRepository: DBInterface<VCClaim>,
     val chunkRepository: DBInterface<VCChunk>,
     val playerRepository: DBInterface<VCPlayer>,
-    val plugin: VisualClaim
+    val plugin: VisualClaim,
+    val partialMapUpdate: (changedClaim: VCClaim) -> Unit,
+    val deleteFromMap: (deletedClaim: VCClaim) -> Unit
 ) {
 
     /**
@@ -37,9 +39,15 @@ class ClaimService(
         playerRepository.upsert(player)
 
         //get claim
-        var claim = claimRepository.findAll {
-            it.playerKey == player.key && it.displayName == name
-        }.firstOrNull()
+        var claim = if (useDefault) {
+            claimRepository.findAll {
+                it.playerKey == player.key
+            }.firstOrNull()
+        } else {
+            claimRepository.findAll {
+                it.playerKey == player.key && it.displayName.getPlain() == name.getPlain()
+            }.firstOrNull()
+        }
 
         //if the claim does not exist, create it
         if(claim == null){
@@ -54,11 +62,15 @@ class ClaimService(
 
         //add chunks to the claim
         val extendResult = extendClaim(claim, chunks)
+        if(extendResult == VCExceptionType.NONE){
+            //successful claim creation or extension
+            partialMapUpdate(claim) //update map visualization
+        }
         return Pair(extendResult, claim)
     }
 
-    //extend claim
-    fun extendClaim(claim: VCClaim, chunks: List<PlainChunk>): VCExceptionType {
+    //extend claim with one or multiple chunks
+    private fun extendClaim(claim: VCClaim, chunks: List<PlainChunk>): VCExceptionType {
         val eList = mutableListOf<VCExceptionType>()
         chunks.forEach { chunk ->
             eList.add(extendClaim(claim, chunk))
@@ -66,7 +78,8 @@ class ClaimService(
         return getMostSevereExceptionType(eList)
     }
 
-    fun extendClaim(claim: VCClaim, chunk: PlainChunk): VCExceptionType{
+    //extend claim with one chunk
+    private fun extendClaim(claim: VCClaim, chunk: PlainChunk): VCExceptionType{
         val existingClaim = getClaimForChunk(chunk)
 
         if(existingClaim != null){
@@ -158,6 +171,7 @@ class ClaimService(
             }
             //delete the claim
             claimRepository.delete(claim.key)
+            deleteFromMap(claim) //remove from map visualization
             return VCExceptionType.NONE
         }
     }
@@ -172,6 +186,7 @@ class ClaimService(
             }.firstOrNull() ?: return VCExceptionType.VCCHUNK_NOT_FOUND
 
             chunkRepository.delete(dbChunk.key)
+            partialMapUpdate(claim) //update map visualization
             return VCExceptionType.NONE
         }
     }
@@ -211,5 +226,15 @@ class ClaimService(
         return playerRepository.findAll {
             it.key == key
         }.firstOrNull()
+    }
+
+    fun getChunkCountOfPlayer(player: VCPlayer): Int {
+        val claims = getClaimsOfPlayer(player)
+        var count = 0
+        claims.forEach { claim ->
+            val chunks = getChunksOfClaim(claim)
+            count += chunks.size
+        }
+        return count
     }
 }

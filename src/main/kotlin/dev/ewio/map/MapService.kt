@@ -5,7 +5,7 @@ import dev.ewio.claim.VCClaim
 
 interface MapService {
     fun isActive(): Boolean
-    fun upsertClaimMarker(claim: VCClaim)
+    fun writeClaimMarker(claim: VCClaim)
     fun removeClaimMarker(claim: VCClaim)
     fun removeChunkMarker(chunk: VCChunk)
     fun shutdown()

@@ -37,7 +37,7 @@ class Pl3xMapService: MapService {
         val api = Pl3xMap.api()
         for (world in api.worldRegistry.values()) {
             val reg: Registry<Layer> = world.layerRegistry
-            val layer = SimpleLayer("visualclaim", Supplier { cfg.get("Pl3xMap-layer-name")?.toString() ?: "Claims" })
+            val layer = SimpleLayer("visualclaim", Supplier { cfg.get("Pl3xMap.layer-name")?.toString() ?: "Claims" })
             layer.setShowControls(true).setLiveUpdate(true).zIndex = 250
             reg.register(layer)
             layers[UUID.nameUUIDFromBytes(world.name.toByteArray())] = layer // Key based on worldname
@@ -48,18 +48,18 @@ class Pl3xMapService: MapService {
         return true
     }
 
-    override fun upsertClaimMarker(claim: VCClaim) {
+    override fun writeClaimMarker(claim: VCClaim) {
         //get all chunks of the claim
         val chunks = plugin.claimService.getChunksOfClaim(claim)
         val player = plugin.claimService.getPlayerByKey(claim.playerKey) ?: return
 
         //add marker for each chunk
         chunks.forEach {
-            upsertChunkbasedClaimMarker(claim, player, it)
+            writeChunkbasedClaimMarker(claim, player, it)
         }
     }
 
-    private fun upsertChunkbasedClaimMarker(claim: VCClaim, player: VCPlayer, chunk: VCChunk) {
+    private fun writeChunkbasedClaimMarker(claim: VCClaim, player: VCPlayer, chunk: VCChunk) {
         //get world
         val world = Pl3xMap.api().worldRegistry.get(chunk.plainChunk.world) ?: return
         plugin.logger.info("Adding marker for chunk ${chunk.plainChunk.world}:${chunk.plainChunk.x},${chunk.plainChunk.z}")
@@ -72,11 +72,14 @@ class Pl3xMapService: MapService {
             )
         ) as SimpleLayer
 
+        val hoverText = getHoverText(claim, player)
+
         val bx: Int = chunk.plainChunk.x * 16
         val bz: Int = chunk.plainChunk.z * 16
 
-        val rect = Rectangle.of(markerKey(chunk), bx.toDouble(), bz.toDouble(), bx.toDouble() + 15, bz.toDouble() + 15)
+        val rect = Rectangle.of(markerKey(chunk), bx.toDouble(), bz.toDouble(), bx.toDouble() + 16, bz.toDouble() + 16)
         val opts = Options.builder()
+            .tooltipContent(hoverText)
             .stroke(Stroke(strokeWeight, strokeColor))
             .fill(Fill(fillColor))
             .build()
@@ -88,6 +91,19 @@ class Pl3xMapService: MapService {
 
         world.layerRegistry.register(layer) // ensure present
 
+    }
+
+    private fun getHoverText(claim: VCClaim, player: VCPlayer): String {
+        if(claim.isDefaultClaim){
+            return plugin.cfg.get("Pl3xMap.hover-text.default-claim")
+                .toString()
+                .replace("<owner>", player.name)
+        } else {
+            return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
+                .toString()
+                .replace("<owner>", player.name)
+                .replace("<claim-name>", claim.displayName.getPlain())
+        }
     }
 
     override fun removeClaimMarker(claim: VCClaim) {

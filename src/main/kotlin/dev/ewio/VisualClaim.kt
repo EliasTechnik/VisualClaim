@@ -6,9 +6,11 @@ import dev.ewio.claim.VCClaim
 import dev.ewio.claim.VCPlayer
 import dev.ewio.claim.repository.adapter.InMemoryRepository
 import dev.ewio.command.ClaimCommand
+import dev.ewio.command.ListclaimsCommand
 import dev.ewio.map.MapService
 import dev.ewio.map.NoopMapService
 import dev.ewio.map.Pl3xMapService
+import dev.ewio.permission.PermissionService
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -17,6 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin
 class VisualClaim : JavaPlugin() {
     lateinit var mapService: MapService
     lateinit var claimService: ClaimService
+    lateinit var permissionService: PermissionService
     lateinit var cfg: FileConfiguration
 
     override fun onEnable() {
@@ -29,8 +32,11 @@ class VisualClaim : JavaPlugin() {
             claimRepository = InMemoryRepository<VCClaim>(extractKey = { it.key }),
             playerRepository = InMemoryRepository<VCPlayer>(extractKey = { it.key }),
             chunkRepository = InMemoryRepository<VCChunk>(extractKey = { it.key }),
-            plugin = this
+            plugin = this,
+            partialMapUpdate = { changedClaim -> partialMapUpdate(changedClaim) },
+            deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) }
         )
+        this.permissionService = PermissionService(this)
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)
         } else {
@@ -39,6 +45,7 @@ class VisualClaim : JavaPlugin() {
 
         // Commands
         getCommand("claim")!!.setExecutor(ClaimCommand(this, this.claimService))
+        getCommand("listclaims")!!.setExecutor(ListclaimsCommand(this))
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")
@@ -51,5 +58,15 @@ class VisualClaim : JavaPlugin() {
 
     fun isPl3xMapPresent(): Boolean {
         return Bukkit.getPluginManager().getPlugin("Pl3xMap") != null
+    }
+
+    private fun partialMapUpdate(changedClaim: VCClaim) {
+        // if a claim changes we remove it completely and re-add it
+        mapService.removeClaimMarker(changedClaim)
+        mapService.writeClaimMarker(changedClaim)
+    }
+
+    private fun deleteFromMap(deletedClaim: VCClaim) {
+        mapService.removeClaimMarker(deletedClaim)
     }
 }

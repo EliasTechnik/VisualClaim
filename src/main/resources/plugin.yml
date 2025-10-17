@@ -23,6 +23,10 @@ commands:
     description: See who claimed a chunk
     usage: /whois ["name"]
     permission: visualclaim.command.whois
+  listclaims:
+    description: List all claims your claims
+    usage: /listclaims
+    permission: visualclaim.command.listclaims
 
 permissions:
   visualclaim.use:

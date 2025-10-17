@@ -5,7 +5,7 @@ class NoopMapService: MapService {
         return false
     }
 
-    override fun upsertClaimMarker(claim: dev.ewio.claim.VCClaim) {
+    override fun writeClaimMarker(claim: dev.ewio.claim.VCClaim) {
         // No operation
     }
 
