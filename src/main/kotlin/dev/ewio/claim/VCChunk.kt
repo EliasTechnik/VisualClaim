@@ -26,4 +26,16 @@ data class VCChunk(
     val key: UKey<VCChunk>,
     val claimKey: UKey<VCClaim>,
     val plainChunk: PlainChunk,
-)
+) {
+    companion object {
+        fun dummy(): VCChunk = VCChunk(
+            UKey.dummy(),
+            UKey.dummy(),
+            PlainChunk(
+                "dummy_world",
+                0,
+                0
+            )
+        )
+    }
+}

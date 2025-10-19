@@ -8,25 +8,33 @@ softdepend:
 
 commands:
   claim:
-    description: Claim a chunk
+    description: Claim that chunk
     usage: /claim ["name"]
     permission: visualclaim.command.claim
   unclaim:
-    description: Unclaim a chunk
-    usage: /unclaim ["name"]
+    description: Unclaim that chunk
+    usage: /unclaim
     permission: visualclaim.command.unclaim
+  deleteclaim:
+    description: Delete a claim and unclaim all chunks in it
+    usage: /deleteclaim "<name>"
+    permission: visualclaim.command.deleteclaim
   autoclaim:
     description: Toggle autoclaim
-    usage: /autoclaim <on|off> ["name"]
+    usage: /autoclaim <on|off>
     permission: visualclaim.command.autoclaim
-  whos:
-    description: See who claimed a chunk
-    usage: /whois ["name"]
-    permission: visualclaim.command.whois
+  claiminfo:
+    description: See who claimed that chunk you are standing on
+    usage: /claiminfo
+    permission: visualclaim.command.claiminfo
   listclaims:
     description: List all claims your claims
     usage: /listclaims
     permission: visualclaim.command.listclaims
+  renameclaim:
+    description: Rename a claim
+    usage: /renameclaim "<oldname>" "<newname>"
+    permission: visualclaim.command.renameclaim
 
 permissions:
   visualclaim.use:

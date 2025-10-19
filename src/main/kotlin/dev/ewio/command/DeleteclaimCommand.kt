@@ -1,0 +1,192 @@
+package dev.ewio.command
+
+import dev.ewio.VisualClaim
+import dev.ewio.util.VCExceptionType
+import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.registerAndGetVCPlayer
+import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
+import org.bukkit.command.TabExecutor
+import kotlin.collections.mutableListOf
+
+class DeleteclaimCommand(
+    val plugin: VisualClaim
+): TabExecutor {
+
+    override fun onCommand(
+        sender: CommandSender,
+        command: Command,
+        label: String,
+        args: Array<out String>
+    ): Boolean {
+        //get Player
+
+        val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+
+        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let {
+            val (vcPlayer, realPlayer) = it
+
+            //check if there is anything to delete
+            val claims = plugin.claimService.getClaimsOfPlayer(vcPlayer)
+            if(claims.isEmpty()) {
+                realPlayer.sendMessage(
+                    plugin.cfg.get("messages.deleteclaim-none").toString()
+                )
+                return true
+            }
+
+            //on empty args, try to delete default claim
+            if(betterArgs.isEmpty()){
+                //default claim
+                val claim = claims.firstOrNull { it.isDefaultClaim }
+                if(claim == null){
+                    realPlayer.sendMessage(
+                        plugin.cfg.get("messages.deleteclaim-usage").toString()
+                    )
+                    return true
+                }else{
+                    //claim found, proceed
+                    sender.sendMessage(
+                        plugin.cfg.get("messages.deleteclaim-confirm")
+                            .toString()
+                            .replace("<claim-name>","")
+                    )
+                    return true
+                }
+            }
+
+            //evaluate args
+            when(betterArgs.size){
+                1 -> {
+                    //check if default claim was confirmed
+                    if(betterArgs[0].lowercase() == "confirm"){
+                        //delete default claim
+                        //check again if there is a default claim
+                        val claim = claims.firstOrNull { it.isDefaultClaim }
+                        if(claim == null) {
+                            realPlayer.sendMessage(
+                                plugin.cfg.get("messages.deleteclaim-not-found").toString()
+                            )
+                            return true
+                        }else{
+                            val result = plugin.claimService.deleteClaim(vcPlayer, claim)
+
+                            if(result == VCExceptionType.NONE) {
+                                realPlayer.sendMessage(
+                                    plugin.cfg.get("messages.deleteclaim-success")
+                                        .toString()
+                                        .replace("<claim-name>", "")
+                                )
+                                return true
+                            }else{
+                                realPlayer.sendMessage(
+                                    plugin.strings.writeOutVCException(result,vcPlayer,claim)
+                                )
+                                return true
+                            }
+                        }
+                    }else{
+                        //claim name given
+                        //check if claim exists
+
+                        val claim = claims.firstOrNull{ it.displayName.toCMDString() == betterArgs[0] }
+
+                        if(claim == null){
+                            //error: no claim found
+                            realPlayer.sendMessage(
+                                plugin.cfg.get("messages.deleteclaim-not-found")
+                                    .toString()
+                                    .replace("<claim-name>", betterArgs[0])
+                            )
+                            return true
+                        }else{
+                            //prompt for confirmation
+                            sender.sendMessage(
+                                plugin.cfg.get("messages.deleteclaim-confirm")
+                                    .toString()
+                                    .replace("<claim-name>", claim.displayName.getPlain())
+                                    .replace("<deleteclaim-confirm>", plugin.cfg.get("trigger-words.deleteclaim-confirm").toString())
+                            )
+                            return true
+                        }
+                    }
+                }
+                2 -> {
+                    //two args. check again for claimname and confirmation
+                    val claim = claims.firstOrNull{ it.displayName.toCMDString() == betterArgs[0] }
+
+                    if(claim == null){
+                        //error: no claim found
+                        realPlayer.sendMessage(
+                            plugin.cfg.get("messages.deleteclaim-not-found")
+                                .toString()
+                                .replace("<claim-name>", betterArgs[0])
+                        )
+                        return true
+                    }else{
+                        //there is a claim. Is it confirmed right?
+                        if(betterArgs[1].lowercase() == plugin.cfg.get("trigger-words.deleteclaim-confirm").toString()){
+                            //right, delete claim
+                            val result = plugin.claimService.deleteClaim(vcPlayer, claim)
+
+                            if(result == VCExceptionType.NONE) {
+                                realPlayer.sendMessage(
+                                    plugin.cfg.get("messages.deleteclaim-success")
+                                        .toString()
+                                        .replace("<claim-name>", claim.displayName.getPlain())
+                                )
+                                return true
+                            }else{
+                                realPlayer.sendMessage(
+                                    plugin.strings.writeOutVCException(result,vcPlayer,claim)
+                                )
+                                return true
+                            }
+                        }
+                        return true
+                    }
+                }
+                else ->
+                {
+                    sender.sendMessage(
+                        plugin.cfg.get("messages.deleteclaim-usage")
+                            .toString()
+                    )
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    override fun onTabComplete(
+        sender: CommandSender,
+        command: Command,
+        alias: String,
+        args: Array<out String>
+    ): MutableList<String> {
+        // Recommendations für <arg>
+        registerAndGetVCPlayer(sender, plugin.claimService)?.let {
+            //get available claims
+            val claims = plugin.claimService.getClaimsOfPlayer(it).filterNot { it.isDefaultClaim } //we must remove the default one
+
+            val names = claims.map { it.displayName.toCMDString() }
+
+            if (names.isEmpty()) {
+                return mutableListOf()
+            }
+
+            return when (args.size) {
+                1 -> {
+                    val recomendations = names.toMutableList()
+                        recomendations.add("")
+                    recomendations
+                }
+
+                else -> mutableListOf<String>()
+            }
+        }
+        return mutableListOf()
+    }
+}

@@ -1,5 +1,6 @@
 package dev.ewio.util
 
+
 class CMDStringWrapper{
     private val raw: String
 

@@ -24,17 +24,29 @@ fill-color: 1711276032 # 0x6600FF00 (halbtransparent grün)
 # Messages (MiniMessage/§-Farben nicht notwendig – plain text reicht hier)
 messages:
   claim-success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
-  claim-already: "Dieser Chunk ist bereits geclaimt (Besitzer: <owner>, Gruppe: <name>)."
-  unclaim-success: "Claim entfernt: <x>,<z> in <world> (Gruppe: <name>)."
-  unclaim-none: "Hier ist kein Claim gesetzt (Gruppe: <name>)."
-  whois-free: "Dieser Chunk ist frei (Gruppe: <name>)."
-  whois-claimed: "Chunk gehört <owner> seit <since> (Gruppe: <name>)."
-  autoclaim-on: "AutoClaim EIN für Gruppe <name>."
-  autoclaim-off: "AutoClaim AUS für Gruppe <name>."
+  claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>."
+  claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
+  claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
+  unclaim-success: "§aChunk <x>,<z> aus Claim <claim-name> entfernt."
+  unclaim-none: "§aHier ist kein Claim gesetzt."
+  unclaim-usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze /deleteclaim \"<name>\", um den gesamten Claim zu löschen."
+  claiminfo-free: "§aDieser Chunk ist frei und gehört niemandem."
+  claiminfo-claimed: "§aDieser Chunk gehört <owner> im Claim <claim-name>."
+  autoclaim-on: "§aAutoClaim EIN für Gruppe <name>."
+  autoclaim-off: "§aAutoClaim AUS für Gruppe <name>."
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
   list-claims: "§aDeine Claims:"
   list-claims-summary: "§aInsgesamt hast du <count> von <maxchunks> Chunks geclaimt."
+  deleteclaim-success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
+  deleteclaim-not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
+  deleteclaim-no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
+  deleteclaim-confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
+  deleteclaim-usage: "§aNutze /deleteclaim \"name\" um einen Claim mit allen seinen Chunks zu löschen."
+  deleteclaim-none: "§aDu hast keine Claims zum Löschen."
+  unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
 
+trigger-words:
+    deleteclaim-confirm: "confirm"
 
 #Debugging
 plugin-insights:

@@ -5,6 +5,7 @@ import dev.ewio.claim.ClaimService
 import dev.ewio.claim.PlainChunk
 import dev.ewio.util.CMDStringWrapper
 import dev.ewio.util.VCExceptionType
+import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.registerAndGetVCPlayer
 import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
 import org.bukkit.command.Command
@@ -13,7 +14,6 @@ import org.bukkit.command.TabExecutor
 
 class ClaimCommand(
     private val plugin: VisualClaim,
-    private val db: ClaimService
 ): TabExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -23,12 +23,14 @@ class ClaimCommand(
     ): Boolean {
         // TODO: check permissions and limits
         //plugin.logger.info("Args: ${args.asList().toString()}")
-        registerAndGetVCPlayerAndRealPlayer(sender, db)?.let{
+        val betterArgs = getCorrectlySplitArgs(args.toList(),0)
+
+        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let{
             val (vcPlayer, realPlayer) = it
             val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
-            if(args.isEmpty()) {
-                val result = db.createClaim(vcPlayer, listOf(chunk))
+            if(betterArgs.isEmpty()) {
+                val result = plugin.claimService.createClaim(vcPlayer, listOf(chunk))
                 when(result.first) {
                     VCExceptionType.NONE -> {
                         realPlayer.sendMessage(
@@ -37,22 +39,22 @@ class ClaimCommand(
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",result.second!!.displayName.getPlain())
+                                .replace("<claim-name>",result.second!!.displayName)
                         )
                         plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {
-                        realPlayer.sendMessage("§cClaim creation failed: ${result.first.toReadableString()}")
-                        return false
+                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second!!))
+                        return true
                     }
                 }
             }
             else{
-                val result = db.createClaim(
+                val result = plugin.claimService.createClaim(
                     player = vcPlayer,
                     chunks = listOf(chunk),
-                    name = CMDStringWrapper(args.asList(),0),
+                    name = betterArgs[0],
                     useDefault = false)
                 when(result.first) {
                     VCExceptionType.NONE -> {
@@ -62,14 +64,14 @@ class ClaimCommand(
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",result.second!!.displayName.getPlain())
+                                .replace("<claim-name>",result.second!!.displayName)
                         )
                         plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {
-                        realPlayer.sendMessage("§cClaim creation failed: ${result.first.toReadableString()}")
-                        return false
+                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second!!))
+                        return true
                     }
                 }
             }
@@ -85,11 +87,12 @@ class ClaimCommand(
         args: Array<out String>
     ): MutableList<String>? {
         // Recommendations für <arg>
-        registerAndGetVCPlayer(sender, db)?.let {
+        registerAndGetVCPlayer(sender, plugin.claimService)?.let {
+            val (vcPlayer, realPlayer) = it
             //get available claims
-            val claims = db.getClaimsOfPlayer(it).filterNot { it.isDefaultClaim } //we must remove the default one
+            val claims = plugin.claimService.getClaimsOfPlayer(it).filterNot { it.isDefaultClaim } //we must remove the default one
 
-            val names = claims.map { it.displayName.toCMDString() }
+            val names = claims.map {"\"" + it.displayName +"\"" }
 
             if (names.isEmpty()) {
                 return mutableListOf()
@@ -97,8 +100,6 @@ class ClaimCommand(
 
             return when (args.size) {
                 1 -> {
-                    //val options = listOf("chunk", "radius", "auto", "info")
-                    //options.filter { it.startsWith(args[0], ignoreCase = true) }.toMutableList()
                     names.toMutableList()
                 }
 

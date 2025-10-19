@@ -31,9 +31,8 @@ class ClaimService(
         player: VCPlayer,
         chunks: List<PlainChunk>,
         useDefault: Boolean = true,
-        name: CMDStringWrapper = CMDStringWrapper(
-            raw = (plugin.cfg.get("default-claim-name")?:"error") as String
-    )): Pair<VCExceptionType, VCClaim?> {
+        name: String = plugin.cfg.get("default-claim-name")?.toString()?:"vc"
+    ): Pair<VCExceptionType, VCClaim> {
 
         //register the player if not registered
         playerRepository.upsert(player)
@@ -45,7 +44,7 @@ class ClaimService(
             }.firstOrNull()
         } else {
             claimRepository.findAll {
-                it.playerKey == player.key && it.displayName.getPlain() == name.getPlain()
+                it.playerKey == player.key && it.displayName == name
             }.firstOrNull()
         }
 
@@ -236,5 +235,16 @@ class ClaimService(
             count += chunks.size
         }
         return count
+    }
+
+    fun getClaimAtChunk(chunk: PlainChunk):VCClaim? {
+        val dbChunk = chunkRepository.findAll {
+            it.plainChunk.toKey() == chunk.toKey()
+        }.firstOrNull() ?: return null
+
+        val claim = claimRepository.findAll {
+            it.key == dbChunk.claimKey
+        }.firstOrNull()
+        return claim
     }
 }
