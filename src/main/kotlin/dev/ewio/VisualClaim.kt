@@ -34,13 +34,17 @@ class VisualClaim : JavaPlugin() {
 
         //services
         this.claimService = ClaimService(
-            claimRepository = InMemoryRepository<VCClaim>(extractKey = { it.key }),
-            playerRepository = InMemoryRepository<VCPlayer>(extractKey = { it.key }),
-            chunkRepository = InMemoryRepository<VCChunk>(extractKey = { it.key }),
+            claimRepository = InMemoryRepository<VCClaim>(extractKey = { it.key }, isDeleted = {it.deleted}),
+            playerRepository = InMemoryRepository<VCPlayer>(extractKey = { it.key }, isDeleted = {false}), //not the cleanest of all but player should never be deleted
+            chunkRepository = InMemoryRepository<VCChunk>(extractKey = { it.key }, isDeleted = {it.deleted}),
             plugin = this,
             partialMapUpdate = { changedClaim -> partialMapUpdate(changedClaim) },
             deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) }
         )
+
+        //purge previous deleted claims
+        claimService.purgeDB()
+
         this.permissionService = PermissionService(this)
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)

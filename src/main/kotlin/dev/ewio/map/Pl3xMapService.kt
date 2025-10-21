@@ -56,6 +56,7 @@ class Pl3xMapService: MapService {
         //add marker for each chunk
         chunks.forEach {
             writeChunkbasedClaimMarker(claim, player, it)
+            plugin.logger.info { "Wrote chunk update" }
         }
     }
 
@@ -102,7 +103,7 @@ class Pl3xMapService: MapService {
             return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
                 .toString()
                 .replace("<owner>", player.name)
-                .replace("<claim-name>", claim.displayName.getPlain())
+                .replace("<claim-name>", claim.displayName)
         }
     }
 

@@ -18,18 +18,18 @@ class StringHelper(
             VCExceptionType.CHUNK_ALREADY_CLAIMED_BY_SAME_CLAIM -> {
                 plugin.cfg.getString("messages.claimed-already")
                     .toString()
-                    .replace("<claim-name>", claim.displayName.getPlain())
+                    .replace("<claim-name>", claim.displayName)
             }
             VCExceptionType.CHUNK_CLAIMED_BY_OTHER_PLAYER -> {
                 plugin.cfg.getString("messages.claimed-by-other")
                     .toString()
                     .replace("<owner>", player.name)
-                    .replace("<claim-name>", claim.displayName.getPlain())
+                    .replace("<claim-name>", claim.displayName)
             }
             VCExceptionType.CLAIM_BELONGS_TO_OTHER_PLAYER -> {
                 plugin.cfg.getString("messages.claim-belongs-to-other")
                     .toString()
-                    .replace("<claim-name>", claim.displayName.getPlain())
+                    .replace("<claim-name>", claim.displayName)
             }
             else -> VCExceptionType.toReadableString(ex)
             //TODO: Extend with more detailed messages if needed

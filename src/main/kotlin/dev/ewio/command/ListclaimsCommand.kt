@@ -42,9 +42,9 @@ class ListclaimsCommand(
                 realPlayer.sendMessage(plugin.cfg.get("messages.list-claims").toString())
                 for(claim in claims){
                     if(plugin.cfg.get("plugin-insights.enabled") == true){
-                        realPlayer.sendMessage("§6- ${claim.displayName.getPlain()} (ID: ${claim.key.value})")
+                        realPlayer.sendMessage("§6- ${claim.displayName} (ID: ${claim.key.value})")
                     }else{
-                        realPlayer.sendMessage("§6- ${claim.displayName.getPlain()}")
+                        realPlayer.sendMessage("§6- ${claim.displayName}")
                     }
                 }
                 realPlayer.sendMessage(

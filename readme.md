@@ -22,6 +22,9 @@ Claim names can have spaces but must be wrapped in quotes when used in commands.
 ## Todo
 
 - prevent multiple claims of the same chunk by the same player
+- fix the map update (it is not triggered and deleted chunks should be handled better. 
+  - Eg. the DB Interface should provide a transparent mode where deleted data is included so the map can have a reference what should be deleted. 
+  - Second option could be a map notify BEFORE actual deletion!)
 - complete commands
 - add ARGB color support
 - add color customization (Fixed values from config from which the player can choose)

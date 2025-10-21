@@ -41,7 +41,7 @@ class ClaimCommand(
                                 .replace("<player>",vcPlayer.name)
                                 .replace("<claim-name>",result.second!!.displayName)
                         )
-                        plugin.mapService.writeClaimMarker(result.second!!)
+                        //plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {
@@ -66,7 +66,7 @@ class ClaimCommand(
                                 .replace("<player>",vcPlayer.name)
                                 .replace("<claim-name>",result.second!!.displayName)
                         )
-                        plugin.mapService.writeClaimMarker(result.second!!)
+                        //plugin.mapService.writeClaimMarker(result.second!!)
                         return true
                     }
                     else -> {

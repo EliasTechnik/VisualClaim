@@ -7,7 +7,8 @@ data class VCClaim(
     val key: UKey<VCClaim>,
     val playerKey: UKey<VCPlayer>,
     val displayName: String,
-    val isDefaultClaim: Boolean = false
+    val isDefaultClaim: Boolean = false,
+    val deleted: Boolean = false
 ) {
     companion object {
         fun dummy(): VCClaim = VCClaim(

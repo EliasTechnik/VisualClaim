@@ -166,10 +166,10 @@ class ClaimService(
             }
 
             chunks.forEach {
-                chunkRepository.delete(it.key)
+                chunkRepository.delete(it.key) { item -> item.copy(deleted = true) }
             }
             //delete the claim
-            claimRepository.delete(claim.key)
+            claimRepository.delete(claim.key) {item -> item.copy(deleted = true)}
             deleteFromMap(claim) //remove from map visualization
             return VCExceptionType.NONE
         }
@@ -184,7 +184,7 @@ class ClaimService(
                 it.plainChunk.toKey() == chunk.toKey() && it.claimKey == claim.key
             }.firstOrNull() ?: return VCExceptionType.VCCHUNK_NOT_FOUND
 
-            chunkRepository.delete(dbChunk.key)
+            chunkRepository.delete(dbChunk.key) {item -> item.copy(deleted = true)}
             partialMapUpdate(claim) //update map visualization
             return VCExceptionType.NONE
         }
@@ -246,5 +246,10 @@ class ClaimService(
             it.key == dbChunk.claimKey
         }.firstOrNull()
         return claim
+    }
+
+    fun purgeDB() {
+        claimRepository.purge({it.deleted}, {it.key})
+        chunkRepository.purge({it.deleted}, {it.key})
     }
 }
