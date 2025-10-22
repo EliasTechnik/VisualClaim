@@ -32,7 +32,7 @@ class DeleteclaimCommand(
             val claims = plugin.claimService.getClaimsOfPlayer(vcPlayer)
             if(claims.isEmpty()) {
                 realPlayer.sendMessage(
-                    plugin.cfg.get("messages.deleteclaim-none").toString()
+                    plugin.cfg.get("messages.deleteclaim.none").toString()
                 )
                 return true
             }
@@ -40,7 +40,7 @@ class DeleteclaimCommand(
             //on empty args show usage
             if(betterArgs.isEmpty()){
                 realPlayer.sendMessage(
-                    plugin.cfg.get("messages.deleteclaim-usage").toString()
+                    plugin.cfg.get("usage.deleteclaim").toString()
                 )
                 return true
             }
@@ -56,7 +56,7 @@ class DeleteclaimCommand(
                     if(claim == null){
                         //error: no claim found
                         realPlayer.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim-not-found")
+                            plugin.cfg.get("messages.deleteclaim.not-found")
                                 .toString()
                                 .replace("<claim-name>", betterArgs[0])
                         )
@@ -64,7 +64,7 @@ class DeleteclaimCommand(
                     }else{
                         //prompt for confirmation
                         sender.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim-confirm")
+                            plugin.cfg.get("messages.deleteclaim.confirm")
                                 .toString()
                                 .replace("<claim-name>", "\"${claim.displayName}\"")
                                 .replace("<deleteclaim-confirm>", plugin.cfg.get("trigger-words.deleteclaim-confirm").toString())
@@ -79,7 +79,7 @@ class DeleteclaimCommand(
                     if(claim == null){
                         //error: no claim found
                         realPlayer.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim-not-found")
+                            plugin.cfg.get("messages.deleteclaim.not-found")
                                 .toString()
                                 .replace("<claim-name>", betterArgs[0])
                         )
@@ -92,7 +92,7 @@ class DeleteclaimCommand(
 
                             if(result == VCExceptionType.NONE) {
                                 realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.deleteclaim-success")
+                                    plugin.cfg.get("messages.deleteclaim.success")
                                         .toString()
                                         .replace("<claim-name>", claim.displayName)
                                 )
@@ -110,7 +110,7 @@ class DeleteclaimCommand(
                 else ->
                 {
                     sender.sendMessage(
-                        plugin.cfg.get("messages.deleteclaim-usage")
+                        plugin.cfg.get("usage.deleteclaim")
                             .toString()
                     )
                     return true
@@ -139,9 +139,7 @@ class DeleteclaimCommand(
 
             return when (args.size) {
                 1 -> {
-                    val recommendations = names.toMutableList()
-                        recommendations.add("")
-                    recommendations
+                    names
                 }
 
                 else -> mutableListOf<String>()

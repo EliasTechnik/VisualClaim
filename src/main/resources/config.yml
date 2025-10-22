@@ -87,12 +87,12 @@ messages:
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
   list-claims: "§aDeine Claims:"
   list-claims-summary: "§aInsgesamt hast du <count> von <maxchunks> Chunks geclaimt."
-  deleteclaim-success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
-  deleteclaim-not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
-  deleteclaim-no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
-  deleteclaim-confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
-  deleteclaim-usage: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
-  deleteclaim-none: "§aDu hast keine Claims zum Löschen."
+  deleteclaim:
+    success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
+    not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
+    no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
+    confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
+    none: "§aDu hast keine Claims zum Löschen."
   renameclaim:
     success: "§aDer Claim <claim-name> wurde in <claim-new-name> umbenannt."
     not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
