@@ -21,6 +21,8 @@ Claim names can have spaces but must be wrapped in quotes when used in commands.
 
 ## Todo
 
+- prevent claiming in protected areas (worldguard, spawn, etc)
+- prevent claimnames that match confirm keywords
 - prevent multiple claims of the same chunk by the same player
 - complete commands
 - add ARGB color support

@@ -102,7 +102,7 @@ class Pl3xMapService: MapService {
             return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
                 .toString()
                 .replace("<owner>", player.name)
-                .replace("<claim-name>", claim.displayName.getPlain())
+                .replace("<claim-name>", claim.displayName)
         }
     }
 
@@ -123,6 +123,13 @@ class Pl3xMapService: MapService {
         val layer = world.layerRegistry.get("visualclaim")
         if (layer is SimpleLayer) {
             layer.removeMarker(markerKey(chunk))
+        }
+    }
+
+    override fun removeChunkMarker(chunks: List<VCChunk>) {
+        //get world
+        chunks.forEach {
+            removeChunkMarker(it)
         }
     }
 

@@ -75,7 +75,7 @@ class VisualClaim : JavaPlugin() {
         mapService.writeClaimMarker(changedClaim)
     }
 
-    private fun deleteFromMap(deletedClaim: VCClaim) {
-        mapService.removeClaimMarker(deletedClaim)
+    private fun deleteFromMap(chunksToDeleted: List<VCChunk>) {
+        mapService.removeChunkMarker(chunksToDeleted)
     }
 }

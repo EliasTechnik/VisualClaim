@@ -24,12 +24,12 @@ fill-color: 1711276032 # 0x6600FF00 (halbtransparent grün)
 # Messages (MiniMessage/§-Farben nicht notwendig – plain text reicht hier)
 messages:
   claim-success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
-  claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>."
+  claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>. Nutze §e/unclaim§a um ihn freizugeben."
   claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
   claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
   unclaim-success: "§aChunk <x>,<z> aus Claim <claim-name> entfernt."
   unclaim-none: "§aHier ist kein Claim gesetzt."
-  unclaim-usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze /deleteclaim \"<name>\", um den gesamten Claim zu löschen."
+  unclaim-usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
   claiminfo-free: "§aDieser Chunk ist frei und gehört niemandem."
   claiminfo-claimed: "§aDieser Chunk gehört <owner> im Claim <claim-name>."
   autoclaim-on: "§aAutoClaim EIN für Gruppe <name>."
@@ -41,8 +41,17 @@ messages:
   deleteclaim-not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
   deleteclaim-no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
   deleteclaim-confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
-  deleteclaim-usage: "§aNutze /deleteclaim \"name\" um einen Claim mit allen seinen Chunks zu löschen."
+  deleteclaim-usage: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
   deleteclaim-none: "§aDu hast keine Claims zum Löschen."
+  renameclaim-success: "§aDer Claim <claim-name> wurde in <claim-name-new> umbenannt."
+  renameclaim-not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
+  renameclaim-no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
+  renameclaim-merge-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename <claim-name> <claim-new-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
+  renameclaim-merge-default-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit deinen Standard-Claim zusammenführen möchtest? Nutze §e/rename <claim-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
+  renameclaim-usage: "§aNutze §e/renameclaim \"alter-name\" \"neuer-name\"§a um einen Claim umzubenennen"
+  renameclaim-none: "§aDu hast keine Claims."
+  renameclaim-default-name: "§aDu hast den Standard-Claim in <claim-new-name> umbenannt."
+  no-default-claim: "§aDu hast keinen Standard-Claim."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
 
 trigger-words:

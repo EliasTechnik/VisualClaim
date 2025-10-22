@@ -19,7 +19,7 @@ class ClaimService(
     val playerRepository: DBInterface<VCPlayer>,
     val plugin: VisualClaim,
     val partialMapUpdate: (changedClaim: VCClaim) -> Unit,
-    val deleteFromMap: (deletedClaim: VCClaim) -> Unit
+    val deleteFromMap: (chunks: List<VCChunk>) -> Unit
 ) {
 
     /**
@@ -95,8 +95,10 @@ class ClaimService(
 
                     val dbChunk = getVCChunkFromClaim(existingClaim, chunk)
                     if (dbChunk != null) {
+                        deleteFromMap(listOf(dbChunk)) //remove from map visualization
                         val newChunk = dbChunk.copy(claimKey = claim.key)
                         chunkRepository.upsert(newChunk)
+                        partialMapUpdate(claim) //update map visualization
                         return VCExceptionType.NONE
                     }else{
                         return VCExceptionType.VCCHUNK_NOT_FOUND //this should never happen
@@ -170,7 +172,7 @@ class ClaimService(
             }
             //delete the claim
             claimRepository.delete(claim.key)
-            deleteFromMap(claim) //remove from map visualization
+            deleteFromMap(chunks) //remove from map visualization
             return VCExceptionType.NONE
         }
     }
@@ -185,6 +187,7 @@ class ClaimService(
             }.firstOrNull() ?: return VCExceptionType.VCCHUNK_NOT_FOUND
 
             chunkRepository.delete(dbChunk.key)
+            deleteFromMap(listOf(dbChunk)) //remove from map visualization
             partialMapUpdate(claim) //update map visualization
             return VCExceptionType.NONE
         }

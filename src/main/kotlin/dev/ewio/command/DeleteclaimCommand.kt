@@ -3,6 +3,7 @@ package dev.ewio.command
 import dev.ewio.VisualClaim
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.getQuotedStrings
 import dev.ewio.util.registerAndGetVCPlayer
 import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
 import org.bukkit.command.Command
@@ -50,7 +51,8 @@ class DeleteclaimCommand(
                     sender.sendMessage(
                         plugin.cfg.get("messages.deleteclaim-confirm")
                             .toString()
-                            .replace("<claim-name>","")
+                            .replace("<claim-name>",plugin.cfg.get("default-claim-name").toString())
+                            .replace("<deleteclaim-confirm>", plugin.cfg.get("trigger-words.deleteclaim-confirm").toString())
                     )
                     return true
                 }
@@ -60,7 +62,7 @@ class DeleteclaimCommand(
             when(betterArgs.size){
                 1 -> {
                     //check if default claim was confirmed
-                    if(betterArgs[0].lowercase() == "confirm"){
+                    if(betterArgs[0].lowercase() == plugin.cfg.get("trigger-words.deleteclaim-confirm").toString()){
                         //delete default claim
                         //check again if there is a default claim
                         val claim = claims.firstOrNull { it.isDefaultClaim }
@@ -76,7 +78,7 @@ class DeleteclaimCommand(
                                 realPlayer.sendMessage(
                                     plugin.cfg.get("messages.deleteclaim-success")
                                         .toString()
-                                        .replace("<claim-name>", "")
+                                        .replace("<claim-name>", plugin.cfg.get("default-claim-name").toString())
                                 )
                                 return true
                             }else{
@@ -90,7 +92,7 @@ class DeleteclaimCommand(
                         //claim name given
                         //check if claim exists
 
-                        val claim = claims.firstOrNull{ it.displayName.toCMDString() == betterArgs[0] }
+                        val claim = claims.firstOrNull{ it.displayName == betterArgs[0] }
 
                         if(claim == null){
                             //error: no claim found
@@ -105,7 +107,7 @@ class DeleteclaimCommand(
                             sender.sendMessage(
                                 plugin.cfg.get("messages.deleteclaim-confirm")
                                     .toString()
-                                    .replace("<claim-name>", claim.displayName.getPlain())
+                                    .replace("<claim-name>", "\"$claim.displayName\"")
                                     .replace("<deleteclaim-confirm>", plugin.cfg.get("trigger-words.deleteclaim-confirm").toString())
                             )
                             return true
@@ -114,7 +116,7 @@ class DeleteclaimCommand(
                 }
                 2 -> {
                     //two args. check again for claimname and confirmation
-                    val claim = claims.firstOrNull{ it.displayName.toCMDString() == betterArgs[0] }
+                    val claim = claims.firstOrNull{ it.displayName == betterArgs[0] }
 
                     if(claim == null){
                         //error: no claim found
@@ -134,7 +136,7 @@ class DeleteclaimCommand(
                                 realPlayer.sendMessage(
                                     plugin.cfg.get("messages.deleteclaim-success")
                                         .toString()
-                                        .replace("<claim-name>", claim.displayName.getPlain())
+                                        .replace("<claim-name>", claim.displayName)
                                 )
                                 return true
                             }else{
@@ -171,7 +173,7 @@ class DeleteclaimCommand(
             //get available claims
             val claims = plugin.claimService.getClaimsOfPlayer(it).filterNot { it.isDefaultClaim } //we must remove the default one
 
-            val names = claims.map { it.displayName.toCMDString() }
+            val names = getQuotedStrings(claims.map { it.displayName }).toMutableList()
 
             if (names.isEmpty()) {
                 return mutableListOf()
@@ -179,9 +181,9 @@ class DeleteclaimCommand(
 
             return when (args.size) {
                 1 -> {
-                    val recomendations = names.toMutableList()
-                        recomendations.add("")
-                    recomendations
+                    val recommendations = names.toMutableList()
+                        recommendations.add("")
+                    recommendations
                 }
 
                 else -> mutableListOf<String>()

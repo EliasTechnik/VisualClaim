@@ -43,5 +43,20 @@ fun getCorrectlySplitArgs(args: List<String>, startIndex: Int = 0): List<String>
         newArgs.add(combined + "\"")
     }
 
-    return newArgs.toList()
+    val cleanArgs = mutableListOf<String>()
+
+    //remove quotes from arguments
+    newArgs.forEach {
+        cleanArgs.add(it.replace("\"", ""))
+    }
+
+    return cleanArgs.toList()
+}
+
+fun getQuotedStrings(strings: List<String>):List<String>{
+    val quotedStrings = mutableListOf<String>()
+    strings.forEach {
+        quotedStrings.add("\"$it\"")
+    }
+    return quotedStrings.toList()
 }

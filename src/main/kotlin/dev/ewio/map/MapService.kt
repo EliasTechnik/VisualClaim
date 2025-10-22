@@ -7,6 +7,7 @@ interface MapService {
     fun isActive(): Boolean
     fun writeClaimMarker(claim: VCClaim)
     fun removeClaimMarker(claim: VCClaim)
+    fun removeChunkMarker(chunks: List<VCChunk>)
     fun removeChunkMarker(chunk: VCChunk)
     fun shutdown()
 }

@@ -39,7 +39,9 @@ class ClaimCommand(
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",result.second!!.displayName)
+                                .replace("<claim-name>",if(result.second.isDefaultClaim)
+                                    plugin.cfg.get("default-claim-name").toString() else result.second!!.displayName
+                                )
                         )
                         plugin.mapService.writeClaimMarker(result.second!!)
                         return true
@@ -64,7 +66,8 @@ class ClaimCommand(
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",result.second!!.displayName)
+                                .replace("<claim-name>",if(result.second.isDefaultClaim)
+                                    plugin.cfg.get("default-claim-name").toString() else result.second!!.displayName)
                         )
                         plugin.mapService.writeClaimMarker(result.second!!)
                         return true
