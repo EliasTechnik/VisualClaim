@@ -1,6 +1,7 @@
-package dev.ewio.claim
+package dev.ewio.claim.repository.definitions
 
 import dev.ewio.util.UKey
+import org.bukkit.Chunk
 
 data class PlainChunk(
     val world: String,
@@ -12,7 +13,7 @@ data class PlainChunk(
     }
 
     companion object {
-        fun fromBukkitChunk(chunk: org.bukkit.Chunk): PlainChunk {
+        fun fromBukkitChunk(chunk: Chunk): PlainChunk {
             return PlainChunk(
                 chunk.world.name,
                 chunk.x,

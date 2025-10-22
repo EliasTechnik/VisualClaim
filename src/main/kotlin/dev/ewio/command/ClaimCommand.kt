@@ -1,8 +1,7 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.ClaimService
-import dev.ewio.claim.PlainChunk
+import dev.ewio.claim.repository.definitions.PlainChunk
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.registerAndGetVCPlayer

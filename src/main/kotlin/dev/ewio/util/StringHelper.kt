@@ -1,9 +1,9 @@
 package dev.ewio.util
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.VCChunk
-import dev.ewio.claim.VCClaim
-import dev.ewio.claim.VCPlayer
+import dev.ewio.claim.repository.definitions.VCChunk
+import dev.ewio.claim.repository.definitions.VCClaim
+import dev.ewio.claim.repository.definitions.VCPlayer
 
 class StringHelper(
     val plugin: VisualClaim

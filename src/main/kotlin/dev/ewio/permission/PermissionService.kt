@@ -1,7 +1,6 @@
 package dev.ewio.permission
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.VCPlayer
 import org.bukkit.entity.Player
 
 class PermissionService(

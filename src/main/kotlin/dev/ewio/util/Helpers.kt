@@ -1,7 +1,7 @@
 package dev.ewio.util
 
 import dev.ewio.claim.ClaimService
-import dev.ewio.claim.VCPlayer
+import dev.ewio.claim.repository.definitions.VCPlayer
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 

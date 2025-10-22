@@ -1,10 +1,9 @@
 package dev.ewio.map
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.VCChunk
-import dev.ewio.claim.VCClaim
-import dev.ewio.claim.VCPlayer
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger.logger
+import dev.ewio.claim.repository.definitions.VCChunk
+import dev.ewio.claim.repository.definitions.VCClaim
+import dev.ewio.claim.repository.definitions.VCPlayer
 
 import net.pl3x.map.core.Pl3xMap
 import net.pl3x.map.core.markers.layer.Layer

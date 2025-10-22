@@ -1,11 +1,13 @@
 package dev.ewio.claim
 
 import dev.ewio.VisualClaim
+import dev.ewio.claim.repository.definitions.PlainChunk
+import dev.ewio.claim.repository.definitions.VCChunk
+import dev.ewio.claim.repository.definitions.VCClaim
+import dev.ewio.claim.repository.definitions.VCPlayer
 import dev.ewio.claim.repository.interfaces.DBInterface
-import dev.ewio.util.ChunkUKeyProvider
-import dev.ewio.util.ClaimUKeyProvider
-import dev.ewio.util.PlayerUKeyProvider
 import dev.ewio.util.UKey
+import dev.ewio.util.UKey.Companion.dummy
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.VCRenameResultType
 import dev.ewio.util.getMostSevereExceptionType
@@ -58,7 +60,7 @@ class ClaimService(
         if(claim == null){
             claim = VCClaim(
                 playerKey = player.key,
-                key = ClaimUKeyProvider.nextKey(),
+                key = dummy(), //temporary dummy key, will be replaced on upsert
                 displayName = name,
             )
             claimRepository.upsert(claim)
@@ -123,7 +125,7 @@ class ClaimService(
             //this chunk is not claimed yet, claim it
 
             val newChunk = VCChunk(
-                key = ChunkUKeyProvider.nextKey(),
+                key = dummy(),
                 claimKey = claim.key,
                 plainChunk = chunk
             )
@@ -212,7 +214,7 @@ class ClaimService(
             return player
         }else {
             val newPlayer = VCPlayer(
-                key = PlayerUKeyProvider.nextKey(),
+                key = dummy(),
                 mcUUID = uuid,
                 name = Bukkit.getPlayer(uuid)?.name ?: "Nameless",
                 resolvedNameAt = System.currentTimeMillis()
@@ -250,7 +252,7 @@ class ClaimService(
         return count
     }
 
-    fun getClaimAtChunk(chunk: PlainChunk):VCClaim? {
+    fun getClaimAtChunk(chunk: PlainChunk): VCClaim? {
         val dbChunk = chunkRepository.findAll {
             it.plainChunk.toKey() == chunk.toKey()
         }.firstOrNull() ?: return null

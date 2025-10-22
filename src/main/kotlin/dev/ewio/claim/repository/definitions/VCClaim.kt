@@ -1,4 +1,4 @@
-package dev.ewio.claim
+package dev.ewio.claim.repository.definitions
 
 import dev.ewio.util.UKey
 
