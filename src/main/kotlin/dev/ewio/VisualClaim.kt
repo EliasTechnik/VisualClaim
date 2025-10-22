@@ -9,6 +9,7 @@ import dev.ewio.command.ClaimCommand
 import dev.ewio.command.ClaiminfoCommand
 import dev.ewio.command.DeleteclaimCommand
 import dev.ewio.command.ListclaimsCommand
+import dev.ewio.command.RenameclaimCommand
 import dev.ewio.command.UnclaimCommand
 import dev.ewio.map.MapService
 import dev.ewio.map.NoopMapService
@@ -55,6 +56,7 @@ class VisualClaim : JavaPlugin() {
         getCommand("claiminfo")?.setExecutor(ClaiminfoCommand(this))
         getCommand("unclaim")?.setExecutor(UnclaimCommand(this))
         getCommand("deleteclaim")?.setExecutor(DeleteclaimCommand(this))
+        getCommand("renameclaim")?.setExecutor(RenameclaimCommand(this))
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")
@@ -71,6 +73,7 @@ class VisualClaim : JavaPlugin() {
 
     private fun partialMapUpdate(changedClaim: VCClaim) {
         // if a claim changes we remove it completely and re-add it
+        //WARNING: This only works if the claim is still in the database!
         mapService.removeClaimMarker(changedClaim)
         mapService.writeClaimMarker(changedClaim)
     }

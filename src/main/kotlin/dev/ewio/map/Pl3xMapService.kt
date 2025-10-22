@@ -53,6 +53,8 @@ class Pl3xMapService: MapService {
         val chunks = plugin.claimService.getChunksOfClaim(claim)
         val player = plugin.claimService.getPlayerByKey(claim.playerKey) ?: return
 
+        plugin.logger.info("Writing markers for claim ${claim.displayName} owned by ${player.name} over ${chunks.size} chunks.")
+
         //add marker for each chunk
         chunks.forEach {
             writeChunkbasedClaimMarker(claim, player, it)
@@ -84,26 +86,18 @@ class Pl3xMapService: MapService {
             .fill(Fill(fillColor))
             .build()
         rect.options = opts
-        if (layer is SimpleLayer){
-            layer.addMarker(rect)
-        }
-
+        layer.addMarker(rect)
 
         world.layerRegistry.register(layer) // ensure present
 
     }
 
     private fun getHoverText(claim: VCClaim, player: VCPlayer): String {
-        if(claim.isDefaultClaim){
-            return plugin.cfg.get("Pl3xMap.hover-text.default-claim")
-                .toString()
-                .replace("<owner>", player.name)
-        } else {
-            return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
-                .toString()
-                .replace("<owner>", player.name)
-                .replace("<claim-name>", claim.displayName)
-        }
+        return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
+            .toString()
+            .replace("<owner>", player.name)
+            .replace("<claim-name>", claim.displayName)
+
     }
 
     override fun removeClaimMarker(claim: VCClaim) {

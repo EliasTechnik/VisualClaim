@@ -38,8 +38,7 @@ class ClaiminfoCommand(
                         plugin.config.get("messages.claiminfo-claimed")
                             .toString()
                             .replace("<owner>", owner.name)
-                            .replace("<claim-name>", if(claim.isDefaultClaim)
-                                plugin.cfg.get("default-claim-name").toString() else claim.displayName)
+                            .replace("<claim-name>", claim.displayName)
                     )
                 }
                 else{

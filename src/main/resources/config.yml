@@ -1,10 +1,8 @@
 # Standard-Name, wenn kein Name in Anführungszeichen angegeben ist
-default-claim-name: "Standard-Claim"
 
 Pl3xMap:
   layer-name: "Claims"
   hover-text:
-    default-claim: "Gebiet von <owner>"
     named-claim: "<claim-name> von <owner>"
 
 
@@ -19,6 +17,58 @@ marker:
 stroke-color: 4278255360 # 0xFF00FF00 (grün)
 stroke-weight: 2
 fill-color: 1711276032 # 0x6600FF00 (halbtransparent grün)
+
+color:
+  names:
+    red: "§cRot"
+    blue: "§9Blau"
+    green: "§aGrün"
+    yellow: "§eGelb"
+    purple: "§5Lila"
+    orange: "§6Orange"
+    white: "§fWeiß"
+    black: "§0Schwarz"
+    gray: "§7Grau"
+    pink: "§dPink"
+    cyan: "§bCyan"
+    lime: "§aLime"
+    light_blue: "§3Hellblau"
+    magenta: "§dMagenta"
+    brown: "§6Braun"
+    gold: "§6Gold"
+    silver: "§7Silber"
+  values:
+    red: "#FF0000"
+    blue: "#0000FF"
+    green: "#00FF00"
+    yellow: "#FFFF00"
+    purple: "#800080"
+    orange: "#FFA500"
+    white: "#FFFFFF"
+    black: "#000000"
+    gray: "#808080"
+    pink: "#FFC0CB"
+    cyan: "#00FFFF"
+    lime: "#00FF00"
+    light_blue: "#ADD8E6"
+    magenta: "#FF00FF"
+    brown: "#A52A2A"
+    gold: "#FFD700"
+    silver: "#C0C0C0"
+  transparency:
+    stroke: 0.3
+    fill: 0.6
+
+#command usage
+usage:
+    claim: "§aNutze §e/claim \"claim-name\"§a um den Chunk in dem du stehst zu claimen. Der Name wird anderen Spielern und auf der Karte angezeigt. Lässt du den Namen weg, wird der chunk zu deinem zuletzt bearbeiteten Claim hinzugefügt."
+    autoclaim: "§aNutze §e/autoclaim \"claim-name\"§a um automatisch die chunks zu claimen in denen du dich befindest. Mit §e/autoclaim off§a schaltest du es wieder aus."
+    claiminfo: "§aNutze §e/claiminfo§a um Informationen über den Chunk in dem du stehst zu erhalten."
+    listclaims: "§aNutze §e/listclaims§a um eine Liste deiner Claims anzuzeigen."
+    renameclaim: "§aNutze §e/renameclaim \"alter-name\" \"neuer-name\"§a um einen Claim umzubenennen."
+    deleteclaim: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
+    unclaim: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
+    claimcolor: "§aMit /claimcolor \"claim-name\" <farbe> änderst du die Farbe der Markierung für deine Claims auf der Karte."
 
 
 # Messages (MiniMessage/§-Farben nicht notwendig – plain text reicht hier)
@@ -43,19 +93,17 @@ messages:
   deleteclaim-confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
   deleteclaim-usage: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
   deleteclaim-none: "§aDu hast keine Claims zum Löschen."
-  renameclaim-success: "§aDer Claim <claim-name> wurde in <claim-name-new> umbenannt."
-  renameclaim-not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
-  renameclaim-no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
-  renameclaim-merge-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename <claim-name> <claim-new-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
-  renameclaim-merge-default-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit deinen Standard-Claim zusammenführen möchtest? Nutze §e/rename <claim-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
-  renameclaim-usage: "§aNutze §e/renameclaim \"alter-name\" \"neuer-name\"§a um einen Claim umzubenennen"
-  renameclaim-none: "§aDu hast keine Claims."
-  renameclaim-default-name: "§aDu hast den Standard-Claim in <claim-new-name> umbenannt."
-  no-default-claim: "§aDu hast keinen Standard-Claim."
+  renameclaim:
+    success: "§aDer Claim <claim-name> wurde in <claim-new-name> umbenannt."
+    not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
+    merge-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename <claim-name> <claim-new-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
+    none: "§aDu hast keine Claims."
+    merge-success: "§aDer Claim <claim-name> wurde mit <claim-new-name> zusammengeführt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
 
 trigger-words:
     deleteclaim-confirm: "confirm"
+    renameclaim-confirm: "confirm"
 
 #Debugging
 plugin-insights:

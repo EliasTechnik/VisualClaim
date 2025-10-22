@@ -2,12 +2,12 @@ package dev.ewio.claim
 
 import dev.ewio.VisualClaim
 import dev.ewio.claim.repository.interfaces.DBInterface
-import dev.ewio.util.CMDStringWrapper
 import dev.ewio.util.ChunkUKeyProvider
 import dev.ewio.util.ClaimUKeyProvider
 import dev.ewio.util.PlayerUKeyProvider
 import dev.ewio.util.UKey
 import dev.ewio.util.VCExceptionType
+import dev.ewio.util.VCRenameResultType
 import dev.ewio.util.getMostSevereExceptionType
 import org.bukkit.Bukkit
 import java.util.UUID
@@ -30,22 +30,28 @@ class ClaimService(
     fun createClaim(
         player: VCPlayer,
         chunks: List<PlainChunk>,
-        useDefault: Boolean = true,
-        name: String = plugin.cfg.get("default-claim-name")?.toString()?:"vc"
+        name: String = ""
     ): Pair<VCExceptionType, VCClaim> {
 
         //register the player if not registered
         playerRepository.upsert(player)
 
+        val appendToLast = name == ""
+
         //get claim
-        var claim = if (useDefault) {
+        var claim = if (appendToLast) {
             claimRepository.findAll {
                 it.playerKey == player.key
-            }.firstOrNull()
+            }.maxByOrNull { it.lastModified }
         } else {
             claimRepository.findAll {
                 it.playerKey == player.key && it.displayName == name
             }.firstOrNull()
+        }
+
+        if(claim == null && appendToLast){
+            //no last claim found where we can append to
+            return Pair(VCExceptionType.NO_CLAIM_FOUND, VCClaim.dummy())
         }
 
         //if the claim does not exist, create it
@@ -54,7 +60,6 @@ class ClaimService(
                 playerKey = player.key,
                 key = ClaimUKeyProvider.nextKey(),
                 displayName = name,
-                isDefaultClaim = useDefault
             )
             claimRepository.upsert(claim)
         }
@@ -75,6 +80,11 @@ class ClaimService(
             eList.add(extendClaim(claim, chunk))
         }
         return getMostSevereExceptionType(eList)
+    }
+
+    private fun extendClaim(claim: VCClaim, chunks: List<VCChunk>){
+        val plainChunks = chunks.map { it.plainChunk }
+        extendClaim(claim, plainChunks)
     }
 
     //extend claim with one chunk
@@ -249,5 +259,66 @@ class ClaimService(
             it.key == dbChunk.claimKey
         }.firstOrNull()
         return claim
+    }
+
+
+    fun renameAndMergeClaim(player: VCPlayer, oldName: String, newName: String, merge: Boolean = false): Triple<VCRenameResultType, String, String> {
+        //get claims of player
+        val claims = getClaimsOfPlayer(player)
+
+        //get claim
+        val claim = claims.firstOrNull {
+            it.displayName == oldName
+        } ?: return Triple(VCRenameResultType.OLD_CLAIM_NOT_FOUND, oldName, newName)
+
+        //check if new name already exists
+        val existingClaim = claims.firstOrNull {
+            it.displayName == newName
+        }
+
+        if(existingClaim != null){
+            if(existingClaim.key == claim.key){
+                //same claim, user is idiot
+                return Triple(VCRenameResultType.SUCCESS, oldName, newName)
+            }
+
+            if(merge){
+                //merge claims
+                val chunksToTransfer = getChunksOfClaim(claim)
+
+                //remove old claim from map visualization
+                deleteFromMap(chunksToTransfer)
+
+                //delete old VCChunks
+                chunksToTransfer.forEach {
+                    chunkRepository.delete(it.key)
+                }
+
+                //delete old claim
+                claimRepository.delete(claim.key)
+
+                //transfer chunks
+                extendClaim(existingClaim, chunksToTransfer)
+
+                //update last modified
+                claimRepository.upsert(existingClaim.copy(lastModified = System.currentTimeMillis()))
+
+                //update map
+                partialMapUpdate(existingClaim) //update map visualization
+                return Triple(VCRenameResultType.MERGED, oldName, newName)
+            }else {
+                return Triple(VCRenameResultType.NAME_ALREADY_EXISTS, oldName, newName)
+            }
+        }else{
+            //there is no existing claim with the new name, just rename
+            //remove old claim from map visualization
+            val chunks = getChunksOfClaim(claim)
+            deleteFromMap(chunks)
+            //rename
+            val renamedClaim = claim.copy(displayName = newName, lastModified = System.currentTimeMillis())
+            claimRepository.upsert(renamedClaim)
+            partialMapUpdate(renamedClaim) //update map visualization //se if this works
+            return Triple(VCRenameResultType.SUCCESS, oldName, newName)
+        }
     }
 }

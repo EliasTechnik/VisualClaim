@@ -22,7 +22,10 @@ fun getCorrectlySplitArgs(args: List<String>, startIndex: Int = 0): List<String>
     val newArgs: MutableList<String> = mutableListOf()
 
     for (i in 0..<args.size) {
-        if (args[i].startsWith("\"")) {
+        if(args[i].startsWith("\"") && args[i].endsWith("\"") && args[i].length > 1){
+            //single word in quotes
+            newArgs.add(args[i])
+        }else if (args[i].startsWith("\"")) {
             //combine until we find the end
             inQuotes = true
             combined = args[i]//.replace("\"", "")
@@ -30,7 +33,7 @@ fun getCorrectlySplitArgs(args: List<String>, startIndex: Int = 0): List<String>
             //found the end
             combined = combined + " " + args[i]//.replace("\"", "")
             inQuotes = false
-            newArgs.add(combined)
+            newArgs.add(combined.trim())
         } else if (inQuotes) {
             combined = combined + " " + args[i]
         } else {
