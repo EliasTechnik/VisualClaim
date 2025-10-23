@@ -8,6 +8,7 @@ import dev.ewio.database.toVCChunk
 import dev.ewio.util.UKey
 import dev.ewio.util.chunkKey
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
@@ -39,8 +40,36 @@ class ExposedChunkRepository : DBInterface<VCChunk> {
         }
     }
 
+    fun upsert(items: List<VCChunk>): List<VCChunk> = transaction {
+        val chunks = mutableListOf<VCChunk>()
+        items.forEach { item ->
+            if (item.key.value < 0) {
+                val id = VCChunks.insertAndGetId {
+                    it[claimKey] = org.jetbrains.exposed.dao.id.EntityID(item.claimKey.value, VCClaims)
+                    it[world] = item.plainChunk.world
+                    it[x] = item.plainChunk.x
+                    it[z] = item.plainChunk.z
+                }.value
+                chunks.add(item.copy(key = chunkKey(id)))
+            } else {
+                VCChunks.update({ VCChunks.id eq item.key.value }) {
+                    it[claimKey] = org.jetbrains.exposed.dao.id.EntityID(item.claimKey.value, VCClaims)
+                    it[world] = item.plainChunk.world
+                    it[x] = item.plainChunk.x
+                    it[z] = item.plainChunk.z
+                }
+                chunks.add(item)
+            }
+        }
+        chunks.toList()
+    }
+
     override fun delete(key: UKey<VCChunk>): Boolean = transaction {
         VCChunks.deleteWhere { VCChunks.id eq key.value } > 0
+    }
+
+    fun delete(keys: List<UKey<VCChunk>>) = transaction {
+        VCChunks.deleteWhere { VCChunks.id.inList(keys.map { it.value }) }
     }
 
     override fun all(): List<VCChunk> = transaction { VCChunks.selectAll().map { it.toVCChunk() } }

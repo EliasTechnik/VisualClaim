@@ -1,6 +1,7 @@
 package dev.ewio.claim
 
 import dev.ewio.VisualClaim
+import dev.ewio.claim.repository.adapter.TransactionCache
 import dev.ewio.claim.repository.definitions.PlainChunk
 import dev.ewio.claim.repository.definitions.VCChunk
 import dev.ewio.claim.repository.definitions.VCClaim
@@ -16,9 +17,7 @@ import java.util.UUID
 
 
 class ClaimService(
-    val claimRepository: DBInterface<VCClaim>,
-    val chunkRepository: DBInterface<VCChunk>,
-    val playerRepository: DBInterface<VCPlayer>,
+    val cache: TransactionCache,
     val plugin: VisualClaim,
     val partialMapUpdate: (changedClaim: VCClaim) -> Unit,
     val deleteFromMap: (chunks: List<VCChunk>) -> Unit
@@ -34,49 +33,74 @@ class ClaimService(
         chunks: List<PlainChunk>,
         name: String = ""
     ): Pair<VCExceptionType, VCClaim> {
+        var result: VCExceptionType = VCExceptionType.NONE
 
-        //register the player if not registered
-        playerRepository.upsert(player)
+        val claim = cache.claimTransaction(player) { claims: List<VCClaim>, chunks: List<VCChunk> ->
+            val appendToLast = name == ""
 
-        val appendToLast = name == ""
+            //get claim
+            var c = if (appendToLast) {
+                claims.filter {
+                    it.playerKey == player.key
+                }.maxByOrNull { it.lastModified }
+            } else {
+                claims.firstOrNull {
+                    it.playerKey == player.key && it.displayName == name
+                }
+            }
 
-        //get claim
-        var claim = if (appendToLast) {
-            claimRepository.findAll {
-                it.playerKey == player.key
-            }.maxByOrNull { it.lastModified }
-        } else {
-            claimRepository.findAll {
-                it.playerKey == player.key && it.displayName == name
-            }.firstOrNull()
+            if(c == null && appendToLast){
+                //no last claim found where we can append to
+                //return Pair(VCExceptionType.NO_CLAIM_FOUND, VCClaim.dummy())
+                result = VCExceptionType.NO_CLAIM_FOUND
+                return@claimTransaction null
+            }
+
+            //if the claim does not exist, create it
+            if(c == null){
+                c = VCClaim(
+                    playerKey = player.key,
+                    key = dummy(), //temporary dummy key, will be replaced on upsert
+                    displayName = name,
+                )
+            }
+
+            return@claimTransaction c
         }
 
-        if(claim == null && appendToLast){
-            //no last claim found where we can append to
-            return Pair(VCExceptionType.NO_CLAIM_FOUND, VCClaim.dummy())
-        }
-
-        //if the claim does not exist, create it
         if(claim == null){
-            claim = VCClaim(
-                playerKey = player.key,
-                key = dummy(), //temporary dummy key, will be replaced on upsert
-                displayName = name,
-            )
-            claimRepository.upsert(claim)
+            //no claim could be created or found
+            return Pair(result, VCClaim.dummy())
+        }else{
+            //add chunks to the claim
+            result = extendClaim(claim, chunks)
+            if(result == VCExceptionType.NONE){
+                //successful claim creation or extension
+                partialMapUpdate(claim) //update map visualization
+            }
         }
-
-        //add chunks to the claim
-        val extendResult = extendClaim(claim, chunks)
-        if(extendResult == VCExceptionType.NONE){
-            //successful claim creation or extension
-            partialMapUpdate(claim) //update map visualization
-        }
-        return Pair(extendResult, claim)
+        return Pair(result, claim)
     }
 
     //extend claim with one or multiple chunks
     private fun extendClaim(claim: VCClaim, chunks: List<PlainChunk>): VCExceptionType {
+
+        cache.chunksTransaction(claim){ existingChunks ->
+
+            val chunks = existingChunks.toMutableList()
+
+            //TODO: Go from here. The plan is to handle everything inside the transaction cache to avoid multiple db calls.
+            //do not forget the map. Any changes to a claim require the removal before and addition after the changes.
+
+        }
+            val eList = mutableListOf<VCExceptionType>()
+            chunks.forEach { chunk ->
+                eList.add(extendClaim(claim, chunk))
+            }
+            return@getMostSevereExceptionType existingChunks
+        }
+
+
         val eList = mutableListOf<VCExceptionType>()
         chunks.forEach { chunk ->
             eList.add(extendClaim(claim, chunk))
@@ -96,7 +120,7 @@ class ClaimService(
         if(existingClaim != null){
             //this chunk is claimed but we might transfer it
             if(existingClaim.key == claim.key){
-                //this chunk is allready claimed by the same claim
+                //this chunk is already claimed by the same claim
                 return VCExceptionType.CHUNK_ALREADY_CLAIMED_BY_SAME_CLAIM
             }
 
@@ -206,22 +230,7 @@ class ClaimService(
     }
 
     fun registerAndGetVCPlayerByUUID(uuid: UUID): VCPlayer {
-        val player = playerRepository.findAll {
-            it.mcUUID == uuid
-        }.firstOrNull()
-
-        if(player != null){
-            return player
-        }else {
-            val newPlayer = VCPlayer(
-                key = dummy(),
-                mcUUID = uuid,
-                name = Bukkit.getPlayer(uuid)?.name ?: "Nameless",
-                resolvedNameAt = System.currentTimeMillis()
-            )
-            playerRepository.upsert(newPlayer)
-            return newPlayer
-        }
+        //TODO
     }
 
     fun getClaimsOfPlayer(player: VCPlayer): List<VCClaim> {
