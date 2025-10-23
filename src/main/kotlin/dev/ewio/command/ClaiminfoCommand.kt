@@ -1,7 +1,7 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.PlainChunk
+import dev.ewio.claim.repository.definitions.PlainChunk
 import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
 import org.bukkit.command.TabExecutor
 
@@ -38,8 +38,7 @@ class ClaiminfoCommand(
                         plugin.config.get("messages.claiminfo-claimed")
                             .toString()
                             .replace("<owner>", owner.name)
-                            .replace("<claim-name>", if(claim.isDefaultClaim)
-                                plugin.cfg.get("default-claim-name").toString() else claim.displayName)
+                            .replace("<claim-name>", claim.displayName)
                     )
                 }
                 else{

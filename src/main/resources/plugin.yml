@@ -1,5 +1,5 @@
 name: VisualClaim
-version: '0.1-SNAPSHOT'
+version: '0.3-SNAPSHOT'
 main: dev.ewio.VisualClaim
 api-version: '1.21'
 author: Elias_Technik

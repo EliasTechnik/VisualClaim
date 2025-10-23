@@ -1,15 +1,6 @@
 package dev.ewio.util
 
-import dev.ewio.claim.VCChunk
-import dev.ewio.claim.VCClaim
-import dev.ewio.claim.VCPlayer
-
-enum class uKeySpace{
-    PLAYER,
-    CLAIM,
-    CHUNK
-}
-
+/*
 abstract class uKeyProvider<S> {
     private var nextKey = 0
 
@@ -26,3 +17,5 @@ abstract class uKeyProvider<S> {
 object PlayerUKeyProvider : uKeyProvider<VCPlayer>()
 object ClaimUKeyProvider : uKeyProvider<VCClaim>()
 object ChunkUKeyProvider : uKeyProvider<VCChunk>()
+
+ */

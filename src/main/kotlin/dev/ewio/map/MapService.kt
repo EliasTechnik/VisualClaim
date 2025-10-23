@@ -1,7 +1,7 @@
 package dev.ewio.map
 
-import dev.ewio.claim.VCChunk
-import dev.ewio.claim.VCClaim
+import dev.ewio.claim.repository.definitions.VCChunk
+import dev.ewio.claim.repository.definitions.VCClaim
 
 interface MapService {
     fun isActive(): Boolean

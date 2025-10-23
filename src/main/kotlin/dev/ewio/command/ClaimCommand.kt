@@ -1,9 +1,7 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.ClaimService
-import dev.ewio.claim.PlainChunk
-import dev.ewio.util.CMDStringWrapper
+import dev.ewio.claim.repository.definitions.PlainChunk
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.registerAndGetVCPlayer
@@ -22,7 +20,7 @@ class ClaimCommand(
         args: Array<out String>
     ): Boolean {
         // TODO: check permissions and limits
-        //plugin.logger.info("Args: ${args.asList().toString()}")
+
         val betterArgs = getCorrectlySplitArgs(args.toList(),0)
 
         registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let{
@@ -30,25 +28,44 @@ class ClaimCommand(
             val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
             if(betterArgs.isEmpty()) {
-                val result = plugin.claimService.createClaim(vcPlayer, listOf(chunk))
-                when(result.first) {
-                    VCExceptionType.NONE -> {
-                        realPlayer.sendMessage(
-                            plugin.config.get("messages.claim-success")
-                                .toString()
-                                .replace("<x>", chunk.x.toString())
-                                .replace("<z>", chunk.z.toString())
-                                .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",if(result.second.isDefaultClaim)
-                                    plugin.cfg.get("default-claim-name").toString() else result.second!!.displayName
-                                )
-                        )
-                        plugin.mapService.writeClaimMarker(result.second!!)
-                        return true
-                    }
-                    else -> {
-                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second!!))
-                        return true
+                //no name given, use last claim or show usage
+
+                //get latest claim
+                val claim = plugin.claimService.getClaimsOfPlayer(vcPlayer).maxByOrNull { it.lastModified }
+
+                if(claim == null){
+                    realPlayer.sendMessage(
+                        plugin.config.get("usage.claim")
+                            .toString()
+                    )
+                    return true
+                }else{
+                    val result = plugin.claimService.createClaim(vcPlayer, listOf(chunk))
+                    when(result.first) {
+                        VCExceptionType.NONE -> {
+                            realPlayer.sendMessage(
+                                plugin.config.get("messages.claim-success")
+                                    .toString()
+                                    .replace("<x>", chunk.x.toString())
+                                    .replace("<z>", chunk.z.toString())
+                                    .replace("<player>",vcPlayer.name)
+                                    .replace("<claim-name>",result.second.displayName
+                                    )
+                            )
+                            plugin.mapService.writeClaimMarker(result.second)
+                            return true
+                        }
+                        VCExceptionType.NO_CLAIM_FOUND -> {
+                            realPlayer.sendMessage(
+                                plugin.config.get("usage.claim")
+                                    .toString()
+                            )
+                            return true
+                        }
+                        else -> {
+                            realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second))
+                            return true
+                        }
                     }
                 }
             }
@@ -56,8 +73,8 @@ class ClaimCommand(
                 val result = plugin.claimService.createClaim(
                     player = vcPlayer,
                     chunks = listOf(chunk),
-                    name = betterArgs[0],
-                    useDefault = false)
+                    name = betterArgs[0]
+                )
                 when(result.first) {
                     VCExceptionType.NONE -> {
                         realPlayer.sendMessage(
@@ -66,14 +83,13 @@ class ClaimCommand(
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",if(result.second.isDefaultClaim)
-                                    plugin.cfg.get("default-claim-name").toString() else result.second!!.displayName)
+                                .replace("<claim-name>",result.second.displayName)
                         )
-                        plugin.mapService.writeClaimMarker(result.second!!)
+                        plugin.mapService.writeClaimMarker(result.second)
                         return true
                     }
                     else -> {
-                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second!!))
+                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second))
                         return true
                     }
                 }
@@ -93,7 +109,7 @@ class ClaimCommand(
         registerAndGetVCPlayer(sender, plugin.claimService)?.let {
             val (vcPlayer, realPlayer) = it
             //get available claims
-            val claims = plugin.claimService.getClaimsOfPlayer(it).filterNot { it.isDefaultClaim } //we must remove the default one
+            val claims = plugin.claimService.getClaimsOfPlayer(it)
 
             val names = claims.map {"\"" + it.displayName +"\"" }
 

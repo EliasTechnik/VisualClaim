@@ -22,6 +22,14 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compileOnly("maven.modrinth:pl3xmap:1.21.5-527")
+
+    // Exposed
+    implementation("org.jetbrains.exposed:exposed-core:0.52.0")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.52.0")
+
+    // SQLite + Hikari
+    implementation("org.xerial:sqlite-jdbc:3.46.0.0")
+    implementation("com.zaxxer:HikariCP:5.1.0")
 }
 
 tasks {
