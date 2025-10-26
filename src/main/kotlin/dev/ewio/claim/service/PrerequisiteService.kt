@@ -3,6 +3,7 @@ package dev.ewio.claim.service
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -32,12 +33,16 @@ class PrerequisiteService(
         claimName: String = "" //if no name is given the claim is appended to the last modified claim
     ): VCResult {
 
+        log("Creating claim for player ${context.player.name} (${context.player.mcUUID}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with claim name '$claimName'")
+
         //Check if max chunks reached
         if(context.chunks.size >= context.restrictions.maxChunks && context.restrictions.maxChunks != -1) {
+            log("Player ${context.player.name} (${context.player.mcUUID}) has reached the maximum number of chunks: ${context.restrictions.maxChunks}")
             return VCResult.CreateClaim.ChunkLimitReached(context.restrictions.maxChunks)
         }
 
         if(claimName.length > context.restrictions.maxClaimNameLength && context.restrictions.maxClaimNameLength != -1) {
+            log("Player ${context.player.name} (${context.player.mcUUID}) provided a claim name that is too long: $claimName")
             return VCResult.CreateClaim.ClaimNameTooLong(context.restrictions.maxClaimNameLength)
         }
 
@@ -46,11 +51,13 @@ class PrerequisiteService(
             //append - get last modified claim
             val lastModifiedClaim = context.claims.maxByOrNull { it.lastModified }
             return if(lastModifiedClaim == null) {
+                log("Player ${context.player.name} (${context.player.mcUUID}) has no existing claims to append to.")
                 VCResult.CreateClaim.NoExistingClaimFound
             }else{
                 //append to the claim
                 val vcChunk = claimService.appendChunkToExistingClaim( chunk, lastModifiedClaim, context.player)
                 if(vcChunk == null){
+                    log("Chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} could not be appended to claim ${lastModifiedClaim.displayName} by player ${context.player.name} (${context.player.mcUUID})")
                     VCResult.CreateClaim.ChunkCouldNotBeClaimed
                 } else {
                     VCResult.CreateClaim.ChunkClaimedSucessfully
@@ -65,16 +72,19 @@ class PrerequisiteService(
 
             //check if max claims reached
             if (context.claims.size >= context.restrictions.maxClaims && context.restrictions.maxClaims != -1) {
+                log("Player ${context.player.name} (${context.player.mcUUID}) has reached the maximum number of claims: ${context.restrictions.maxClaims}")
                 return VCResult.CreateClaim.ClaimLimitReached(context.restrictions.maxClaims)
             }
 
+            log("No existing claim with name '$claimName' found for player ${context.player.name} (${context.player.mcUUID}). Creating new (empty) claim.")
             //create empty claim first
             val claim = claimService.createEmptyClaim(
                 player = context.player,
                 claimName = claimName
             )
 
-            if (claim.key == -1) {
+            if (claim == null) {
+                log("Claim '${claimName}' could not be created for player ${context.player.name} (${context.player.mcUUID}). The service returned no claim.")
                 return VCResult.CreateClaim.ClaimCouldNotBeCreated
             } else {
                 //add chunk
@@ -180,9 +190,10 @@ class PrerequisiteService(
 
     suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? {
         val realPlayer = sender as? Player ?: return null
+        log("Fetching player context for ${realPlayer.name} (${realPlayer.uniqueId})")
         getPlayerContext(realPlayer)?.let{
             contextCache.put(realPlayer.uniqueId, it)
-            Pair(it, realPlayer)
+            return Pair(it, realPlayer)
         }
         return null
     }

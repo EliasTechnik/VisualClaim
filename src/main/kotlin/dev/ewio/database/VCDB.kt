@@ -12,32 +12,47 @@ import java.sql.DriverManager
 
 object VCDB {
     private lateinit var ds: HikariDataSource
+    lateinit var db: Database
+        private set
 
     fun connect(dbPath: String) {
-        /// WAL vorher einmalig setzen
-        DriverManager.getConnection("jdbc:sqlite:$dbPath").use { conn ->
-            conn.createStatement().use { st ->
-                st.execute("PRAGMA journal_mode = WAL;")
+        // PRAGMAs *einmalig* vor Pool setzen
+        DriverManager.getConnection("jdbc:sqlite:$dbPath").use { c ->
+            c.createStatement().use { st ->
+                st.execute("PRAGMA journal_mode=WAL;")
+                st.execute("PRAGMA foreign_keys=ON;")
+                st.execute("PRAGMA busy_timeout=5000;")
+                st.execute("PRAGMA synchronous=NORMAL;") // schneller, ok für WAL
             }
         }
 
         val cfg = HikariConfig().apply {
             jdbcUrl = "jdbc:sqlite:$dbPath"
-            maximumPoolSize = 1          // SQLite: eine Verbindung reicht
-            isAutoCommit = true          // PRAGMAs laufen außerhalb von Transaktionen
-            connectionInitSql = """
-                PRAGMA foreign_keys = ON;
-                PRAGMA busy_timeout = 5000;
-            """.trimIndent()
+            driverClassName = "org.sqlite.JDBC"
+
+            // Writers bleiben trotzdem sequenziell (SQLite-Constraint).
+            maximumPoolSize = 4
+            minimumIdle = 1
+
+            // Exposed managt Transaktionen – AutoCommit hier lieber AUS
+            isAutoCommit = false
+
+            // Leaks aufspüren
+            leakDetectionThreshold = 10_000
+
+            // SQLite blockiert – lieber länger warten als sofort fehlschlagen
+            connectionTimeout = 60_000
+
+            // Health-Check
+            connectionTestQuery = "SELECT 1"
         }
         ds = HikariDataSource(cfg)
+        db = Database.connect(ds)
 
-        val db = Database.connect(ds)
-
-        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+        // Isolation muss bei SQLite nicht hochgedreht werden; Standard reicht.
+        // TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
 
         transaction(db) {
-            // Tabellen anlegen
             SchemaUtils.createMissingTablesAndColumns(
                 VCPlayers, VCClaims, VCChunks
             )

@@ -9,6 +9,7 @@ import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.util.log
 import org.bukkit.Bukkit
 import java.util.UUID
 
@@ -29,6 +30,7 @@ class ClaimService(
         var player = playerRepo.findByUUID(uuid)
         if(player == null){
             //register new player
+            log("Registering new player with UUID $uuid")
             player = VCPlayer(
                 mcUUID = uuid,
                 name = Bukkit.getPlayer(uuid)?.name ?: "Nameless",
@@ -38,11 +40,14 @@ class ClaimService(
         }
 
         if (player == null) {
+            log("Failed to register or find player with UUID $uuid")
             return null
         }else{
             //get remaining data
             val claims = claimRepo.listByPlayer(player.key)
             val chunks = chunkRepo.listByPlayer(player.key)
+
+            log("Loaded player context for player ${player.name} (UUID: ${player.mcUUID}), Claims: ${claims.size}, Chunks: ${chunks.size}")
 
             return VCPlayerDBContext(
                 player = player,
@@ -73,13 +78,20 @@ class ClaimService(
     suspend fun createEmptyClaim(
         player: VCPlayer,
         claimName: String
-    ): VCClaim {
-        return claimRepo.create(
+    ): VCClaim? {
+        val claim = claimRepo.upsert(
             VCClaim(
                 playerKey = player.key,
                 displayName = claimName
             )
         )
+
+        claim?.let{
+            log("Created new claim '${it.displayName}' (key: ${it.key}) for player ${player.name} (UUID: ${player.mcUUID})")
+        }?: log("Failed to create new claim '$claimName' for player ${player.name} (UUID: ${player.mcUUID}). The Database returned null.")
+
+        return claim
+
     }
 
     suspend fun transferChunkToAnotherClaim(
@@ -173,5 +185,24 @@ class ClaimService(
             return VCResult.RenameClaim.RenamedSuccessful
         }
         return VCResult.RenameClaim.VCClaimNotFound
+    }
+
+    suspend fun placeAllClaimsOnMap(){
+        val allPlayers = playerRepo.all()
+        val allClaims = claimRepo.all()
+        val allChunks = chunkRepo.all()
+
+        allPlayers.forEach { player ->
+            val playerClaims = allClaims.filter { it.playerKey == player.key }
+            playerClaims.forEach { claim ->
+                val claimChunks = allChunks.filter { it.claimKey == claim.key }
+                placeOnMap(player, claim, claimChunks)
+            }
+        }
+    }
+
+    suspend fun deleteAllClaimsFromMap(){
+        val allChunks = chunkRepo.all()
+        deleteFromMap(allChunks)
     }
 }

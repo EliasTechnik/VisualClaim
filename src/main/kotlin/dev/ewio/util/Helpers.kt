@@ -10,7 +10,7 @@ fun getCorrectlySplitArgs(args: List<String>, startIndex: Int = 0): List<String>
         if(args[i].startsWith("\"") && args[i].endsWith("\"") && args[i].length > 1){
             //single word in quotes
             newArgs.add(args[i])
-        }else if (args[i].startsWith("\"")) {
+        }else if (args[i].startsWith("\"") && !inQuotes) {
             //combine until we find the end
             inQuotes = true
             combined = args[i]//.replace("\"", "")
@@ -47,4 +47,9 @@ fun getQuotedStrings(strings: List<String>):List<String>{
         quotedStrings.add("\"$it\"")
     }
     return quotedStrings.toList()
+}
+
+fun log(message: String) {
+    //GL.logger.info(" "+message)
+    logInfo(message)
 }

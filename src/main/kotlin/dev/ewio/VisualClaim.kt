@@ -1,5 +1,6 @@
 package dev.ewio
 
+import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.scope
 import dev.ewio.claim.repository.ChunkRepository
 import dev.ewio.claim.repository.ClaimRepository
@@ -17,7 +18,9 @@ import dev.ewio.database.VCDB
 import dev.ewio.map.MapService
 import dev.ewio.map.NoopMapService
 import dev.ewio.map.Pl3xMapService
+import dev.ewio.util.GL
 import dev.ewio.util.StringHelper
+import dev.ewio.util.log
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -34,6 +37,9 @@ class VisualClaim : JavaPlugin() {
 
     override fun onEnable() {
         // Plugin startup logic
+        GL.init(this)
+
+
         saveDefaultConfig()
         cfg = config
 
@@ -46,7 +52,6 @@ class VisualClaim : JavaPlugin() {
                 250 //database limit
             }
         )
-
 
         //init database
         VCDB.connect(File(dataFolder, "VisualClaim.db").absolutePath)
@@ -74,6 +79,14 @@ class VisualClaim : JavaPlugin() {
 
         //TODO
         // 4) (Optional) Bestehende Claims in die Karte pushen – NICHT im Main-Thread
+
+        if(mapService.isActive()){
+            launch {
+                claimService.deleteAllClaimsFromMap()
+                claimService.placeAllClaimsOnMap()
+            }
+        }
+
         /*
         server.scheduler.runTaskAsynchronously(this) {
             val chunks = chunkRepo.all()
@@ -104,8 +117,6 @@ class VisualClaim : JavaPlugin() {
         // Plugin shutdown logic
         mapService.shutdown()
         VCDB.shutdown()
-        //TODO: Remove all markers from map?
-
     }
 
     fun isPl3xMapPresent(): Boolean {

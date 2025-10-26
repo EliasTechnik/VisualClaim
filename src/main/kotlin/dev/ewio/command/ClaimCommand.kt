@@ -3,7 +3,9 @@ package dev.ewio.command
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.claim.service.PrerequisiteService
+import dev.ewio.util.GL
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.bukkit.command.Command
@@ -29,6 +31,8 @@ class ClaimCommand(
             preService.getPlayerContext(sender)?.let{
                 var (context, realPlayer) = it
                 val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
+
+                log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")
 
 
                 var result: VCResult
@@ -122,6 +126,8 @@ class ClaimCommand(
                         )
                     }
                 }
+            }?:run{
+                log("Failed to get player context for sender ${sender.name}")
             }
         }
         return true //we handle everything in the coroutine

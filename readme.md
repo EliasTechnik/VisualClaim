@@ -61,6 +61,8 @@ ClaimRepository: Handles data storage and retrieval
 
 ## Todo
 
+- add mainThread timer to check that we don't block the main thread for too long
+- register player on login to always have context
 - prevent claiming in protected areas (worldguard, spawn, etc)
 - prevent claimnames that match confirm keywords
 - prevent multiple claims of the same chunk by the same player

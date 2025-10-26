@@ -3,8 +3,11 @@ package dev.ewio.claim.repository
 import dev.ewio.claim.definitions.*
 import dev.ewio.database.VCPlayers
 import dev.ewio.database.rowToVCPlayer
+import dev.ewio.util.log
+import dev.ewio.util.logInfo
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.insertIgnore
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.insertIgnoreAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
@@ -15,35 +18,42 @@ class PlayerRepository {
     suspend fun upsert(player: VCPlayer): VCPlayer? = newSuspendedTransaction(Dispatchers.IO) {
         if(player.key == -1) {
             // new player
-            val insertedId = VCPlayers.insertIgnore {
+            val insertedId = VCPlayers.insertIgnoreAndGetId {
                 it[mcUUID] = player.mcUUID.toString()
                 it[name] = player.name
                 it[resolvedNameAt] = player.resolvedNameAt
                 it[autoClaim] = player.autoClaim
-            } get VCPlayers.key
-
-            if (insertedId != null) {
-                return@newSuspendedTransaction findByKey(insertedId)
             }
 
-            // Fallback: Insert wurde ignoriert oder DB hat keinen Key zurückgegeben -> nach UUID suchen
-            return@newSuspendedTransaction findByUUID(player.mcUUID)
+            log("Inserted new player with UUID ${player.mcUUID}, assigned key: ${insertedId?.value}")
+
+            return@newSuspendedTransaction VCPlayers
+                .selectAll()
+                .where { VCPlayers.id eq insertedId?.value }
+                .limit(1)
+                .firstOrNull()?.let(::rowToVCPlayer)
         }else{
             //existing player
-            VCPlayers.update({ VCPlayers.key eq player.key }) { st ->
+            VCPlayers.update({ VCPlayers.id eq player.key }) { st ->
                 st[name] = player.name
                 st[resolvedNameAt] = player.resolvedNameAt
                 st[autoClaim] = player.autoClaim
             }
-            return@newSuspendedTransaction findByKey(player.key)
+            return@newSuspendedTransaction player
         }
     }
 
     suspend fun findByKey(key: Int): VCPlayer? = newSuspendedTransaction(Dispatchers.IO) {
-        VCPlayers.selectAll().where { VCPlayers.key eq key }.limit(1).firstOrNull()?.let(::rowToVCPlayer)
+        VCPlayers.selectAll().where { VCPlayers.id eq key }.limit(1).firstOrNull()?.let(::rowToVCPlayer)
     }
 
     suspend fun findByUUID(uuid: UUID): VCPlayer? = newSuspendedTransaction(Dispatchers.IO) {
         VCPlayers.selectAll().where { VCPlayers.mcUUID eq uuid.toString() }.limit(1).firstOrNull()?.let(::rowToVCPlayer)
+    }
+
+    suspend fun all(): List<VCPlayer> = newSuspendedTransaction {
+        VCPlayers.selectAll().let{ results ->
+            results.map(::rowToVCPlayer)
+        }
     }
 }

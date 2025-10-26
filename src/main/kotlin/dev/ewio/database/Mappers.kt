@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.ResultRow
 import java.util.UUID
 
 fun rowToVCPlayer(row: ResultRow) = VCPlayer(
-    key = row[VCPlayers.key],
+    key = row[VCPlayers.id].value,
     mcUUID = UUID.fromString(row[VCPlayers.mcUUID]),
     name = row[VCPlayers.name],
     resolvedNameAt = row[VCPlayers.resolvedNameAt],
@@ -16,14 +16,14 @@ fun rowToVCPlayer(row: ResultRow) = VCPlayer(
 )
 
 fun rowToVCClaim(row: ResultRow) = VCClaim(
-    key = row[VCClaims.key],
+    key = row[VCClaims.id].value,
     playerKey = row[VCClaims.playerKey],
     displayName = row[VCClaims.displayName],
     lastModified = row[VCClaims.lastModified]
 )
 
 fun rowToVCChunk(row: ResultRow) = VCChunk(
-    key = row[VCChunks.key],
+    key = row[VCChunks.id].value,
     claimKey = row[VCChunks.claimKey],
     plainChunk = PlainChunk(
         world = row[VCChunks.world],

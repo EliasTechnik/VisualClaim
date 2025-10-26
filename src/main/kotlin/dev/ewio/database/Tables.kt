@@ -4,21 +4,21 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
-object VCPlayers : Table("vc_player") {
-    val key = integer("key").autoIncrement()
+object VCPlayers : IntIdTable("vc_player") {
+    //val key = integer("key").uniqueIndex()
     val mcUUID = varchar("mc_uuid", 36)
     val name = varchar("name", 16)
     val resolvedNameAt = long("resolved_name_at")
     val autoClaim = bool("auto_claim").default(false)
 
-    override val primaryKey = PrimaryKey(key)
+    //override val primaryKey = PrimaryKey(key)
 }
 
 
-object VCClaims : Table("vc_claim") {
-    val key = integer("key").autoIncrement()
+object VCClaims : IntIdTable("vc_claim") {
+    //val key = integer("key").uniqueIndex()
     val playerKey = integer("player_key").references(
-        VCPlayers.key,
+        VCPlayers.id,
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )
@@ -30,14 +30,14 @@ object VCClaims : Table("vc_claim") {
         index(isUnique = true, columns = arrayOf(playerKey, displayName))
     }
 
-    override val primaryKey = PrimaryKey(key)
+    //override val primaryKey = PrimaryKey(key)
 }
 
 
-object VCChunks : Table("vc_chunk") {
-    val key = integer("key").autoIncrement()
+object VCChunks : IntIdTable("vc_chunk") {
+    //val key = integer("key").uniqueIndex()
     val claimKey = integer("claim_key").references(
-        VCClaims.key,
+        VCClaims.id,
         onDelete = ReferenceOption.CASCADE,
         onUpdate = ReferenceOption.CASCADE
     )
@@ -51,5 +51,5 @@ object VCChunks : Table("vc_chunk") {
         index(isUnique = true, columns = arrayOf(claimKey, world, x, z))
     }
 
-    override val primaryKey = PrimaryKey(key)
+    //override val primaryKey = PrimaryKey(key)
 }
