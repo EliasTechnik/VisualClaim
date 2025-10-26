@@ -205,4 +205,8 @@ class ClaimService(
         val allChunks = chunkRepo.all()
         deleteFromMap(allChunks)
     }
+
+    suspend fun getAllPlayers(): List<VCPlayer> {
+        return playerRepo.all()
+    }
 }

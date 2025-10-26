@@ -37,14 +37,19 @@ class PermissionService(
     }
 
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {
-        val maxClaims = getUpperLimitFromPermission(bukkitPlayer, "vc.restrictions.maxclaims.") ?: defaultVCRestrictions.maxClaims
-        val maxChunks = getUpperLimitFromPermission(bukkitPlayer, "vc.restrictions.maxchunks.") ?: defaultVCRestrictions.maxChunks
-        val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "vc.restrictions.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
+        val maxClaims = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaims.") ?: defaultVCRestrictions.maxClaims
+        val maxChunks = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunks.") ?: defaultVCRestrictions.maxChunks
+        val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
+        val listOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.listOther") != null
+        val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
+
 
         return VCRestrictions(
             maxClaims = maxClaims,
             maxChunks = maxChunks,
-            maxClaimNameLength = maxClaimNameLength
+            maxClaimNameLength = maxClaimNameLength,
+            listOtherPlayerClaims = listOtherPlayerClaims,
+            canClaim = canClaim
         )
     }
 

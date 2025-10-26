@@ -87,8 +87,13 @@ messages:
   autoclaim-on: "§aAutoClaim EIN für Gruppe <name>."
   autoclaim-off: "§aAutoClaim AUS für Gruppe <name>."
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
-  list-claims: "§aDeine Claims:"
-  list-claims-summary: "§aInsgesamt hast du <count> von <maxchunks> Chunks geclaimt."
+  player-not-found: "§aDer Spieler <player> wurde nicht gefunden."
+  list-claims:
+    header: "§aDeine Claims:"
+    header-other: "§aClaims von <player>:"
+    summary: "§aInsgesamt hast du <chunk-count> von <maxchunks> Chunks geclaimt und <claim-count> von <maxclaims> möglichen Claims erstellt. "
+    summary-other: "§aInsgesamt hat <player> <chunk-count> von <maxchunks> Chunks geclaimt und <claim-count> von <maxclaims> möglichen Claims erstellt. "
+    no-claims-other: "§aSpieler <player> hat keine Claims."
   deleteclaim:
     success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
     not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
@@ -109,4 +114,4 @@ trigger-words:
 
 #Debugging
 plugin-insights:
-  enabled: true
+  enabled: true #Shows som additional debug information in the server console and when commands are executed.

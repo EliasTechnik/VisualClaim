@@ -13,6 +13,7 @@ import dev.ewio.claim.definitions.VCRestrictions
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.command.ClaimCommand
+import dev.ewio.command.ListclaimsCommand
 
 import dev.ewio.database.VCDB
 import dev.ewio.map.MapService
@@ -96,14 +97,20 @@ class VisualClaim : JavaPlugin() {
 
 
         // Commands
-        getCommand("claim")?.setExecutor(ClaimCommand(
-            preService = prerequisiteService,
-            coroutineScope = this.scope,
-            getStringFromConfig = { path -> getStringFormConfig(path) }
-        ))
-        /*
-        getCommand("listclaims")?.setExecutor(ListclaimsCommand(this))
+        getCommand("claim")?.setExecutor(
+            ClaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            ))
 
+        getCommand("listclaims")?.setExecutor(
+            ListclaimsCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            ))
+/*
         getCommand("claiminfo")?.setExecutor(ClaiminfoCommand(this))
         getCommand("unclaim")?.setExecutor(UnclaimCommand(this))
         getCommand("deleteclaim")?.setExecutor(DeleteclaimCommand(this))

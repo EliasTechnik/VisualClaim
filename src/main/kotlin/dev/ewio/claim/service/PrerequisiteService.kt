@@ -1,8 +1,10 @@
 package dev.ewio.claim.service
 
+import dev.ewio.annotations.Costly
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.util.SimpleCache
 import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import org.bukkit.command.CommandSender
@@ -17,6 +19,13 @@ class PrerequisiteService(
     private val contextCache = ContextCache(
         fetch = { uuid ->
             this.getPlayerContext(uuid)
+        },
+        coroutineScope = coroutineScope
+    )
+
+    private val playerNameCache = SimpleCache<String>(
+        fetchAll = {
+            claimService.getAllPlayers().map { it.name }
         },
         coroutineScope = coroutineScope
     )
@@ -219,6 +228,15 @@ class PrerequisiteService(
 
     fun getCachedPlayerContext(player: Player): VCPlayerContext? {
         return contextCache.get(player)
+    }
+
+    @Costly
+    suspend fun getPlayerNames(): List<String> {
+        return claimService.getAllPlayers().map { it.name }
+    }
+
+    fun getCachedPlayerNames(): List<String> {
+        return playerNameCache.getAll()
     }
 
 }
