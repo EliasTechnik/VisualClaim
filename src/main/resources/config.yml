@@ -10,6 +10,8 @@ Pl3xMap:
 # Limits (0 oder negativ = deaktiviert)
 limits:
   max-claims-per-player: 150
+  max-chunks-per-player: 1000
+  max-claim-name-length: 32 #max 250
 
 
 # Farben für Kartenmarker (ARGB Integer)

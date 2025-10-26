@@ -25,11 +25,18 @@ dependencies {
 
     // Exposed
     implementation("org.jetbrains.exposed:exposed-core:0.52.0")
+    implementation("org.jetbrains.exposed:exposed-dao:0.52.0")
     implementation("org.jetbrains.exposed:exposed-jdbc:0.52.0")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:0.52.0")
 
     // SQLite + Hikari
     implementation("org.xerial:sqlite-jdbc:3.46.0.0")
     implementation("com.zaxxer:HikariCP:5.1.0")
+
+    // Coroutines
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
+    implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
 }
 
 tasks {

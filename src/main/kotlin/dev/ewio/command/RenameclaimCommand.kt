@@ -4,11 +4,11 @@ import dev.ewio.VisualClaim
 
 import dev.ewio.util.VCRenameResultType
 import dev.ewio.util.getCorrectlySplitArgs
-import dev.ewio.util.registerAndGetVCPlayer
-import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+
+/*
 
 class RenameclaimCommand(
     val plugin: VisualClaim
@@ -216,3 +216,5 @@ class RenameclaimCommand(
         return mutableListOf()
     }
 }
+
+ */

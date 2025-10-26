@@ -1,17 +1,16 @@
-package dev.ewio.claim.repository.definitions
+package dev.ewio.claim.definitions
 
-import dev.ewio.util.UKey
 
 data class VCClaim(
-    val key: UKey<VCClaim>,
-    val playerKey: UKey<VCPlayer>,
+    val key: Int = -1,
+    val playerKey: Int,
     val displayName: String,
     val lastModified: Long = System.currentTimeMillis()
 ) {
     companion object {
         fun dummy(): VCClaim = VCClaim(
-            UKey.dummy(),
-            UKey.dummy(),
+            -1,
+            -1,
             "dummy",
         )
     }

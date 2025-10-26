@@ -1,6 +1,5 @@
-package dev.ewio.claim.repository.definitions
+package dev.ewio.claim.definitions
 
-import dev.ewio.util.UKey
 import org.bukkit.Chunk
 
 data class PlainChunk(
@@ -24,14 +23,14 @@ data class PlainChunk(
 }
 
 data class VCChunk(
-    val key: UKey<VCChunk>,
-    val claimKey: UKey<VCClaim>,
+    val key: Int = -1,
+    val claimKey: Int,
     val plainChunk: PlainChunk,
 ) {
     companion object {
         fun dummy(): VCChunk = VCChunk(
-            UKey.dummy(),
-            UKey.dummy(),
+            -1,
+            -1,
             PlainChunk(
                 "dummy_world",
                 0,

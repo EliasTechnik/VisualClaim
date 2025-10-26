@@ -1,40 +1,33 @@
 package dev.ewio.database
 
-import dev.ewio.claim.repository.definitions.PlainChunk
-import dev.ewio.claim.repository.definitions.VCChunk
-import dev.ewio.claim.repository.definitions.VCClaim
-import dev.ewio.claim.repository.definitions.VCPlayer
-import dev.ewio.database.VCClaims.playerKey
-import dev.ewio.util.chunkKey
-import dev.ewio.util.claimKey
-
-import dev.ewio.util.playerKey
+import dev.ewio.claim.definitions.PlainChunk
+import dev.ewio.claim.definitions.VCChunk
+import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCPlayer
 import org.jetbrains.exposed.sql.ResultRow
 import java.util.UUID
 
-fun ResultRow.toVCPlayer(): VCPlayer = VCPlayer(
-    key = playerKey(this[VCPlayers.id].value),
-    mcUUID = UUID.fromString(this[VCPlayers.mcUuid]),
-    name = this[VCPlayers.name],
-    resolvedNameAt = this[VCPlayers.resolvedNameAt],
-    autoClaim = this[VCPlayers.autoClaim]
+fun rowToVCPlayer(row: ResultRow) = VCPlayer(
+    key = row[VCPlayers.key],
+    mcUUID = UUID.fromString(row[VCPlayers.mcUUID]),
+    name = row[VCPlayers.name],
+    resolvedNameAt = row[VCPlayers.resolvedNameAt],
+    autoClaim = row[VCPlayers.autoClaim]
 )
 
-
-fun ResultRow.toVCClaim(): VCClaim = VCClaim(
-    key = claimKey(this[VCClaims.id].value),
-    playerKey = playerKey(this[playerKey].value),
-    displayName = this[VCClaims.displayName],
-    lastModified = this[VCClaims.lastModified]
+fun rowToVCClaim(row: ResultRow) = VCClaim(
+    key = row[VCClaims.key],
+    playerKey = row[VCClaims.playerKey],
+    displayName = row[VCClaims.displayName],
+    lastModified = row[VCClaims.lastModified]
 )
 
-
-fun ResultRow.toVCChunk(): VCChunk = VCChunk(
-    key = chunkKey(this[VCChunks.id].value),
-    claimKey = claimKey(this[VCChunks.claimKey].value),
+fun rowToVCChunk(row: ResultRow) = VCChunk(
+    key = row[VCChunks.key],
+    claimKey = row[VCChunks.claimKey],
     plainChunk = PlainChunk(
-        world = this[VCChunks.world],
-        x = this[VCChunks.x],
-        z = this[VCChunks.z]
+        world = row[VCChunks.world],
+        x = row[VCChunks.x],
+        z = row[VCChunks.z]
     )
 )

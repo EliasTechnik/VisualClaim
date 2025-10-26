@@ -23,6 +23,42 @@ Claim names can have spaces but must be wrapped in quotes when used in commands.
 - `/claim <name>` - Claim the chunk the player is currently in with the given name. (the name is optional). If a claim with the same name already exists, the chunk will be added to that claim.
 - ...todo
 
+## Innerworkings
+
+VisualClaim works mostly by commands issued by players. The call chain (should) look like this:
+
+```
+Player issues command 
+    |
+    V
+CommandExecutor: Fetches player and command arguments 
+    |
+    V
+AsyncCommandHandler: Handles command asynchronously
+    |
+    V
+PermissionsGate: Checks if player has permission to execute the command
+    |
+    V
+PrerequisiteGate: Checks if all prerequisites are met (e.g. claim name is valid, chunk is not already claimed, etc)
+    |
+    V
+MapLock: Cares about updateing the map
+    |   /\ 
+    V    |
+ClaimService: Main service which handles claim logic
+    |
+    V
+ClaimRepository: Handles data storage and retrieval
+```
+
+## Permissions
+
+- ```VisualClaim.claim``` - Permission to claim, unlcaim and manage claims your own chunks. Only limited by the global config settings.
+- ```VisualClaim.listOther``` - Permission to list other players' claims.
+- ```VisualClaim.maxClaims.<number>``` - Set the maximum number of claims a player can have. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
+- ```VisualClaim.maxChunks.<number>``` -  Set the maximum number of chunks a player can claim. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
+
 ## Todo
 
 - prevent claiming in protected areas (worldguard, spawn, etc)

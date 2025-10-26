@@ -1,11 +1,12 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.ClaimService
-import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
+import dev.ewio.claim.service.ClaimService
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+
+/*
 
 class ListclaimsCommand(
     private val plugin: VisualClaim
@@ -62,3 +63,5 @@ class ListclaimsCommand(
         return true
     }
 }
+
+ */

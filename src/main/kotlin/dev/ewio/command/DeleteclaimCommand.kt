@@ -4,12 +4,12 @@ import dev.ewio.VisualClaim
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.getQuotedStrings
-import dev.ewio.util.registerAndGetVCPlayer
-import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 import kotlin.collections.mutableListOf
+
+/*
 
 class DeleteclaimCommand(
     val plugin: VisualClaim
@@ -148,3 +148,5 @@ class DeleteclaimCommand(
         return mutableListOf()
     }
 }
+
+ */

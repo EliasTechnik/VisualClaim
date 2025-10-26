@@ -4,27 +4,52 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
-object VCPlayers : IntIdTable("vc_player") {
-    val mcUuid = varchar("mc_uuid", 36)
-    val name = varchar("name", 64)
+object VCPlayers : Table("vc_player") {
+    val key = integer("key").autoIncrement()
+    val mcUUID = varchar("mc_uuid", 36)
+    val name = varchar("name", 16)
     val resolvedNameAt = long("resolved_name_at")
     val autoClaim = bool("auto_claim").default(false)
 
+    override val primaryKey = PrimaryKey(key)
 }
 
 
-object VCClaims : IntIdTable("vc_claim") {
-    val playerKey = reference("player_key", VCPlayers, onDelete = ReferenceOption.CASCADE)
-    val displayName = varchar("display_name", 128)
+object VCClaims : Table("vc_claim") {
+    val key = integer("key").autoIncrement()
+    val playerKey = integer("player_key").references(
+        VCPlayers.key,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    )
+    val displayName = varchar("display_name", 250)
     val lastModified = long("last_modified")
+
+    init {
+        // z.B. pro Player ein Name nur einmal (optional):
+        index(isUnique = true, columns = arrayOf(playerKey, displayName))
+    }
+
+    override val primaryKey = PrimaryKey(key)
 }
 
 
-object VCChunks : IntIdTable("vc_chunk") {
-    val claimKey = reference("claim_key", VCClaims, onDelete = ReferenceOption.CASCADE)
-    val world = varchar("world", 128)
+object VCChunks : Table("vc_chunk") {
+    val key = integer("key").autoIncrement()
+    val claimKey = integer("claim_key").references(
+        VCClaims.key,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    )
+    // PlainChunk
+    val world = varchar("world", 64)
     val x = integer("x")
     val z = integer("z")
 
-    init { uniqueIndex("ux_chunk_world_x_z", world, x, z) }
+    init {
+        // derselbe Chunk darf nur einmal existieren
+        index(isUnique = true, columns = arrayOf(claimKey, world, x, z))
+    }
+
+    override val primaryKey = PrimaryKey(key)
 }

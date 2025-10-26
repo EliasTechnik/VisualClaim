@@ -1,10 +1,10 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.repository.definitions.PlainChunk
-import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
+import dev.ewio.claim.definitions.PlainChunk
 import org.bukkit.command.TabExecutor
 
+/*
 class ClaiminfoCommand(
     private val plugin: VisualClaim
 ): TabExecutor {
@@ -61,3 +61,6 @@ class ClaiminfoCommand(
         return true
     }
 }
+
+
+ */

@@ -1,5 +1,18 @@
 package dev.ewio.util
 
+
+
+
+enum class VCCreateClaimResult{
+    SUCCESS,
+    CHUNK_ALREADY_CLAIMED_BY_SAME_CLAIM,
+    CHUNK_CLAIMED_BY_OTHER_PLAYER,
+    NO_EXISTING_CLAIM_FOUND,
+    CLAIM_COULD_NOT_BE_CREATED,
+    UNKNOWN_ERROR
+}
+
+
 enum class VCExceptionType {
     NONE,
     CHUNK_ALREADY_CLAIMED_BY_SAME_CLAIM, //of same player

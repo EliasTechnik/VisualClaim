@@ -1,9 +1,9 @@
 package dev.ewio.map
 
 import dev.ewio.VisualClaim
-import dev.ewio.claim.repository.definitions.VCChunk
-import dev.ewio.claim.repository.definitions.VCClaim
-import dev.ewio.claim.repository.definitions.VCPlayer
+import dev.ewio.claim.definitions.VCChunk
+import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCPlayer
 
 import net.pl3x.map.core.Pl3xMap
 import net.pl3x.map.core.markers.layer.Layer
@@ -47,11 +47,7 @@ class Pl3xMapService: MapService {
         return true
     }
 
-    override fun writeClaimMarker(claim: VCClaim) {
-        //get all chunks of the claim
-        val chunks = plugin.claimService.getChunksOfClaim(claim)
-        val player = plugin.claimService.getPlayerByKey(claim.playerKey) ?: return
-
+    override fun writeClaimMarker(player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) {
         plugin.logger.info("Writing markers for claim ${claim.displayName} owned by ${player.name} over ${chunks.size} chunks.")
 
         //add marker for each chunk
@@ -99,17 +95,7 @@ class Pl3xMapService: MapService {
 
     }
 
-    override fun removeClaimMarker(claim: VCClaim) {
-        //get all chunks of the claim
-        val chunks = plugin.claimService.getChunksOfClaim(claim)
-
-        //remove marker for each chunk
-        chunks.forEach {
-            removeChunkMarker(it)
-        }
-    }
-
-    override fun removeChunkMarker(chunk: VCChunk) {
+    private fun removeChunkMarker(chunk: VCChunk) {
         //get world
         val world = Pl3xMap.api().worldRegistry.get(chunk.plainChunk.world) ?: return
 
@@ -120,17 +106,19 @@ class Pl3xMapService: MapService {
     }
 
     override fun removeChunkMarker(chunks: List<VCChunk>) {
-        //get world
         chunks.forEach {
             removeChunkMarker(it)
         }
     }
 
     override fun shutdown() {
-        // optional: Layer aufräumen
+        //Layer aufräumen
+        for ((_, layer) in layers) {
+            layer?.clearMarkers()
+        }
     }
 
     private fun markerKey(chunk: VCChunk): String {
-        return chunk.plainChunk.world + ":" + chunk.plainChunk.x + "," + chunk.plainChunk.z + ":" + chunk.claimKey.value
+        return chunk.plainChunk.world + ":" + chunk.plainChunk.x + "," + chunk.plainChunk.z + ":" + chunk.claimKey
     }
 }

@@ -1,17 +1,20 @@
 package dev.ewio.command
 
-import dev.ewio.VisualClaim
-import dev.ewio.claim.repository.definitions.PlainChunk
-import dev.ewio.util.VCExceptionType
+import dev.ewio.claim.definitions.PlainChunk
+import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
-import dev.ewio.util.registerAndGetVCPlayer
-import dev.ewio.util.registerAndGetVCPlayerAndRealPlayer
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+import org.bukkit.entity.Player
 
 class ClaimCommand(
-    private val plugin: VisualClaim,
+    private val preService: PrerequisiteService,
+    private val coroutineScope: CoroutineScope,
+    private val getStringFromConfig: (key: String) -> String,
 ): TabExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -19,84 +22,109 @@ class ClaimCommand(
         label: String,
         args: Array<out String>
     ): Boolean {
-        // TODO: check permissions and limits
 
-        val betterArgs = getCorrectlySplitArgs(args.toList(),0)
+        coroutineScope.launch {
+            val betterArgs = getCorrectlySplitArgs(args.toList(),0)
 
-        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let{
-            val (vcPlayer, realPlayer) = it
-            val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
+            preService.getPlayerContext(sender)?.let{
+                var (context, realPlayer) = it
+                val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
-            if(betterArgs.isEmpty()) {
-                //no name given, use last claim or show usage
 
-                //get latest claim
-                val claim = plugin.claimService.getClaimsOfPlayer(vcPlayer).maxByOrNull { it.lastModified }
-
-                if(claim == null){
-                    realPlayer.sendMessage(
-                        plugin.config.get("usage.claim")
-                            .toString()
+                var result: VCResult
+                if(betterArgs.isEmpty()) {
+                    //no name given, use last claim or show usage
+                    result = preService.createClaim(
+                        context = context,
+                        chunk = chunk
                     )
-                    return true
-                }else{
-                    val result = plugin.claimService.createClaim(vcPlayer, listOf(chunk))
-                    when(result.first) {
-                        VCExceptionType.NONE -> {
-                            realPlayer.sendMessage(
-                                plugin.config.get("messages.claim-success")
-                                    .toString()
-                                    .replace("<x>", chunk.x.toString())
-                                    .replace("<z>", chunk.z.toString())
-                                    .replace("<player>",vcPlayer.name)
-                                    .replace("<claim-name>",result.second.displayName
-                                    )
-                            )
-                            plugin.mapService.writeClaimMarker(result.second)
-                            return true
-                        }
-                        VCExceptionType.NO_CLAIM_FOUND -> {
-                            realPlayer.sendMessage(
-                                plugin.config.get("usage.claim")
-                                    .toString()
-                            )
-                            return true
-                        }
-                        else -> {
-                            realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second))
-                            return true
-                        }
-                    }
                 }
-            }
-            else{
-                val result = plugin.claimService.createClaim(
-                    player = vcPlayer,
-                    chunks = listOf(chunk),
-                    name = betterArgs[0]
-                )
-                when(result.first) {
-                    VCExceptionType.NONE -> {
+                else{
+                    result = preService.createClaim(
+                        context = context,
+                        chunk = chunk,
+                        claimName = betterArgs[0]
+                    )
+                }
+
+                //update context after operation
+                val newContext = preService.updatePlayerContext(context)
+
+                if(newContext != null){
+                    context = newContext
+                }else{
+                    //could not update context
+                    realPlayer.sendMessage(
+                        getStringFromConfig("messages.error.unknown-error")
+                    )
+                    return@launch
+                }
+
+                //result handling here
+                when(result) {
+                    is VCResult.CreateClaim.ChunkClaimedSucessfully -> {
+                        val claim = context.claims.maxByOrNull { it.lastModified }
                         realPlayer.sendMessage(
-                            plugin.config.get("messages.claim-success")
-                                .toString()
+                            getStringFromConfig("messages.claim-success")
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
-                                .replace("<player>",vcPlayer.name)
-                                .replace("<claim-name>",result.second.displayName)
+                                .replace("<player>",context.player.name)
+                                .replace("<claim-name>",claim?.displayName ?: "Unnamed Claim")
                         )
-                        plugin.mapService.writeClaimMarker(result.second)
-                        return true
+                    }
+                    is VCResult.CreateClaim.NoExistingClaimFound -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("usage.claim")
+                        )
+                    }
+                    is VCResult.CreateClaim.ChunkLimitReached -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.chunk-limit-reached")
+                                .replace("<max-chunks>", result.maxChunks.toString())
+                        )
+                    }
+                    is VCResult.CreateClaim.ChunkCouldNotBeClaimed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.chunk-could-not-be-claimed")
+                        )
+                    }
+                    is VCResult.CreateClaim.ClaimCouldNotBeCreated -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.claim-could-not-be-created")
+                        )
+                    }
+                    is VCResult.CreateClaim.ClaimLimitReached -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.claim-limit-reached")
+                                .replace("<max-claims>", result.maxClaims.toString())
+                        )
+                    }
+                    is VCResult.CreateClaim.ClaimNameTooLong -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.claim-name-too-long")
+                                .replace("<max-length>", result.maxLength.toString())
+                        )
+                    }
+                    is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.chunk-already-claimed-by-same-claim")
+                        )
+                    }
+                    is VCResult.CreateClaim.ChunkClaimedByOtherPlayer -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.chunk-claimed-by-other-player")
+                                .replace("<other-player>", result.otherPlayer)
+                        )
                     }
                     else -> {
-                        realPlayer.sendMessage(plugin.strings.writeOutVCException(result.first, vcPlayer, result.second))
-                        return true
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.error.unknown-error")
+                        )
                     }
                 }
             }
         }
-        //this point should never be reached
-        return false
+        return true //we handle everything in the coroutine
     }
 
     override fun onTabComplete(
@@ -106,18 +134,20 @@ class ClaimCommand(
         args: Array<out String>
     ): MutableList<String>? {
         // Recommendations für <arg>
-        registerAndGetVCPlayer(sender, plugin.claimService)?.let {
-            val (vcPlayer, realPlayer) = it
-            //get available claims
-            val claims = plugin.claimService.getClaimsOfPlayer(it)
 
-            val names = claims.map {"\"" + it.displayName +"\"" }
+        val betterArgs = getCorrectlySplitArgs(args.toList(),0)
+        val player = sender as? Player?: return mutableListOf()
+
+        preService.getCachedPlayerContext(player)?.let{ context ->
+            //get available claims
+
+            val names = context.claims.map {"\"" + it.displayName +"\"" }
 
             if (names.isEmpty()) {
                 return mutableListOf()
             }
 
-            return when (args.size) {
+            return when (betterArgs.size) {
                 1 -> {
                     names.toMutableList()
                 }
