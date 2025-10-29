@@ -1,4 +1,4 @@
-    package dev.ewio.util
+package dev.ewio.util
 
 import dev.ewio.util.GL
 
@@ -23,3 +23,10 @@ fun logInfo(message: String) {
     GL.logger.info("[${callerInfo()}] $message")
 }
 
+fun logWarning(message: String) {
+    GL.logger.warning("[${callerInfo()}][WARN] $message")
+}
+
+fun logSevere(message: String) {
+    GL.logger.severe("[${callerInfo()}][SEVERE] $message")
+}

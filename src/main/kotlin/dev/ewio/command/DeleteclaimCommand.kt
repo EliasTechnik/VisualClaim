@@ -1,18 +1,35 @@
 package dev.ewio.command
 
 import dev.ewio.VisualClaim
+import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.VCExceptionType
 import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.getQuotedStrings
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+import org.bukkit.entity.Player
 import kotlin.collections.mutableListOf
 
-/*
+/**
+ * Deletes a claim owned by the player.
+ *
+ * Usage:
+ * /deleteclaim <claim-name> <confirmation>
+ * /deleteclaim -o <player> <claim-name> <confirmation> [if player has permission VisualClaim.deleteOther]
+ *
+ *
+ * If no arguments are provided, the command shows usage information.
+ * The player must confirm the deletion by providing the correct confirmation word.
+ */
 
 class DeleteclaimCommand(
-    val plugin: VisualClaim
+    private val preService: PrerequisiteService,
+    private val coroutineScope: CoroutineScope,
+    private val getStringFromConfig: (key: String) -> String,
 ): TabExecutor {
 
     override fun onCommand(
@@ -21,103 +38,165 @@ class DeleteclaimCommand(
         label: String,
         args: Array<out String>
     ): Boolean {
-        //get Player
 
-        val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+        coroutineScope.launch {
+            val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
 
-        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let {
-            val (vcPlayer, realPlayer) = it
+            preService.getPlayerContext(sender)?.let {
+                val (context, realPlayer) = it
 
-            //check if there is anything to delete
-            val claims = plugin.claimService.getClaimsOfPlayer(vcPlayer)
-            if(claims.isEmpty()) {
-                realPlayer.sendMessage(
-                    plugin.cfg.get("messages.deleteclaim.none").toString()
-                )
-                return true
-            }
-
-            //on empty args show usage
-            if(betterArgs.isEmpty()){
-                realPlayer.sendMessage(
-                    plugin.cfg.get("usage.deleteclaim").toString()
-                )
-                return true
-            }
-
-            //evaluate args
-            when(betterArgs.size){
-                1 -> {
-                    //claim name given
-                    //check if claim exists
-
-                    val claim = claims.firstOrNull{ it.displayName == betterArgs[0] }
-
-                    if(claim == null){
-                        //error: no claim found
-                        realPlayer.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim.not-found")
-                                .toString()
-                                .replace("<claim-name>", betterArgs[0])
-                        )
-                        return true
-                    }else{
-                        //prompt for confirmation
-                        sender.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim.confirm")
-                                .toString()
-                                .replace("<claim-name>", "\"${claim.displayName}\"")
-                                .replace("<deleteclaim-confirm>", plugin.cfg.get("trigger-words.deleteclaim-confirm").toString())
-                        )
-                        return true
+                val result = when (betterArgs.size){
+                    0 -> {
+                        VCResult.MalformedCommand
                     }
-                }
-                2 -> {
-                    //two args. check again for claimname and confirmation
-                    val claim = claims.firstOrNull{ it.displayName == betterArgs[0] }
-
-                    if(claim == null){
-                        //error: no claim found
-                        realPlayer.sendMessage(
-                            plugin.cfg.get("messages.deleteclaim.not-found")
-                                .toString()
-                                .replace("<claim-name>", betterArgs[0])
-                        )
-                        return true
-                    }else{
-                        //there is a claim. Is it confirmed right?
-                        if(betterArgs[1].lowercase() == plugin.cfg.get("trigger-words.deleteclaim-confirm").toString()){
-                            //right, delete claim
-                            val result = plugin.claimService.deleteClaim(vcPlayer, claim)
-
-                            if(result == VCExceptionType.NONE) {
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.deleteclaim.success")
-                                        .toString()
-                                        .replace("<claim-name>", claim.displayName)
-                                )
-                                return true
-                            }else{
-                                realPlayer.sendMessage(
-                                    plugin.strings.writeOutVCException(result,vcPlayer,claim)
-                                )
-                                return true
+                    1 -> {
+                        //claim name given
+                        //check if claim exists
+                        if(betterArgs[0].startsWith("-o")){
+                            //missing playername
+                            VCResult.MalformedCommand
+                        }else {
+                            //check if claim exists
+                            if (context.claims.firstOrNull { it.displayName == betterArgs[0] } == null) {
+                                VCResult.DeleteClaim.VCClaimNotFound(betterArgs[0])
+                            } else {
+                                VCResult.DeleteClaim.ConfirmationRequired(betterArgs[0])
                             }
                         }
-                        return true
+                    }
+                    2 -> {
+                        //claim name + confirmation or "-o" + playername
+
+                        if(betterArgs[0].startsWith("-o")){
+                            //check if playername exists
+                            VCResult.MalformedCommand //This is not very user friendly, but ok for now
+                            //TODO: improve this so that admins get proper messages
+                        }else{
+                            //check if claim exists
+                            if (context.claims.firstOrNull { it.displayName == betterArgs[0] } == null) {
+                                VCResult.DeleteClaim.VCClaimNotFound(betterArgs[0])
+                            } else {
+                                if(betterArgs[1].equals(getStringFromConfig("trigger-words.deleteclaim-confirm"), ignoreCase = true)) {
+                                    //proceed with deletion
+                                    preService.deleteClaim(
+                                        context = context,
+                                        claimName = betterArgs[0],
+                                    )
+                                } else {
+                                    VCResult.MalformedCommand
+                                }
+                            }
+                        }
+                    }
+                    3 -> {
+                        //"-o" + playername + claimname
+                        if(betterArgs[0].startsWith("-o")){
+                            //check if playername exists
+                            if(preService.getCachedPlayerNames().firstOrNull { it == betterArgs[1] } != null) {
+                                //check if claim exists
+                                preService.deleteClaim(
+                                    context = context,
+                                    claimName = betterArgs[2],
+                                    playerName = betterArgs[1],
+                                    pretestAdmin = true,
+                                    adminMode = true
+                                )
+                            }else{
+                                VCResult.MalformedCommand
+                            }
+                        }else{
+                            VCResult.MalformedCommand
+                        }
+                    }
+                    4 -> {
+                        //"-o" + playername + claimname + confirmation
+                        if(betterArgs[0].startsWith("-o")){
+                            //check if playername exists
+                            if(preService.getCachedPlayerNames().firstOrNull { it == betterArgs[1] } != null) {
+                                //check if claim exists
+                                val pretest = preService.deleteClaim(
+                                    context = context,
+                                    claimName = betterArgs[2],
+                                    playerName = betterArgs[1],
+                                    pretestAdmin = true,
+                                    adminMode = true
+                                )
+
+                                if(pretest is VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired){
+                                    if(betterArgs[3].equals(getStringFromConfig("trigger-words.deleteclaim-confirm"), ignoreCase = true)) {
+                                        //proceed with deletion
+                                        preService.deleteClaim(
+                                            context = context,
+                                            claimName = betterArgs[2],
+                                            playerName = betterArgs[1],
+                                            adminMode = true
+                                        )
+                                    } else {
+                                        VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired(betterArgs[2])
+                                    }
+                                } else {
+                                    pretest
+                                }
+                            }else{
+                                VCResult.MalformedCommand
+                            }
+                        }else{
+                            VCResult.MalformedCommand
+                        }
+                    }
+                    else -> {
+                        VCResult.MalformedCommand
                     }
                 }
-                else ->
-                {
-                    sender.sendMessage(
-                        plugin.cfg.get("usage.deleteclaim")
-                            .toString()
-                    )
-                    return true
+
+
+                when(result){
+                    is VCResult.DeleteClaim.RemovedSuccessful ->  {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.deleteclaim.success")
+                                .replace("<claim-name>", "\"${result.claimName}\"")
+                        )
+                    }
+                    is VCResult.DeleteClaim.VCClaimNotFound -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.deleteclaim.not-found")
+                                .replace("<claim-name>", "\"${result.claimName}\"")
+                        )
+                    }
+                    is VCResult.DeleteClaim.ConfirmationRequired -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.deleteclaim.confirm")
+                                .replace("<claim-name>", "\"${result.claimName}\"")
+                                .replace("<deleteclaim-confirm>", getStringFromConfig("trigger-words.deleteclaim-confirm"))
+                        )
+                    }
+                    is VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.deleteclaim.confirm-other")
+                                .replace("<claim-name>", "\"${result.claimName}\"")
+                                .replace("<deleteclaim-confirm>", getStringFromConfig("trigger-words.deleteclaim-confirm"))
+                        )
+                    }
+                    is VCResult.DeleteClaim.NotOwnerOfClaim -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.deleteclaim.not-owner")
+                                .replace("<claim-name>", "\"${result.claimName}\"")
+                        )
+                    }
+                    is VCResult.MalformedCommand -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("usage.deleteclaim")
+                        )
+                    }
+                    else -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unknown-error")
+                        )
+                    }
                 }
             }
         }
-        return false
+        return true
     }
 
     override fun onTabComplete(
@@ -127,26 +206,44 @@ class DeleteclaimCommand(
         args: Array<out String>
     ): MutableList<String> {
         // Recommendations für <arg>
-        registerAndGetVCPlayer(sender, plugin.claimService)?.let {
-            //get available claims
-            val claims = plugin.claimService.getClaimsOfPlayer(it)
+        val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+        val player = sender as? Player ?: return mutableListOf()
 
-            val names = getQuotedStrings(claims.map { it.displayName }).toMutableList()
-
-            if (names.isEmpty()) {
-                return mutableListOf()
-            }
-
-            return when (args.size) {
+        preService.getCachedPlayerContext(player)?.let { context ->
+            when (betterArgs.size) {
                 1 -> {
-                    names
+                    //claim names
+                    val names = context.claims.map { "\"" + it.displayName + "\"" }.toMutableList()
+                    if(context.restrictions.deleteclaimOther){
+                        names.add("-o")
+                    }
+                    return names
                 }
 
-                else -> mutableListOf<String>()
+                2 -> {
+                    if (betterArgs[0] == "-o" && context.restrictions.deleteclaimOther) {
+                        //player names
+                        val playerNames = preService.getCachedPlayerNames().map { it }
+                        return playerNames.toMutableList()
+                    } else {
+                        return mutableListOf()
+                    }
+                }
+
+                3 -> {
+                    if (betterArgs[0] == "-o" && context.restrictions.deleteclaimOther) {
+                        //TODO: claim names of the other player
+                        //this is a bit complicated because some db access is needed and this is costly to do on tab complete
+                        //the best way would be to cache claims per player name in the preService but that is not implemented yet
+                        //for now, return empty list
+                        return mutableListOf()
+                    } else {
+                        return mutableListOf()
+                    }
+                }
+                else -> return mutableListOf()
             }
         }
         return mutableListOf()
     }
 }
-
- */

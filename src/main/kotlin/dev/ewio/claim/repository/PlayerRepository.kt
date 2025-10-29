@@ -56,4 +56,8 @@ class PlayerRepository {
             results.map(::rowToVCPlayer)
         }
     }
+
+    suspend fun findByName(playerName: String): List<VCPlayer> = newSuspendedTransaction {
+        VCPlayers.selectAll().where { VCPlayers.name eq playerName }.map(::rowToVCPlayer)
+    }
 }

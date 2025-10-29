@@ -42,6 +42,8 @@ class PermissionService(
         val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
         val listOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.listOther") != null
         val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
+        val unclaimOther = getPermission(bukkitPlayer, "VisualClaim.unclaimOther") != null
+        val deleteclaimOther = getPermission(bukkitPlayer, "VisualClaim.deleteOther") != null
 
 
         return VCRestrictions(
@@ -49,7 +51,9 @@ class PermissionService(
             maxChunks = maxChunks,
             maxClaimNameLength = maxClaimNameLength,
             listOtherPlayerClaims = listOtherPlayerClaims,
-            canClaim = canClaim
+            canClaim = canClaim,
+            unclaimOther = unclaimOther,
+            deleteclaimOther = deleteclaimOther
         )
     }
 

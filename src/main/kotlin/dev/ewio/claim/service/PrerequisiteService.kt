@@ -6,6 +6,7 @@ import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.SimpleCache
 import dev.ewio.util.log
+import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
@@ -42,7 +43,7 @@ class PrerequisiteService(
         claimName: String = "" //if no name is given the claim is appended to the last modified claim
     ): VCResult {
 
-        log("Creating claim for player ${context.player.name} (${context.player.mcUUID}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with claim name '$claimName'")
+        log("player ${context.player.name} (${context.player.mcUUID}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with claim name '$claimName' issued claim command.")
 
         //Check if max chunks reached
         if(context.chunks.size >= context.restrictions.maxChunks && context.restrictions.maxChunks != -1) {
@@ -137,45 +138,103 @@ class PrerequisiteService(
         }
         else{
             //there is already a claim with this name - append to it
-            val vcChunk = claimService.appendChunkToExistingClaim(
-                chunk = chunk,
-                claim = existingClaim,
-                player = context.player
-            )
-            if(vcChunk == null){
-                return VCResult.CreateClaim.ChunkCouldNotBeClaimed
-            } else {
-                return VCResult.CreateClaim.ChunkClaimedSucessfully
+
+            //check if chunk is already part of a claim
+            val exVCChunk = claimService.getVCChunkByPlainChunk(chunk)
+            if (exVCChunk != null) {
+                //it is already part of a claim
+                //check if it is owned by the same player
+                return if (context.claims.firstOrNull { it.key == exVCChunk.claimKey } != null) {
+                    //the chunk is already claimed by the same claim
+                    VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim
+                } else VCResult.CreateClaim.ChunkClaimedByOtherPlayer(
+                    otherPlayer = claimService.getVCChunkOwner(exVCChunk)?.name
+                        ?: "unknown"
+                )
+            }else{
+                val vcChunk = claimService.appendChunkToExistingClaim(
+                    chunk = chunk,
+                    claim = existingClaim,
+                    player = context.player
+                )
+                return if(vcChunk == null){
+                    VCResult.CreateClaim.ChunkCouldNotBeClaimed
+                } else {
+                    VCResult.CreateClaim.ChunkClaimedSucessfully
+                }
             }
         }
     }
 
     suspend fun unclaimChunk(
         context: VCPlayerContext,
-        chunk: PlainChunk
+        chunk: PlainChunk,
+        forceUnclaim: Boolean = false
     ): VCResult {
-        //find chunk in context
-        val vcChunk = context.chunks.firstOrNull {
-            it.plainChunk.world == chunk.world &&
-            it.plainChunk.x == chunk.x &&
-            it.plainChunk.z == chunk.z
-        }
+        //find chunk
 
-        if(vcChunk == null) {
-            return VCResult.RemoveChunk.VCChunkNotFound
-        }
+        val vcChunk = claimService.getVCChunkByPlainChunk(chunk)
+            ?: return VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed
 
-        return claimService.removeChunkFromClaim(vcChunk)
+        //check owner
+        val claim = context.claims.firstOrNull { it.key == vcChunk.claimKey }
+        if(claim != null){
+            //the player owns this chunk
+            //proceed to unclaim
+            return when( updatePlayerContextCache(context, {claimService.removeChunkFromClaim(vcChunk)})){
+                is VCResult.UnclaimChunk.UnclaimSuccessful -> VCResult.UnclaimChunk.UnclaimSuccessful(
+                    claimName = claim.displayName
+                )
+                is VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed -> VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed
+                else -> VCResult.UnknownFailure
+            }
+        }else{
+            //the player does not own this chunk
+            if(forceUnclaim && context.restrictions.unclaimOther){
+                //proceed to unclaim
+                return updatePlayerContextCache(context, { claimService.removeChunkFromClaim(vcChunk) })
+            }else{
+                val owner = claimService.getOwnerOfChunk(vcChunk)
+
+                return VCResult.UnclaimChunk.UnclaimFailedWrongOwner(
+                    ownerName = owner?.name ?: "unknown"
+                )
+            }
+        }
     }
 
     suspend fun deleteClaim(
         context: VCPlayerContext,
-        claimName: String
+        claimName: String,
+        pretestAdmin:Boolean = false, //if true, just check if the claim exists
+        playerName: String = "",
+        adminMode: Boolean = false
     ): VCResult {
-        val claim = context.claims.firstOrNull { it.displayName == claimName }
-            ?: return VCResult.DeleteClaim.VCClaimNotFound
+        if(adminMode){
+            //the player is trying to delete another player's claim
+            //get claim
+            val claim = claimService.getClaimByNameAndPlayerName(
+                claimName = claimName,
+                playerName = playerName
+            ) ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
 
-        return claimService.deleteClaim(claim)
+            if(pretestAdmin){
+                return VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired(claimName)
+            }
+
+            //check permission
+            return if(context.restrictions.deleteclaimOther){
+                updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+            }else{
+                VCResult.DeleteClaim.NotOwnerOfClaim(claimName)
+            }
+        } else {
+            //normal deletion
+            val claim = context.claims.firstOrNull { it.displayName == claimName }
+                ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
+            return updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+
+        }
     }
 
     suspend fun renameClaim(
@@ -195,6 +254,28 @@ class PrerequisiteService(
             newName = newName,
             player = context.player
         )
+    }
+
+    suspend fun getClaimAtChunk(
+        chunk: PlainChunk
+    ): VCResult {
+        val claim = claimService.getClaimAtChunk(chunk)
+
+        if(claim == null){
+            return VCResult.ClaimInfo.ChunkNotClaimed
+        }else{
+            val owner = claimService.getPlayerByKey(claim.playerKey)
+            return if(owner != null){
+                VCResult.ClaimInfo.chunkClaimed(
+                    claimName = claim.displayName,
+                    ownerName = owner.name
+                )
+            }else{
+                logSevere("Claim at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} has no valid owner! ClaimKey: ${claim.key}, PlayerKey: ${claim.playerKey}. VC Database might be in an inconsistent state.")
+                VCResult.ClaimInfo.ClaimedButWithoutOwner //this is an error that would only happen if the database is in an inconsistent state
+            }
+        }
+
     }
 
     suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? {
@@ -218,7 +299,7 @@ class PrerequisiteService(
             )
     }
 
-    suspend fun updatePlayerContext(context: VCPlayerContext): VCPlayerContext? {
+    suspend fun getFreshPlayerContext(context: VCPlayerContext): VCPlayerContext? {
         val updatedContext = claimService.getPlayerContextByKey(context.player.key) ?: return null
         return VCPlayerContext(
             restrictions = context.restrictions,
@@ -226,9 +307,17 @@ class PrerequisiteService(
         )
     }
 
+    private suspend fun <T> updatePlayerContextCache(context: VCPlayerContext, exFirst: suspend () -> T): T  {
+        val result = exFirst()
+        val updatedContext = this.getFreshPlayerContext(context)?: return result
+        contextCache.put(updatedContext.player.mcUUID, updatedContext)
+        return result
+    }
+
     fun getCachedPlayerContext(player: Player): VCPlayerContext? {
         return contextCache.get(player)
     }
+
 
     @Costly
     suspend fun getPlayerNames(): List<String> {
@@ -237,6 +326,19 @@ class PrerequisiteService(
 
     fun getCachedPlayerNames(): List<String> {
         return playerNameCache.getAll()
+    }
+
+    @Costly
+    suspend fun getClaimNamesForPlayer(playerName: String): List<String> {
+        val player = claimService.getPlayerByName(playerName)
+
+        if(player != null){
+            val contexts = claimService.getPlayerContextByKey(player.key)
+            if(contexts != null){
+                return contexts.claims.map { it.displayName }
+            }
+        }
+        return emptyList()
     }
 
 }

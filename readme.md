@@ -58,22 +58,19 @@ ClaimRepository: Handles data storage and retrieval
 - ```VisualClaim.listOther``` - Permission to list other players' claims.
 - ```VisualClaim.maxClaims.<number>``` - Set the maximum number of claims a player can have. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
 - ```VisualClaim.maxChunks.<number>``` -  Set the maximum number of chunks a player can claim. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
+- ```VisualClaim.unclaimOther``` - Permission to unclaim chunks from other players' claims by using the `\unclaim force` command.
 
 ## Todo
 
-- add mainThread timer to check that we don't block the main thread for too long
+- go over claim command and make sure we check all edege cases (eg. chunk already claimed....)
 - register player on login to always have context
 - prevent claiming in protected areas (worldguard, spawn, etc)
 - prevent claimnames that match confirm keywords
-- prevent multiple claims of the same chunk by the same player
 - complete commands
 - add ARGB color support
 - add color customization (Fixed values from config from which the player can choose)
 - add help
 - add "non intrusive" claim visualization to HUD
-- add persistent storage
-- add permissions and limits
-- add character limit
+- test permissions
 - add forbidden words filter
-- remove non-config error messages in claimCommand
 - test

@@ -1,5 +1,6 @@
 package dev.ewio.claim.service
 
+import dev.ewio.annotations.Lossy
 import dev.ewio.claim.repository.ChunkRepository
 import dev.ewio.claim.repository.ClaimRepository
 import dev.ewio.claim.repository.PlayerRepository
@@ -151,11 +152,11 @@ class ClaimService(
     ): VCResult {
         val dbChunk = chunkRepo.findByKey(chunk.key)
         if(dbChunk == null) {
-            return VCResult.RemoveChunk.VCChunkNotFound
+            return VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed
         } else {
             chunkRepo.deleteByKey(dbChunk.key)
             deleteFromMap(listOf(dbChunk)) //remove from map visualization
-            return VCResult.RemoveChunk.RemovedSuccessful
+            return VCResult.UnclaimChunk.UnclaimSuccessful("")
         }
     }
 
@@ -166,7 +167,7 @@ class ClaimService(
 
         //delete all chunks of the claim
         claimRepo.deleteCascade(claim.key)
-        return VCResult.DeleteClaim.RemovedSuccessful
+        return VCResult.DeleteClaim.RemovedSuccessful(claim.displayName)
     }
 
     suspend fun renameClaim(claim: VCClaim, newName: String, player: VCPlayer): VCResult {
@@ -208,5 +209,45 @@ class ClaimService(
 
     suspend fun getAllPlayers(): List<VCPlayer> {
         return playerRepo.all()
+    }
+
+    suspend fun getClaimAtChunk(chunk: PlainChunk): VCClaim? {
+        val vcChunk = chunkRepo.findByWorldXZ(
+            world = chunk.world,
+            x = chunk.x,
+            z = chunk.z
+        ) ?: return null
+
+        return claimRepo.findByKey(vcChunk.claimKey)
+    }
+
+    suspend fun getPlayerByKey(key: Int): VCPlayer? {
+        return playerRepo.findByKey(key)
+    }
+
+    suspend fun getOwnerOfChunk(vcChunk: VCChunk): VCPlayer? {
+        val claim = claimRepo.findByKey(vcChunk.claimKey) ?: return null
+
+        return playerRepo.findByKey(claim.playerKey)
+    }
+
+    @Lossy
+    suspend fun getClaimByNameAndPlayerName(claimName: String, playerName: String): VCClaim? {
+        val player = playerRepo.findByName(playerName).maxByOrNull { it.resolvedNameAt } //this will get the most recently resolved name (if there is a collision)
+        // this might be not ideal since names can change.
+        // There should be only one player with the exact name at any given time, but because of how the VC database works collisions are possible.
+        // Because this is a hard and rare edge case, we will ignore it for now and only take the first match. This might lead to
+        // claims being undeletable by admins. When this happens we need to implement a better way to delete claims of other players.
+
+        player?.let {
+            return claimRepo.listByPlayer(it.key).filter { claim -> claim.displayName == claimName }.maxByOrNull { it.lastModified }
+        }
+
+        return null
+    }
+
+    @Lossy
+    suspend fun getPlayerByName(playerName: String): VCPlayer? {
+        return playerRepo.findByName(playerName).maxByOrNull { it.resolvedNameAt }
     }
 }

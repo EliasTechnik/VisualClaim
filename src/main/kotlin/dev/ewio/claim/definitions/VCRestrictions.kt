@@ -1,9 +1,11 @@
 package dev.ewio.claim.definitions
 
 data class VCRestrictions(
-    val maxClaims: Int,
-    val maxChunks: Int,
-    val maxClaimNameLength: Int,
-    val listOtherPlayerClaims: Boolean = false,
-    val canClaim: Boolean = false
+    val maxClaims: Int, //the maximum number of claims a player can have (-1 = unlimited)
+    val maxChunks: Int, //the maximum number of chunks a player can claim (-1 = unlimited)
+    val maxClaimNameLength: Int, //the maximum length of a claim name
+    val listOtherPlayerClaims: Boolean = false, //whether the player can list other players' claims
+    val canClaim: Boolean = false, //whether the player can claim chunks
+    val unclaimOther: Boolean = false, //whether the player can unclaim other players' chunks
+    val deleteclaimOther: Boolean = false //whether the player can delete other players' claims
 )

@@ -75,15 +75,24 @@ usage:
 
 # Messages (MiniMessage/§-Farben nicht notwendig – plain text reicht hier)
 messages:
-  claim-success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
-  claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>. Nutze §e/unclaim§a um ihn freizugeben."
-  claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
-  claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
-  unclaim-success: "§aChunk <x>,<z> aus Claim <claim-name> entfernt."
-  unclaim-none: "§aHier ist kein Claim gesetzt."
-  unclaim-usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
-  claiminfo-free: "§aDieser Chunk ist frei und gehört niemandem."
-  claiminfo-claimed: "§aDieser Chunk gehört <owner> im Claim <claim-name>."
+  claim:
+    success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
+    claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>. Nutze §e/unclaim§a um ihn freizugeben."
+    claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
+    claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
+    could-not-create-claim: "§cDer Claim <claim-name> konnte hier nicht erstellt werden."
+    could-not-be-claimed: "§cDer Chunk konnte nicht geclaimt werden."
+    max-claims-reached: "§aDu hast die maximale Anzahl an Claims erreicht. Du kannst maximal <maxclaims> Claims erstellen."
+    max-chunks-reached: "§aDu hast die maximale Anzahl an geclaimten Chunks erreicht. Du kannst maximal <maxchunks> Chunks claimen."
+    name-too-long: "§aDer Claim-Name darf maximal <max-length> Zeichen lang sein."
+  unclaim:
+    success: "§aChunk <x>,<z> aus Claim <claim-name> entfernt."
+    none: "§aHier ist kein Claim gesetzt."
+    other-owner: "§aDieser Chunk gehört <owner>. Du kannst nur deine eigenen Chunks unclaimen."
+    usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
+  claiminfo:
+    free: "§aDieser Chunk ist frei und gehört niemandem."
+    claimed: "§aDieser Chunk gehört <owner> im Claim <claim-name>."
   autoclaim-on: "§aAutoClaim EIN für Gruppe <name>."
   autoclaim-off: "§aAutoClaim AUS für Gruppe <name>."
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
@@ -97,7 +106,7 @@ messages:
   deleteclaim:
     success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
     not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
-    no-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
+    not-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
     confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
     none: "§aDu hast keine Claims zum Löschen."
   renameclaim:

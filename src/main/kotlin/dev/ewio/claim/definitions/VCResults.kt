@@ -5,6 +5,10 @@ open class VCResult {
 
     sealed class Failure : VCResult()
 
+    object UnknownFailure : Failure()
+
+    object MalformedCommand: Failure()
+
     sealed class CreateClaim {
         object ClaimCreatedSuccessfully : Success()
         object ChunkClaimedSucessfully : Success()
@@ -24,14 +28,19 @@ open class VCResult {
         object VCChunkNotFound : Failure()
     }
 
-    sealed class RemoveChunk{
-        object RemovedSuccessful : Success()
-        object VCChunkNotFound : Failure()  //"This chunk is not found in any of your claims."
+    sealed class UnclaimChunk{
+        data class UnclaimSuccessful(val claimName: String) : Success()
+        object UnclaimAlreadyUnclaimed : Failure()  //"This chunk is already unclaimed."
+        data class UnclaimFailedWrongOwner(val ownerName: String) : Failure() //"You do not own this chunk. It is owned by <ownerName>."
+
     }
 
     sealed class DeleteClaim{
-        object RemovedSuccessful : Success()
-        object VCClaimNotFound : Failure()  //"No claim found with the given name."
+        data class RemovedSuccessful(val claimName: String) : Success()
+        data class VCClaimNotFound(val claimName: String) : Failure()  //"No claim found with the given name."
+        data class NotOwnerOfClaim(val claimName: String) : Failure() //"You do not own this claim."
+        data class ConfirmationRequired(val claimName: String) : Failure() //"You must confirm the deletion of this claim."
+        data class ConfirmOtherPlayerClaimRequired(val claimName: String) : Failure() //"You must confirm the deletion of another player's claim."
     }
 
     sealed class RenameClaim{
@@ -39,5 +48,11 @@ open class VCResult {
         object VCClaimNotFound : Failure()  //"No claim found with the given name."
         object ClaimNameAlreadyExists : Failure() //"You already have a claim with this name."
         data class ClaimNameTooLong(val maxLength: Int) : Failure() //"The claim name is too long."
+    }
+
+    sealed class ClaimInfo{
+        data class chunkClaimed(val claimName: String, val ownerName: String) : Success()
+        object ChunkNotClaimed : Success()
+        object ClaimedButWithoutOwner : Failure() //"This claim has no owner."
     }
 }

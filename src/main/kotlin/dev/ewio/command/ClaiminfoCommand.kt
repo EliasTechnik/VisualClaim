@@ -2,15 +2,25 @@ package dev.ewio.command
 
 import dev.ewio.VisualClaim
 import dev.ewio.claim.definitions.PlainChunk
+import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.PrerequisiteService
+import dev.ewio.util.getCorrectlySplitArgs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
 
-/*
+
 class ClaiminfoCommand(
-    private val plugin: VisualClaim
+    private val preService: PrerequisiteService,
+    private val coroutineScope: CoroutineScope,
+    private val getStringFromConfig: (key: String) -> String
 ): TabExecutor {
     override fun onTabComplete(
-        sender: org.bukkit.command.CommandSender,
-        command: org.bukkit.command.Command,
+        sender: CommandSender,
+        command: Command,
         alias: String,
         args: Array<out String>
     ): MutableList<String> {
@@ -18,49 +28,55 @@ class ClaiminfoCommand(
     }
 
     override fun onCommand(
-        sender: org.bukkit.command.CommandSender,
-        command: org.bukkit.command.Command,
+        sender: CommandSender,
+        command: Command,
         label: String,
         args: Array<out String>
     ): Boolean {
 
-        //get Player
-        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let {
-            val (vcPlayer, realPlayer) = it
+        coroutineScope.launch{
+            val betterArgs = getCorrectlySplitArgs(args.toList(),0)
 
-            val chunk = PlainChunk.fromBukkitChunk((realPlayer.location.chunk))
-            val claim = plugin.claimService.getClaimAtChunk(chunk)
-
-            if(claim != null){
-                val owner = plugin.claimService.getPlayerByKey(claim.playerKey)
-                if(owner != null){
+            if(betterArgs.isNotEmpty()){
+                //invalid usage
+                preService.getPlayerContext(sender)?.let {
+                    val (_, realPlayer) = it
                     realPlayer.sendMessage(
-                        plugin.config.get("messages.claiminfo-claimed")
-                            .toString()
-                            .replace("<owner>", owner.name)
-                            .replace("<claim-name>", claim.displayName)
+                        getStringFromConfig("usage.claiminfo-usage")
                     )
                 }
-                else{
-                    realPlayer.sendMessage(
-                        plugin.config.get("messages.unknown-owner")
-                            .toString()
-                    )
-                    plugin.logger.warning("Claim ${claim.key.value} has unknown owner with key ${claim.playerKey.value}. " +
-                            "This is an plugin internal error and might hint to a corrupted database.")
+                return@launch
+            }
+
+            preService.getPlayerContext(sender)?.let {
+                val (context, realPlayer) = it
+
+                val chunk = PlainChunk.fromBukkitChunk((realPlayer.location.chunk))
+
+                when (val claimResult = preService.getClaimAtChunk(chunk)) {
+                    is VCResult.ClaimInfo.chunkClaimed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claiminfo.claimed")
+                                .replace("<owner>", claimResult.ownerName)
+                                .replace("<claim-name>", claimResult.claimName)
+                        )
+                    }
+
+                    is VCResult.ClaimInfo.ChunkNotClaimed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claiminfo.free")
+                        )
+                    }
+
+                    else -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unknown-owner")
+                        )
+
+                    }
                 }
-
-            } else {
-                realPlayer.sendMessage(
-                    plugin.config.get("messages.claiminfo-free")
-                        .toString()
-                )
-
             }
         }
         return true
     }
 }
-
-
- */

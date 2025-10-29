@@ -13,7 +13,10 @@ import dev.ewio.claim.definitions.VCRestrictions
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.command.ClaimCommand
+import dev.ewio.command.ClaiminfoCommand
+import dev.ewio.command.DeleteclaimCommand
 import dev.ewio.command.ListclaimsCommand
+import dev.ewio.command.UnclaimCommand
 
 import dev.ewio.database.VCDB
 import dev.ewio.map.MapService
@@ -110,11 +113,26 @@ class VisualClaim : JavaPlugin() {
                 coroutineScope = this.scope,
                 getStringFromConfig = { path -> getStringFormConfig(path) }
             ))
-/*
-        getCommand("claiminfo")?.setExecutor(ClaiminfoCommand(this))
-        getCommand("unclaim")?.setExecutor(UnclaimCommand(this))
-        getCommand("deleteclaim")?.setExecutor(DeleteclaimCommand(this))
-        getCommand("renameclaim")?.setExecutor(RenameclaimCommand(this))
+
+        getCommand("claiminfo")?.setExecutor(ClaiminfoCommand(
+            preService = prerequisiteService,
+            coroutineScope = this.scope,
+            getStringFromConfig = { path -> getStringFormConfig(path) }
+        ))
+
+
+        getCommand("unclaim")?.setExecutor(UnclaimCommand(
+            preService = prerequisiteService,
+            coroutineScope = this.scope,
+            getStringFromConfig = { path -> getStringFormConfig(path) }
+        ))
+
+        getCommand("deleteclaim")?.setExecutor(DeleteclaimCommand(
+            preService = prerequisiteService,
+            coroutineScope = this.scope,
+            getStringFromConfig = { path -> getStringFormConfig(path) }
+        ))
+/*         getCommand("renameclaim")?.setExecutor(RenameclaimCommand(this))
 */
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")

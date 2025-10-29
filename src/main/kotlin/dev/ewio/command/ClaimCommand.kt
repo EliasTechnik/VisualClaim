@@ -52,14 +52,14 @@ class ClaimCommand(
                 }
 
                 //update context after operation
-                val newContext = preService.updatePlayerContext(context)
+                val newContext = preService.getFreshPlayerContext(context)
 
                 if(newContext != null){
                     context = newContext
                 }else{
                     //could not update context
                     realPlayer.sendMessage(
-                        getStringFromConfig("messages.error.unknown-error")
+                        getStringFromConfig("messages.unknown-error")
                     )
                     return@launch
                 }
@@ -69,7 +69,7 @@ class ClaimCommand(
                     is VCResult.CreateClaim.ChunkClaimedSucessfully -> {
                         val claim = context.claims.maxByOrNull { it.lastModified }
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim-success")
+                            getStringFromConfig("messages.claim.success")
                                 .replace("<x>", chunk.x.toString())
                                 .replace("<z>", chunk.z.toString())
                                 .replace("<player>",context.player.name)
@@ -83,40 +83,40 @@ class ClaimCommand(
                     }
                     is VCResult.CreateClaim.ChunkLimitReached -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.chunk-limit-reached")
+                            getStringFromConfig("messages.claim.max-chunks-reached")
                                 .replace("<max-chunks>", result.maxChunks.toString())
                         )
                     }
                     is VCResult.CreateClaim.ChunkCouldNotBeClaimed -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.chunk-could-not-be-claimed")
+                            getStringFromConfig("messages.claim.could-not-be-claimed")
                         )
                     }
                     is VCResult.CreateClaim.ClaimCouldNotBeCreated -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.claim-could-not-be-created")
+                            getStringFromConfig("messages.claim.could-not-create-claim")
                         )
                     }
                     is VCResult.CreateClaim.ClaimLimitReached -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.claim-limit-reached")
+                            getStringFromConfig("messages.claim.max-claims-reached")
                                 .replace("<max-claims>", result.maxClaims.toString())
                         )
                     }
                     is VCResult.CreateClaim.ClaimNameTooLong -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.claim-name-too-long")
+                            getStringFromConfig("messages.claim.name-too-long")
                                 .replace("<max-length>", result.maxLength.toString())
                         )
                     }
                     is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.chunk-already-claimed-by-same-claim")
+                            getStringFromConfig("messages.claim.claimed-already")
                         )
                     }
                     is VCResult.CreateClaim.ChunkClaimedByOtherPlayer -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.chunk-claimed-by-other-player")
+                            getStringFromConfig("messages.claim.claimed-by-other")
                                 .replace("<other-player>", result.otherPlayer)
                         )
                     }
