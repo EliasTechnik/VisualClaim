@@ -9,18 +9,19 @@ open class VCResult {
 
     object MalformedCommand: Failure()
 
+    object MissingPermission: Failure()
+
     sealed class CreateClaim {
-        object ClaimCreatedSuccessfully : Success()
-        object ChunkClaimedSucessfully : Success()
+        data class ClaimCreatedSuccessfully(val claim: VCClaim, val chunk: VCChunk) : Success()
+        data class ChunkAddedToClaim(val claim: VCClaim, val chunk: VCChunk) : Success()
         object ChunkAlreadyClaimedBySameClaim : Failure()
         data class ChunkClaimedByOtherPlayer(val otherPlayer: String) : Failure()
         data class ChunkLimitReached(val maxChunks: Int) : Failure()
         data class ClaimLimitReached(val maxClaims: Int) : Failure()
-        object ChunkCouldNotBeClaimed: Failure()
+        object ChunkCanNotBeClaimed: Failure()
         object NoExistingClaimFound : Failure()
-        object ClaimCouldNotBeCreated : Failure()
+        //object ClaimCouldNotBeCreated : Failure()
         data class ClaimNameTooLong(val maxLength: Int): Failure()
-        object UNKNOWN : Failure()
     }
 
     sealed class TransferChunk{

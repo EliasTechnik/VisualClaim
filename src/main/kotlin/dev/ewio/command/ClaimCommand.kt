@@ -24,7 +24,6 @@ class ClaimCommand(
         label: String,
         args: Array<out String>
     ): Boolean {
-
         coroutineScope.launch {
             val betterArgs = getCorrectlySplitArgs(args.toList(),0)
 
@@ -35,78 +34,39 @@ class ClaimCommand(
                 log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")
 
 
-                var result: VCResult
-                if(betterArgs.isEmpty()) {
+                val result = if(betterArgs.isEmpty()) {
                     //no name given, use last claim or show usage
-                    result = preService.createClaim(
+                    preService.createClaim(
                         context = context,
                         chunk = chunk
                     )
-                }
-                else{
-                    result = preService.createClaim(
+                } else{
+                    //we have a name
+                    preService.createClaim(
                         context = context,
                         chunk = chunk,
                         claimName = betterArgs[0]
                     )
                 }
 
-                //update context after operation
-                val newContext = preService.getFreshPlayerContext(context)
-
-                if(newContext != null){
-                    context = newContext
-                }else{
-                    //could not update context
-                    realPlayer.sendMessage(
-                        getStringFromConfig("messages.unknown-error")
-                    )
-                    return@launch
-                }
-
                 //result handling here
                 when(result) {
-                    is VCResult.CreateClaim.ChunkClaimedSucessfully -> {
-                        val claim = context.claims.maxByOrNull { it.lastModified }
+                    is VCResult.CreateClaim.ClaimCreatedSuccessfully -> {
                         realPlayer.sendMessage(
                             getStringFromConfig("messages.claim.success")
-                                .replace("<x>", chunk.x.toString())
-                                .replace("<z>", chunk.z.toString())
+                                .replace("<x>", result.chunk.plainChunk.x.toString())
+                                .replace("<z>", result.chunk.plainChunk.z.toString())
                                 .replace("<player>",context.player.name)
-                                .replace("<claim-name>",claim?.displayName ?: "Unnamed Claim")
+                                .replace("<claim-name>",result.claim.displayName)
                         )
                     }
-                    is VCResult.CreateClaim.NoExistingClaimFound -> {
+                    is VCResult.CreateClaim.ChunkAddedToClaim -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("usage.claim")
-                        )
-                    }
-                    is VCResult.CreateClaim.ChunkLimitReached -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.max-chunks-reached")
-                                .replace("<max-chunks>", result.maxChunks.toString())
-                        )
-                    }
-                    is VCResult.CreateClaim.ChunkCouldNotBeClaimed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.could-not-be-claimed")
-                        )
-                    }
-                    is VCResult.CreateClaim.ClaimCouldNotBeCreated -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.could-not-create-claim")
-                        )
-                    }
-                    is VCResult.CreateClaim.ClaimLimitReached -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.max-claims-reached")
-                                .replace("<max-claims>", result.maxClaims.toString())
-                        )
-                    }
-                    is VCResult.CreateClaim.ClaimNameTooLong -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.name-too-long")
-                                .replace("<max-length>", result.maxLength.toString())
+                            getStringFromConfig("messages.claim.addedToClaim")
+                                .replace("<x>", result.chunk.plainChunk.x.toString())
+                                .replace("<z>", result.chunk.plainChunk.z.toString())
+                                .replace("<player>",context.player.name)
+                                .replace("<claim-name>",result.claim.displayName)
                         )
                     }
                     is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
@@ -120,14 +80,45 @@ class ClaimCommand(
                                 .replace("<other-player>", result.otherPlayer)
                         )
                     }
+                    is VCResult.CreateClaim.ChunkLimitReached -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.max-chunks-reached")
+                                .replace("<max-chunks>", result.maxChunks.toString())
+                        )
+                    }
+                    is VCResult.CreateClaim.ClaimLimitReached -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.max-claims-reached")
+                                .replace("<max-claims>", result.maxClaims.toString())
+                        )
+                    }
+                    is VCResult.CreateClaim.ChunkCanNotBeClaimed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.can-not-be-claimed")
+                        )
+                    }
+                    is VCResult.CreateClaim.NoExistingClaimFound -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("usage.claim")
+                        )
+                    }
+                    is VCResult.CreateClaim.ClaimNameTooLong -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.name-too-long")
+                                .replace("<max-length>", result.maxLength.toString())
+                        )
+                    }
+                    is VCResult.MissingPermission -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.missing-permission")
+                        )
+                    }
                     else -> {
                         realPlayer.sendMessage(
-                            getStringFromConfig("messages.error.unknown-error")
+                            getStringFromConfig("messages.unknown-error")
                         )
                     }
                 }
-            }?:run{
-                log("Failed to get player context for sender ${sender.name}")
             }
         }
         return true //we handle everything in the coroutine
@@ -138,15 +129,12 @@ class ClaimCommand(
         command: Command,
         alias: String,
         args: Array<out String>
-    ): MutableList<String>? {
-        // Recommendations für <arg>
-
+    ): MutableList<String>?{
         val betterArgs = getCorrectlySplitArgs(args.toList(),0)
         val player = sender as? Player?: return mutableListOf()
 
         preService.getCachedPlayerContext(player)?.let{ context ->
             //get available claims
-
             val names = context.claims.map {"\"" + it.displayName +"\"" }
 
             if (names.isEmpty()) {
@@ -157,7 +145,6 @@ class ClaimCommand(
                 1 -> {
                     names.toMutableList()
                 }
-
                 else -> mutableListOf()
             }
         }

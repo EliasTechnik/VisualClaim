@@ -77,11 +77,12 @@ usage:
 messages:
   claim:
     success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
-    claimed-already: "§aDieser Chunk ist bereits von dir geclaimt und gehört zum Claim <claim-name>. Nutze §e/unclaim§a um ihn freizugeben."
+    addedToClaim: "§aChunk <x>,<z> wurde für <player> geclaim und zum/zur <claim-name> hinzugefügt."
+    claimed-already: "§aDieser Chunk ist bereits von dir geclaimt. Nutze §e/unclaim§a um ihn freizugeben."
     claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
     claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
     could-not-create-claim: "§cDer Claim <claim-name> konnte hier nicht erstellt werden."
-    could-not-be-claimed: "§cDer Chunk konnte nicht geclaimt werden."
+    can-not-be-claimed: "§cDer Chunk kann nicht geclaimt werden."
     max-claims-reached: "§aDu hast die maximale Anzahl an Claims erreicht. Du kannst maximal <maxclaims> Claims erstellen."
     max-chunks-reached: "§aDu hast die maximale Anzahl an geclaimten Chunks erreicht. Du kannst maximal <maxchunks> Chunks claimen."
     name-too-long: "§aDer Claim-Name darf maximal <max-length> Zeichen lang sein."
@@ -116,6 +117,7 @@ messages:
     none: "§aDu hast keine Claims."
     merge-success: "§aDer Claim <claim-name> wurde mit <claim-new-name> zusammengeführt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
+  missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
 
 trigger-words:
     deleteclaim-confirm: "confirm"

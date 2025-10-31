@@ -250,4 +250,8 @@ class ClaimService(
     suspend fun getPlayerByName(playerName: String): VCPlayer? {
         return playerRepo.findByName(playerName).maxByOrNull { it.resolvedNameAt }
     }
+
+    suspend fun getOwnerOfClaim(claim: VCClaim): VCPlayer? {
+        return getPlayerByKey(claim.key)
+    }
 }
