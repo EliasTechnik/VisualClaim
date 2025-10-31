@@ -44,6 +44,7 @@ class PermissionService(
         val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
         val unclaimOther = getPermission(bukkitPlayer, "VisualClaim.unclaimOther") != null
         val deleteclaimOther = getPermission(bukkitPlayer, "VisualClaim.deleteOther") != null
+        val renameOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.renameOther") != null
 
 
         return VCRestrictions(
@@ -53,7 +54,8 @@ class PermissionService(
             listOtherPlayerClaims = listOtherPlayerClaims,
             canClaim = canClaim,
             unclaimOther = unclaimOther,
-            deleteclaimOther = deleteclaimOther
+            deleteclaimOther = deleteclaimOther,
+            renameOtherPlayerClaims = renameOtherPlayerClaims
         )
     }
 

@@ -33,7 +33,6 @@ class ClaimCommand(
 
                 log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")
 
-
                 val result = if(betterArgs.isEmpty()) {
                     //no name given, use last claim or show usage
                     preService.createClaim(
@@ -45,7 +44,7 @@ class ClaimCommand(
                     preService.createClaim(
                         context = context,
                         chunk = chunk,
-                        claimName = betterArgs[0]
+                        claimString = betterArgs[0]
                     )
                 }
 
@@ -60,11 +59,11 @@ class ClaimCommand(
                                 .replace("<claim-name>",result.claim.displayName)
                         )
                     }
-                    is VCResult.CreateClaim.ChunkAddedToClaim -> {
+                    is VCResult.CreateClaim.ChunkTransferredToClaim -> {
                         realPlayer.sendMessage(
                             getStringFromConfig("messages.claim.addedToClaim")
-                                .replace("<x>", result.chunk.plainChunk.x.toString())
-                                .replace("<z>", result.chunk.plainChunk.z.toString())
+                                .replace("<x>", result.chunk.x.toString())
+                                .replace("<z>", result.chunk.z.toString())
                                 .replace("<player>",context.player.name)
                                 .replace("<claim-name>",result.claim.displayName)
                         )

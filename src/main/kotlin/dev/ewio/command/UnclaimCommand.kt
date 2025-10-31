@@ -28,13 +28,13 @@ class UnclaimCommand(
                 val (context, realPlayer) = it
                 val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
-                if (betterArgs.isEmpty()) {
-                    preService.unclaimChunk(
+                val result = if (betterArgs.isEmpty()) {
+                        preService.unclaimChunk(
                         context = context,
                         chunk = chunk
                     )
                 } else {
-                    val result = if(betterArgs[0] == "force") {
+                    if (betterArgs[0] == "force") {
                         //we are forcing unclaim even if the player is not the owner
                         //fear not the wrath of permissions, for you shall be forgiven - Copilot
 
@@ -51,32 +51,32 @@ class UnclaimCommand(
                         )
                         return@launch
                     }
+                }
 
-                    when(result){
-                        is VCResult.UnclaimChunk.UnclaimSuccessful -> {
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.unclaim.success")
-                                    .replace("<x>", chunk.x.toString())
-                                    .replace("<z>", chunk.z.toString())
-                                    .replace("<claim-name>", result.claimName)
-                            )
-                        }
-                        is VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed -> {
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.unclaim.none")
-                            )
-                        }
-                        is VCResult.UnclaimChunk.UnclaimFailedWrongOwner -> {
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.unclaim.other-owner")
-                                    .replace("<owner>", result.ownerName)
-                            )
-                        }
-                        is VCResult.UnknownFailure -> {
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.unknown-error")
-                            )
-                        }
+                when(result){
+                    is VCResult.UnclaimChunk.UnclaimSuccessful -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unclaim.success")
+                                .replace("<x>", chunk.x.toString())
+                                .replace("<z>", chunk.z.toString())
+                                .replace("<claim-name>", result.claimName)
+                        )
+                    }
+                    is VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unclaim.none")
+                        )
+                    }
+                    is VCResult.UnclaimChunk.UnclaimFailedWrongOwner -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unclaim.other-owner")
+                                .replace("<owner>", result.ownerName)
+                        )
+                    }
+                    is VCResult.UnknownFailure -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unknown-error")
+                        )
                     }
                 }
             }

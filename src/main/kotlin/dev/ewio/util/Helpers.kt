@@ -1,5 +1,8 @@
 package dev.ewio.util
 
+import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCPlayerContext
+
 
 fun getCorrectlySplitArgs(args: List<String>, startIndex: Int = 0): List<String>{
     var combined: String = ""
@@ -52,4 +55,9 @@ fun getQuotedStrings(strings: List<String>):List<String>{
 fun log(message: String) {
     //GL.logger.info(" "+message)
     logInfo(message)
+}
+
+fun countChunksInClaim(context: VCPlayerContext, claim: VCClaim): Int {
+    val chunks = context.chunks.filter { it.claimKey == claim.key }
+    return chunks.size
 }

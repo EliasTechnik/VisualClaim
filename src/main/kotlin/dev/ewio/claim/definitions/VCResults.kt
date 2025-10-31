@@ -13,7 +13,7 @@ open class VCResult {
 
     sealed class CreateClaim {
         data class ClaimCreatedSuccessfully(val claim: VCClaim, val chunk: VCChunk) : Success()
-        data class ChunkAddedToClaim(val claim: VCClaim, val chunk: VCChunk) : Success()
+        data class ChunkTransferredToClaim(val claim: VCClaim, val chunk: PlainChunk) : Success() //The chunk was claimed previously, but now added to a different claim of the same player
         object ChunkAlreadyClaimedBySameClaim : Failure()
         data class ChunkClaimedByOtherPlayer(val otherPlayer: String) : Failure()
         data class ChunkLimitReached(val maxChunks: Int) : Failure()
@@ -45,9 +45,11 @@ open class VCResult {
     }
 
     sealed class RenameClaim{
-        object RenamedSuccessful : Success()
-        object VCClaimNotFound : Failure()  //"No claim found with the given name."
-        object ClaimNameAlreadyExists : Failure() //"You already have a claim with this name."
+        data class RenamedSuccessful(val oldName: String, val newName: String) : Success()
+        data class MergeSuccessful(val oldName: String, val newName: String) : Success()
+        data class OldNameNotFound(val oldName: String) : Failure()  //"No claim found with the given name."
+        data class ConfirmMergeRequired(val oldName: String, val newName: String) : Failure() //"A claim with the new name already exists. You must confirm the merge."
+        data class ConfirmMergeOtherPlayerClaimRequired(val oldName: String, val newName: String, val playerName: String) : Failure() //"A claim with the new name owned by another player already exists. You must confirm the merge."
         data class ClaimNameTooLong(val maxLength: Int) : Failure() //"The claim name is too long."
     }
 

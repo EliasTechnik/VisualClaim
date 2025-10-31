@@ -1,184 +1,200 @@
 package dev.ewio.command
 
-import dev.ewio.VisualClaim
-
-import dev.ewio.util.VCRenameResultType
+import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
+import org.bukkit.entity.Player
 
-/*
 
 class RenameclaimCommand(
-    val plugin: VisualClaim
+    private val preService: PrerequisiteService,
+    private val coroutineScope: CoroutineScope,
+    private val getStringFromConfig: (key: String) -> String
 ): TabExecutor {
-
+    /**
+     * Renames a claim owned by the player.
+     * Usage: /renameclaim <old-claim-name> <new-claim-name>
+     * If a claim with the new name already exists, the player will be prompted to confirm a merge.
+     * If confirmed, the old-claim will be merged into the new one.
+     * Given the right permission: /renameclaim -p <player> <old-claim-name> <new-claim-name>
+     * will rename/merge another player's claim.
+     */
     override fun onCommand(
         sender: CommandSender,
         command: Command,
         label: String,
         args: Array<out String>
     ): Boolean {
-        val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+        coroutineScope.launch {
+            val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
 
-        registerAndGetVCPlayerAndRealPlayer(sender, plugin.claimService)?.let {
-            val (vcPlayer, realPlayer) = it
+            preService.getPlayerContext(sender)?.let {
+                var (context, realPlayer) = it
 
-            plugin.logger.info("Renameclaim command executed by ${vcPlayer.name} with args: ${betterArgs.joinToString("|")}")
-
-            //check if there is anything to rename
-            val claims = plugin.claimService.getClaimsOfPlayer(vcPlayer)
-            if(claims.isEmpty()) {
-                realPlayer.sendMessage(
-                    plugin.cfg.get("messages.renameclaim.none").toString()
-                )
-                return true
-            }
-
-            //on empty args show usage
-            if(betterArgs.isEmpty()){
-                realPlayer.sendMessage(
-                    plugin.cfg.get("usage.renameclaim").toString()
-                )
-                return true
-            }
-
-            //evaluate args
-            when(betterArgs.size){
-                1 -> {
-                    realPlayer.sendMessage(
-                        plugin.cfg.get("usage.renameclaim").toString()
-                    )
-                    return true
-                }
-                2 -> {
-                    //get claim by name
-                    val claim = claims.firstOrNull { it.displayName == betterArgs[0] }
-
-                    if (claim == null) {
-                        //error: no claim found
-                        realPlayer.sendMessage(
-                            plugin.cfg.get("messages.renameclaim.not-found")
-                                .toString()
-                                .replace("<claim-name>", betterArgs[0])
-                        )
-                        return true
-                    } else {
-                        //rename claim
-                        val result = plugin.claimService.renameAndMergeClaim(vcPlayer, claim.displayName, betterArgs[1])
-
-                        when (result.first) {
-                            VCRenameResultType.SUCCESS -> {
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.renameclaim.success")
-                                        .toString()
-                                        .replace("<claim-name>", result.second)
-                                        .replace("<claim-new-name>", result.third)
-                                )
-                                return true
-                            }
-
-                            VCRenameResultType.MERGED -> {
-                                //This code should not be reachable here, but just in case
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.renameclaim.merge-success")
-                                        .toString()
-                                        .replace("<claim-name>", result.second)
-                                        .replace("<claim-new-name>", result.third)
-                                )
-                                return true
-                            }
-
-                            VCRenameResultType.NAME_ALREADY_EXISTS -> {
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.renameclaim.merge-confirm")
-                                        .toString()
-                                        .replace("<claim-name>", "\"${result.second}\"")
-                                        .replace("<claim-new-name>", "\"${result.third}\"")
-                                        .replace(
-                                            "<renameclaim-confirm>",
-                                            plugin.cfg.get("trigger-words.renameclaim-confirm").toString()
-                                        )
-                                )
-                                return true
-                            }
-
-                            VCRenameResultType.OLD_CLAIM_NOT_FOUND -> {
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.renameclaim.not-found")
-                                        .toString()
-                                        .replace("<claim-name>", betterArgs[0])
-                                )
-                                return true
-                            }
-
-                            VCRenameResultType.FAILED -> {
-                                realPlayer.sendMessage(
-                                    plugin.cfg.get("messages.unknown-error")
-                                        .toString()
-                                )
-                                return true
-                            }
-                        }
-                    }
-                }
-                3 -> {
-                    //a merge was confirmed or the user mistyped
-                    if(betterArgs[2].lowercase() == plugin.cfg.get("trigger-words.renameclaim-confirm").toString()) {
-                        //get claim by name
-                        val claim = claims.firstOrNull { it.displayName == betterArgs[0] }
-
-                        if (claim == null) {
-                            //error: no claim found
+                val result = when (betterArgs.size) {
+                    2 -> {
+                        // /renameclaim <old-claim-name> <new-claim-name>
+                        // or
+                        // /renameclaim -p <player>
+                        if (betterArgs[0] == "-p") {
+                            //invalid usage
                             realPlayer.sendMessage(
-                                plugin.cfg.get("messages.renameclaim.not-found")
-                                    .toString()
-                                    .replace("<claim-name>", betterArgs[0])
+                                getStringFromConfig("usage.renameclaim-other")
                             )
-                            return true
+                            return@launch
                         } else {
-                            //rename claim with merge
-                            val result = plugin.claimService.renameAndMergeClaim(
-                                vcPlayer,
-                                claim.displayName,
-                                betterArgs[1],
-                                true
+                            //renaming own claim
+                            preService.renameClaim(
+                                context = context,
+                                oldName = betterArgs[0],
+                                newName = betterArgs[1]
                             )
-
-                            when (result.first) {
-                                VCRenameResultType.MERGED -> {
-                                    realPlayer.sendMessage(
-                                        plugin.cfg.get("messages.renameclaim.merge-success")
-                                            .toString()
-                                            .replace("<claim-name>", result.second)
-                                            .replace("<claim-new-name>", result.third)
-                                    )
-                                    return true
-                                }
-
-                                else -> {
-                                    realPlayer.sendMessage(
-                                        plugin.cfg.get("messages.unknown-error")
-                                            .toString()
-                                    )
-                                    return true
-                                }
-                            }
                         }
+                    }
+
+                    3 -> {
+                        // /renameclaim <old-claim-name> <new-claim-name> confirm
+                        // or
+                        // /renameclaim -p <player> <old-claim-name>
+                        if (betterArgs[0] == "-p") {
+                            //invalid usage
+                            realPlayer.sendMessage(
+                                getStringFromConfig("usage.renameclaim-other")
+                            )
+                            return@launch
+                        } else {
+                            //renaming own claim with possible merge confirmation
+                            preService.renameClaim(
+                                context = context,
+                                oldName = betterArgs[0],
+                                newName = betterArgs[1],
+                                confirmMerge = betterArgs[2].lowercase() == getStringFromConfig("trigger-words.renameclaim-confirm").lowercase()
+                            )
+                        }
+                    }
+
+                    4 -> {
+                        // /renameclaim -p <player> <old-claim-name> <new-claim-name>
+                        if (betterArgs[0] == "-p") {
+                            //renaming other player's claim
+                            preService.renameForeignClaim(
+                                context = context,
+                                targetPlayerName = betterArgs[1],
+                                oldName = betterArgs[2],
+                                newName = betterArgs[3],
+                            )
+                        } else {
+                            //invalid usage
+                            realPlayer.sendMessage(
+                                getStringFromConfig("usage.renameclaim")
+                            )
+                            return@launch
+                        }
+                    }
+
+                    5 -> {
+                        // /renameclaim -p <player> <old-claim-name> <new-claim-name> confirm
+                        if (betterArgs[0] == "-p") {
+                            //renaming other player's claim with possible merge confirmation
+                            preService.renameForeignClaim(
+                                context = context,
+                                targetPlayerName = betterArgs[1],
+                                oldName = betterArgs[2],
+                                newName = betterArgs[3],
+                                confirmMerge = betterArgs[4].lowercase() == getStringFromConfig("trigger-words.renameclaim-confirm").lowercase()
+                            )
+                        } else {
+                            //invalid usage
+                            realPlayer.sendMessage(
+                                getStringFromConfig("usage.renameclaim")
+                            )
+                            return@launch
+                        }
+                    }
+
+                    else -> {
+                        //invalid usage
+                        realPlayer.sendMessage(
+                            getStringFromConfig("usage.renameclaim")
+                        )
+                        return@launch
                     }
                 }
 
-                else -> {
-                    sender.sendMessage(
-                        plugin.cfg.get("messages.usage.renameclaim")
-                            .toString()
-                    )
-                    return true
+                when (result) {
+                    is VCResult.RenameClaim.RenamedSuccessful -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.renameclaim.success")
+                                .replace("<claim-name>", result.oldName)
+                                .replace("<claim-new-name>", result.newName)
+                        )
+                    }
+
+                    is VCResult.RenameClaim.MergeSuccessful -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.renameclaim.merge-success")
+                                .replace("<claim-name>", result.oldName)
+                                .replace("<claim-new-name>", result.newName)
+                        )
+                    }
+
+                    is VCResult.RenameClaim.OldNameNotFound -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.renameclaim.not-found")
+                                .replace("<claim-name>", result.oldName)
+                        )
+                    }
+
+                    is VCResult.RenameClaim.ConfirmMergeRequired -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.renameclaim.merge-confirm")
+                                .replace("<claim-name>", "\"${result.oldName}\"")
+                                .replace("<claim-new-name>", "\"${result.newName}\"")
+                                .replace(
+                                    "<renameclaim-confirm>",
+                                    getStringFromConfig("trigger-words.renameclaim-confirm")
+                                )
+                        )
+                    }
+
+                    is VCResult.RenameClaim.ConfirmMergeOtherPlayerClaimRequired -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.renameclaim.merge-other-confirm")
+                                .replace("<claim-name>", "\"${result.oldName}\"")
+                                .replace("<claim-new-name>", "\"${result.newName}\"")
+                                .replace(
+                                    "<renameclaim-confirm>",
+                                    getStringFromConfig("trigger-words.renameclaim-confirm")
+                                )
+                        )
+                    }
+
+                    is VCResult.UnknownFailure -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unknown-error")
+                        )
+                    }
+
+                    is VCResult.MissingPermission -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.missing-permission")
+                        )
+                    }
+
+                    else -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.unknown-error")
+                        )
+                    }
                 }
             }
         }
-        return false
+        return true
     }
 
     override fun onTabComplete(
@@ -189,32 +205,48 @@ class RenameclaimCommand(
     ): MutableList<String> {
         // Recommendations für <arg>
         val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+        val player = sender as? Player ?: return mutableListOf()
 
-        plugin.logger.info("Renameclaim tabcomplete executed by ${sender.name} with args: ${betterArgs.joinToString("|")}")
-
-        registerAndGetVCPlayer(sender, plugin.claimService)?.let {
-            //get available claims
-            val claims = plugin.claimService.getClaimsOfPlayer(it)
-
+        preService.getCachedPlayerContext(player)?.let { context ->
             when (betterArgs.size) {
-                0 -> {
-                    return claims.map { "\"" + it.displayName + "\"" }.toMutableList()
-                }
-
                 1 -> {
-                    return claims.map {name ->  "\"" + name.displayName + "\"" }.toMutableList()
-                }
-                2 -> {
-                    return claims.filterNot { name -> name.displayName == betterArgs[0] }
-                        .map {name ->  "\"" + name.displayName + "\"" }
-                        .toMutableList()
+                    //claim names
+                    val names = context.claims.map { "\"" + it.displayName + "\"" }.toMutableList()
+                    if(context.restrictions.renameOtherPlayerClaims){
+                        names.add("-p")
+                    }
+                    return names
                 }
 
+                2 -> {
+                    if (betterArgs[0] == "-p" && context.restrictions.renameOtherPlayerClaims) {
+                        //player names
+                        val playerNames = preService.getCachedPlayerNames().map { it }
+                        return playerNames.toMutableList()
+                    } else {
+                        val names = context.claims.map { "\"" + it.displayName + "\"" }.toMutableList()
+                        if(context.restrictions.renameOtherPlayerClaims){
+                            names.add("-p")
+                        }
+                        names.removeIf { it == "\"${betterArgs[0]}\"" }
+                        return names
+                    }
+                }
+
+                3 -> {
+                    if (betterArgs[0] == "-p" && context.restrictions.renameOtherPlayerClaims) {
+                        //TODO: claim names of the other player
+                        //this is a bit complicated because some db access is needed and this is costly to do on tab complete
+                        //the best way would be to cache claims per player name in the preService but that is not implemented yet
+                        //for now, return empty list
+                        return mutableListOf()
+                    } else {
+                        return mutableListOf()
+                    }
+                }
                 else -> return mutableListOf()
             }
         }
         return mutableListOf()
     }
 }
-
- */

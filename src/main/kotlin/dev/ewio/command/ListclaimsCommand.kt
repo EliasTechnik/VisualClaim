@@ -3,6 +3,7 @@ package dev.ewio.command
 import dev.ewio.VisualClaim
 import dev.ewio.claim.service.ClaimService
 import dev.ewio.claim.service.PrerequisiteService
+import dev.ewio.util.countChunksInClaim
 import dev.ewio.util.getCorrectlySplitArgs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -57,7 +58,6 @@ class ListclaimsCommand(
                 //check if listing other players claims
                 if(betterArgs.isNotEmpty()){
                     if(context.restrictions.listOtherPlayerClaims){
-                        //TODO: List other player's claims
 
                         val otherPlayer = getPlayer(betterArgs[0])
 
@@ -75,9 +75,9 @@ class ListclaimsCommand(
                                     )
                                     for (claim in targetContext.claims) {
                                         if (getStringFromConfig("plugin-insights.enabled").toBoolean()) {
-                                            realPlayer.sendMessage("§6- ${claim.displayName} (ID: ${claim.key})")
+                                            realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(targetContext, claim)} Chunks) [ID: ${claim.key}]")
                                         } else {
-                                            realPlayer.sendMessage("§6- ${claim.displayName}")
+                                            realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(targetContext, claim)} Chunks)")
                                         }
                                     }
                                     realPlayer.sendMessage(
@@ -126,10 +126,10 @@ class ListclaimsCommand(
                     } else {
                         realPlayer.sendMessage(getStringFromConfig("messages.list-claims.header").toString())
                         for(claim in context.claims){
-                            if(getStringFromConfig("plugin-insights.enabled").toBoolean()){
-                                realPlayer.sendMessage("§6- ${claim.displayName} (ID: ${claim.key})")
-                            }else{
-                                realPlayer.sendMessage("§6- ${claim.displayName}")
+                            if (getStringFromConfig("plugin-insights.enabled").toBoolean()) {
+                                realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(context, claim)} Chunks) [ID: ${claim.key}]")
+                            } else {
+                                realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(context, claim)} Chunks)")
                             }
                         }
                         realPlayer.sendMessage(

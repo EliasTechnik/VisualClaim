@@ -8,6 +8,7 @@ import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
+import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.log
@@ -179,13 +180,45 @@ class ClaimService(
             val renamedClaim = it.copy(displayName = newName)
             val updatedClaim = claimRepo.upsert(renamedClaim)
 
-            updatedClaim?.let { uc ->
-                placeOnMap(player,uc, chunks) //re-add to map
+            return if(updatedClaim == null) {
+                VCResult.UnknownFailure
+            }else{
+                placeOnMap(player,updatedClaim, chunks) //re-add to map
+                VCResult.RenameClaim.RenamedSuccessful(claim.displayName, updatedClaim.displayName)
             }
-
-            return VCResult.RenameClaim.RenamedSuccessful
         }
-        return VCResult.RenameClaim.VCClaimNotFound
+        return VCResult.RenameClaim.OldNameNotFound(claim.displayName)
+    }
+
+    suspend fun mergeClaims(
+        sourceClaim: VCClaim,
+        targetClaim: VCClaim,
+        player: VCPlayer
+    ): VCResult {
+        //get all chunks of source claim
+        val sourceChunks = chunkRepo.listByClaim(sourceClaim.key)
+        val targetChunks = chunkRepo.listByClaim(targetClaim.key)
+
+        //remove both claims from map
+        deleteFromMap(sourceChunks)
+        deleteFromMap(targetChunks)
+
+        //reassign all chunks from source to target
+        sourceChunks.forEach { chunk ->
+            val updatedChunk = chunk.copy(
+                claimKey = targetClaim.key
+            )
+            chunkRepo.upsert(updatedChunk)
+        }
+
+        //delete source claim
+        claimRepo.deleteCascade(sourceClaim.key)
+
+        //re-add target claim to map
+        val allTargetChunks = chunkRepo.listByClaim(targetClaim.key)
+        placeOnMap(player,targetClaim, allTargetChunks)
+
+        return VCResult.RenameClaim.MergeSuccessful(sourceClaim.displayName, targetClaim.displayName)
     }
 
     suspend fun placeAllClaimsOnMap(){
@@ -254,4 +287,5 @@ class ClaimService(
     suspend fun getOwnerOfClaim(claim: VCClaim): VCPlayer? {
         return getPlayerByKey(claim.key)
     }
+
 }

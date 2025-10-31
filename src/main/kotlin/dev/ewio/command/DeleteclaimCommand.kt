@@ -19,7 +19,7 @@ import kotlin.collections.mutableListOf
  *
  * Usage:
  * /deleteclaim <claim-name> <confirmation>
- * /deleteclaim -o <player> <claim-name> <confirmation> [if player has permission VisualClaim.deleteOther]
+ * /deleteclaim -p <player> <claim-name> <confirmation> [if player has permission VisualClaim.deleteOther]
  *
  *
  * If no arguments are provided, the command shows usage information.
@@ -89,8 +89,8 @@ class DeleteclaimCommand(
                         }
                     }
                     3 -> {
-                        //"-o" + playername + claimname
-                        if(betterArgs[0].startsWith("-o")){
+                        //"-p" + playername + claimname
+                        if(betterArgs[0].startsWith("-p")){
                             //check if playername exists
                             if(preService.getCachedPlayerNames().firstOrNull { it == betterArgs[1] } != null) {
                                 //check if claim exists
@@ -110,7 +110,7 @@ class DeleteclaimCommand(
                     }
                     4 -> {
                         //"-o" + playername + claimname + confirmation
-                        if(betterArgs[0].startsWith("-o")){
+                        if(betterArgs[0].startsWith("-p")){
                             //check if playername exists
                             if(preService.getCachedPlayerNames().firstOrNull { it == betterArgs[1] } != null) {
                                 //check if claim exists
@@ -215,13 +215,13 @@ class DeleteclaimCommand(
                     //claim names
                     val names = context.claims.map { "\"" + it.displayName + "\"" }.toMutableList()
                     if(context.restrictions.deleteclaimOther){
-                        names.add("-o")
+                        names.add("-p")
                     }
                     return names
                 }
 
                 2 -> {
-                    if (betterArgs[0] == "-o" && context.restrictions.deleteclaimOther) {
+                    if (betterArgs[0] == "-p" && context.restrictions.deleteclaimOther) {
                         //player names
                         val playerNames = preService.getCachedPlayerNames().map { it }
                         return playerNames.toMutableList()
@@ -231,7 +231,7 @@ class DeleteclaimCommand(
                 }
 
                 3 -> {
-                    if (betterArgs[0] == "-o" && context.restrictions.deleteclaimOther) {
+                    if (betterArgs[0] == "-p" && context.restrictions.deleteclaimOther) {
                         //TODO: claim names of the other player
                         //this is a bit complicated because some db access is needed and this is costly to do on tab complete
                         //the best way would be to cache claims per player name in the preService but that is not implemented yet

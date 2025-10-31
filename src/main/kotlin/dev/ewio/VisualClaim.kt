@@ -16,6 +16,7 @@ import dev.ewio.command.ClaimCommand
 import dev.ewio.command.ClaiminfoCommand
 import dev.ewio.command.DeleteclaimCommand
 import dev.ewio.command.ListclaimsCommand
+import dev.ewio.command.RenameclaimCommand
 import dev.ewio.command.UnclaimCommand
 
 import dev.ewio.database.VCDB
@@ -24,7 +25,6 @@ import dev.ewio.map.NoopMapService
 import dev.ewio.map.Pl3xMapService
 import dev.ewio.util.GL
 import dev.ewio.util.StringHelper
-import dev.ewio.util.log
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -42,7 +42,6 @@ class VisualClaim : JavaPlugin() {
     override fun onEnable() {
         // Plugin startup logic
         GL.init(this)
-
 
         saveDefaultConfig()
         cfg = config
@@ -81,9 +80,6 @@ class VisualClaim : JavaPlugin() {
         }
         this.strings = StringHelper(this)
 
-        //TODO
-        // 4) (Optional) Bestehende Claims in die Karte pushen – NICHT im Main-Thread
-
         if(mapService.isActive()){
             launch {
                 claimService.deleteAllClaimsFromMap()
@@ -91,49 +87,54 @@ class VisualClaim : JavaPlugin() {
             }
         }
 
-        /*
-        server.scheduler.runTaskAsynchronously(this) {
-            val chunks = chunkRepo.all()
-            // Falls du initial Marker zeichnen willst:
-            // gruppiere nach claimKey und rufe partialMapUpdate(...) für jeden Claim auf
-        }*/
-
-
         // Commands
         getCommand("claim")?.setExecutor(
             ClaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
                 getStringFromConfig = { path -> getStringFormConfig(path) }
-            ))
+            )
+        )
 
         getCommand("listclaims")?.setExecutor(
             ListclaimsCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
                 getStringFromConfig = { path -> getStringFormConfig(path) }
-            ))
+            )
+        )
 
-        getCommand("claiminfo")?.setExecutor(ClaiminfoCommand(
-            preService = prerequisiteService,
-            coroutineScope = this.scope,
-            getStringFromConfig = { path -> getStringFormConfig(path) }
-        ))
+        getCommand("claiminfo")?.setExecutor(
+                ClaiminfoCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            )
+        )
 
 
-        getCommand("unclaim")?.setExecutor(UnclaimCommand(
-            preService = prerequisiteService,
-            coroutineScope = this.scope,
-            getStringFromConfig = { path -> getStringFormConfig(path) }
-        ))
+        getCommand("unclaim")?.setExecutor(
+            UnclaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            )
+        )
 
-        getCommand("deleteclaim")?.setExecutor(DeleteclaimCommand(
-            preService = prerequisiteService,
-            coroutineScope = this.scope,
-            getStringFromConfig = { path -> getStringFormConfig(path) }
-        ))
-/*         getCommand("renameclaim")?.setExecutor(RenameclaimCommand(this))
-*/
+        getCommand("deleteclaim")?.setExecutor(
+            DeleteclaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            )
+        )
+        getCommand("renameclaim")?.setExecutor(
+            RenameclaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            )
+        )
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")
     }
@@ -149,7 +150,6 @@ class VisualClaim : JavaPlugin() {
     }
 
     private fun placeOnMap(player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) {
-
         mapService.writeClaimMarker(player, claim, chunks)
     }
 

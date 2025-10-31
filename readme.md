@@ -23,6 +23,15 @@ Claim names can have spaces but must be wrapped in quotes when used in commands.
 - `/claim <name>` - Claim the chunk the player is currently in with the given name. (the name is optional). If a claim with the same name already exists, the chunk will be added to that claim.
 - ...todo
 
+With the ```other```-Permissions almost every command can be executed for other players. All that is needed is to put ```-p <PlayerName>``` after the command and before the arguments.
+**Note:** This is still work in progress and not all commands support this yet. Commands with support are:
+
+- ```/renameclaim```
+- ```/listclaims``` (sort of, the ```-p``` flag is not necessary here, just provide the player name as argument)
+- ```/unclaim force``` (no flag necessary and name needed. It will stupidly unclaim the chunk from anything ;P )
+- ```/deleteclaim```
+- 
+
 ## Innerworkings
 
 VisualClaim works mostly by commands issued by players. The call chain (should) look like this:
@@ -51,6 +60,12 @@ ClaimService: Main service which handles claim logic
     V
 ClaimRepository: Handles data storage and retrieval
 ```
+
+VisualClaim relies heavily on its SQLite database. To take load off the main server thread, all database operations are executed asynchronously. 
+This means that there might be a slight delay between issuing a command and seeing the result but in exchange the server performance will not be affected much. (Hopefully ;) )
+To help with the speed and to enable smart tab completion, VisualClaim keeps an in-memory cache per player. The cache updates on important changes but might be slightly out of date in some edge cases.
+The cache can be manually refreshed with every command execution. (even invalid ones.) Outdated caches will only affect tab completion and not the actual command execution.    
+
 
 ## Permissions
 

@@ -37,5 +37,27 @@ commands:
     permission: visualclaim.command.renameclaim
 
 permissions:
-  visualclaim.use:
+  visualclaim.claim:
+    description: "Allows claiming chunks"
     default: true
+  visualclaim.maxclaims:
+    description: "Overrides the max claims per player limit if a number or -1 is specified behind it"
+    default: false
+  visualclaim.maxchunks:
+    description: "Overrides the max chunks per player limit if a number or -1 is specified behind it"
+    default: false
+  visualclaim.maxclaimlength:
+    description: "Overrides the character limit of claim names for that player or -1 is specified behind it"
+    default: false
+  visualclaim.listother:
+    description: "Allows listing other players' claims"
+    default: false
+  visualclaim.unclaimother:
+    description:  "Allows unclaiming chunks from other players"
+    default: false
+  visualclaim.deleteother:
+    description: "Allows deleting other players' claims"
+    default: false
+  visualclaim.renameother:
+    description: "Allows renaming other players' claims"
+    default: false

@@ -68,6 +68,7 @@ usage:
     claiminfo: "§aNutze §e/claiminfo§a um Informationen über den Chunk in dem du stehst zu erhalten."
     listclaims: "§aNutze §e/listclaims§a um eine Liste deiner Claims anzuzeigen."
     renameclaim: "§aNutze §e/renameclaim \"alter-name\" \"neuer-name\"§a um einen Claim umzubenennen."
+    renameclaim-other: "§aNutze §e/renameclaim -p <Spieler> \"alter-name\" \"neuer-name\"§a um einen Claim eines anderen Spielers umzubenennen."
     deleteclaim: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
     unclaim: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
     claimcolor: "§aMit /claimcolor \"claim-name\" <farbe> änderst du die Farbe der Markierung für deine Claims auf der Karte."
@@ -97,7 +98,6 @@ messages:
   autoclaim-on: "§aAutoClaim EIN für Gruppe <name>."
   autoclaim-off: "§aAutoClaim AUS für Gruppe <name>."
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
-  player-not-found: "§aDer Spieler <player> wurde nicht gefunden."
   list-claims:
     header: "§aDeine Claims:"
     header-other: "§aClaims von <player>:"
@@ -114,10 +114,11 @@ messages:
     success: "§aDer Claim <claim-name> wurde in <claim-new-name> umbenannt."
     not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
     merge-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename <claim-name> <claim-new-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
-    none: "§aDu hast keine Claims."
+    none: "§aKeine Claims zum Umbenennen verfügbar."
     merge-success: "§aDer Claim <claim-name> wurde mit <claim-new-name> zusammengeführt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
+  player-not-found: "§cDer Spieler <player> wurde nicht gefunden."
 
 trigger-words:
     deleteclaim-confirm: "confirm"
