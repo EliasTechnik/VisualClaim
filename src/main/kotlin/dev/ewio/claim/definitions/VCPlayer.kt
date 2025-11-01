@@ -7,15 +7,6 @@ data class VCPlayer(
     val mcUUID: UUID,
     val name: String,
     val resolvedNameAt: Long,
-    val autoClaim: Boolean = false
-) {
-    companion object {
-        fun dummy(): VCPlayer = VCPlayer(
-            -1,
-            UUID.fromString("00000000-0000-0000-0000-000000000000"),
-            "dummy",
-            0L,
-            false
-        )
-    }
-}
+    val autoClaim: Boolean = false,
+    val bossbar: Boolean = true
+)

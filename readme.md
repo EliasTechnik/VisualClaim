@@ -77,15 +77,16 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
-- go over claim command and make sure we check all edege cases (eg. chunk already claimed....)
-- register player on login to always have context
+- register player on login to always have context 
+- remove player from cache on logout
+
 - prevent claiming in protected areas (worldguard, spawn, etc)
 - prevent claimnames that match confirm keywords
-- complete commands
-- add ARGB color support
+- add ARGB color support to config
 - add color customization (Fixed values from config from which the player can choose)
 - add help
-- add "non intrusive" claim visualization to HUD
-- test permissions
+- add "non intrusive" claim visualization to HUD (togleable bossbar and particles on chunkborder)
+- ```\showclaim <name>``` - shows border of claim with particles for a short time (or until toggled off) (always on when autoclaiming)
+- autoclaim 
 - add forbidden words filter
 - test

@@ -12,7 +12,8 @@ fun rowToVCPlayer(row: ResultRow) = VCPlayer(
     mcUUID = UUID.fromString(row[VCPlayers.mcUUID]),
     name = row[VCPlayers.name],
     resolvedNameAt = row[VCPlayers.resolvedNameAt],
-    autoClaim = row[VCPlayers.autoClaim]
+    autoClaim = row[VCPlayers.autoClaim],
+    bossbar = row[VCPlayers.bossbar]
 )
 
 fun rowToVCClaim(row: ResultRow) = VCClaim(

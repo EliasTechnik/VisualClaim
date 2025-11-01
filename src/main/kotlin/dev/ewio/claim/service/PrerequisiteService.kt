@@ -7,11 +7,13 @@ import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.SimpleCache
+import dev.ewio.util.VCCache
 import dev.ewio.util.log
 import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import java.util.UUID
 
 class PrerequisiteService(
     private val claimService: ClaimService,
@@ -19,9 +21,12 @@ class PrerequisiteService(
     private val coroutineScope: CoroutineScope
 ) {
 
-    private val contextCache = ContextCache(
+    private val contextCache = VCCache<UUID, VCPlayerContext, Player>(
         fetch = { uuid ->
             this.getPlayerContext(uuid)
+        },
+        extractKey = { player ->
+            player.uniqueId
         },
         coroutineScope = coroutineScope
     )

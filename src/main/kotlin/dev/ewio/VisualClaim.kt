@@ -10,6 +10,7 @@ import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCRestrictions
+import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.command.ClaimCommand
@@ -18,13 +19,13 @@ import dev.ewio.command.DeleteclaimCommand
 import dev.ewio.command.ListclaimsCommand
 import dev.ewio.command.RenameclaimCommand
 import dev.ewio.command.UnclaimCommand
-
 import dev.ewio.database.VCDB
+import dev.ewio.listener.JoinListener
+import dev.ewio.listener.LeaveListener
 import dev.ewio.map.MapService
 import dev.ewio.map.NoopMapService
 import dev.ewio.map.Pl3xMapService
 import dev.ewio.util.GL
-import dev.ewio.util.StringHelper
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -36,8 +37,11 @@ class VisualClaim : JavaPlugin() {
     lateinit var claimService: ClaimService
     lateinit var permissionService: PermissionService
     lateinit var prerequisiteService: PrerequisiteService
+    lateinit var movementService: MovementService
     lateinit var cfg: FileConfiguration
-    lateinit var strings: StringHelper
+
+    lateinit var joinListner: JoinListener
+    lateinit var leaveListener: LeaveListener
 
     override fun onEnable() {
         // Plugin startup logic
@@ -78,7 +82,6 @@ class VisualClaim : JavaPlugin() {
         } else {
             NoopMapService()
         }
-        this.strings = StringHelper(this)
 
         if(mapService.isActive()){
             launch {
@@ -86,6 +89,24 @@ class VisualClaim : JavaPlugin() {
                 claimService.placeAllClaimsOnMap()
             }
         }
+
+        this.movementService = MovementService(
+            registerListener = { listener ->
+                server.pluginManager.registerEvents(listener, this)
+            },
+            preService = this.prerequisiteService,
+            coroutineScope = this.scope
+        )
+
+        //Listeners (which aren't part of services) can be registered here
+        this.joinListner = JoinListener()
+        server.pluginManager.registerEvents(this.joinListner, this)
+        this.leaveListener = LeaveListener()
+        server.pluginManager.registerEvents(this.leaveListener, this)
+
+
+
+
 
         // Commands
         getCommand("claim")?.setExecutor(
