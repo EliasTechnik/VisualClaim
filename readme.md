@@ -87,6 +87,7 @@ The cache can be manually refreshed with every command execution. (even invalid 
 - add help
 - add "non intrusive" claim visualization to HUD (togleable bossbar and particles on chunkborder)
 - ```\showclaim <name>``` - shows border of claim with particles for a short time (or until toggled off) (always on when autoclaiming)
+- ```/transferclaim <playername>:<claimname> <playername>``` - transfer claim to another player
 - autoclaim 
 - add forbidden words filter
 - test

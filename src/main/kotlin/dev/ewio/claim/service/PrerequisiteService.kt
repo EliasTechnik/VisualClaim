@@ -13,23 +13,17 @@ import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerMoveEvent
 import java.util.UUID
 
 class PrerequisiteService(
     private val claimService: ClaimService,
     private val permissionService: PermissionService,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val cc: CentralCache
 ) {
 
-    private val contextCache = VCCache<UUID, VCPlayerContext, Player>(
-        fetch = { uuid ->
-            this.getPlayerContext(uuid)
-        },
-        extractKey = { player ->
-            player.uniqueId
-        },
-        coroutineScope = coroutineScope
-    )
+    private lateinit var movementService: MovementService
 
     private val playerNameCache = SimpleCache<String>(
         fetchAll = {
@@ -117,7 +111,7 @@ class PrerequisiteService(
                         player = context.player
                     )
 
-                    return updatePlayerContextCache(context) {
+                    return cc.updatePlayerContextCache(context) {
                         when (transferResult) {
                             is VCResult.TransferChunk.TransferSuccessful -> VCResult.CreateClaim.ChunkTransferredToClaim(targetClaim, vcChunk.plainChunk)
                             is VCResult.TransferChunk.VCChunkNotFound -> VCResult.UnknownFailure
@@ -156,7 +150,7 @@ class PrerequisiteService(
             return if(vcChunk == null){
                 VCResult.UnknownFailure
             }else {
-                updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context) {
                     VCResult.CreateClaim.ClaimCreatedSuccessfully(targetClaim, vcChunk)
                 }
             }
@@ -169,7 +163,6 @@ class PrerequisiteService(
     ): VCClaim? {
         return context.claims.maxByOrNull { it.lastModified }
     }
-
 
     suspend fun unclaimChunk(
         context: VCPlayerContext,
@@ -186,7 +179,7 @@ class PrerequisiteService(
         if(claim != null){
             //the player owns this chunk
             //proceed to unclaim
-            return when( updatePlayerContextCache(context, {claimService.removeChunkFromClaim(vcChunk)})){
+            return when( cc.updatePlayerContextCache(context, {claimService.removeChunkFromClaim(vcChunk)})){
                 is VCResult.UnclaimChunk.UnclaimSuccessful -> VCResult.UnclaimChunk.UnclaimSuccessful(
                     claimName = claim.displayName
                 )
@@ -197,7 +190,7 @@ class PrerequisiteService(
             //the player does not own this chunk
             if(forceUnclaim && context.restrictions.unclaimOther){
                 //proceed to unclaim
-                return updatePlayerContextCache(context, { claimService.removeChunkFromClaim(vcChunk) })
+                return cc.updatePlayerContextCache(context, { claimService.removeChunkFromClaim(vcChunk) })
             }else{
                 val owner = claimService.getOwnerOfChunk(vcChunk)
 
@@ -229,7 +222,7 @@ class PrerequisiteService(
 
             //check permission
             return if(context.restrictions.deleteclaimOther){
-                updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+                cc.updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
             }else{
                 VCResult.DeleteClaim.NotOwnerOfClaim(claimName)
             }
@@ -237,7 +230,7 @@ class PrerequisiteService(
             //normal deletion
             val claim = context.claims.firstOrNull { it.displayName == claimName }
                 ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
-            return updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+            return cc.updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
 
         }
     }
@@ -265,7 +258,7 @@ class PrerequisiteService(
                 )
             }else{
                 //merge claims
-                updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context) {
                     claimService.mergeClaims(
                         sourceClaim = claim,
                         targetClaim = existingClaimWithNewName,
@@ -275,7 +268,7 @@ class PrerequisiteService(
             }
         }else{
             //rename claim
-            updatePlayerContextCache(context) {
+            cc.updatePlayerContextCache(context) {
                 claimService.renameClaim(
                     claim = claim,
                     newName = newName,
@@ -320,7 +313,7 @@ class PrerequisiteService(
                 )
             }else{
                 //merge claims
-                updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context) {
                     claimService.mergeClaims(
                         sourceClaim = claim,
                         targetClaim = existingClaimWithNewName,
@@ -330,7 +323,7 @@ class PrerequisiteService(
             }
         }else{
             //rename claim
-            updatePlayerContextCache(context) {
+            cc.updatePlayerContextCache(context) {
                 claimService.renameClaim(
                     claim = claim,
                     newName = newName,
@@ -338,6 +331,38 @@ class PrerequisiteService(
                 )
             }
         }
+    }
+
+    suspend fun enableAutoclaim(
+        context: VCPlayerContext,
+        claimName: String
+    ): VCResult {
+        if(!context.restrictions.canClaim){
+            return VCResult.MissingPermission
+        }
+
+        //make sure the claim exists
+        val claim = context.claims.firstOrNull { it.displayName == claimName }
+            ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
+
+        movementService.activateAutoClaimForPlayer(
+            playerContext = context,
+            claim = claim
+        )
+    }
+
+    suspend fun disableAutoclaim(
+        context: VCPlayerContext
+    ): VCResult {
+        //disable autoclaim
+        return VCResult.UnknownFailure
+    }
+
+    suspend fun handleAutoClaimOnMove(
+        context: VCPlayerContext,
+        event: PlayerMoveEvent
+    ): VCResult.AutoClaim{
+
     }
 
     suspend fun getClaimAtChunk(
@@ -362,62 +387,7 @@ class PrerequisiteService(
 
     }
 
-    suspend fun getDBPlayerContext(playerName: String): VCPlayerDBContext? {
-        val player = claimService.getPlayerByName(playerName) ?: return null
-        return claimService.getPlayerContextByKey(player.key)
-    }
 
-    suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? {
-        val realPlayer = sender as? Player ?: return null
-        log("Fetching player context for ${realPlayer.name} (${realPlayer.uniqueId})")
-        getPlayerContext(realPlayer)?.let{
-            contextCache.put(realPlayer.uniqueId, it)
-            return Pair(it, realPlayer)
-        }
-        return null
-    }
-
-
-
-    private suspend fun getPlayerContext(player: Player): VCPlayerContext? {
-        val context = claimService.registerPlayerContextByUUID(player.uniqueId)?: return null
-        return VCPlayerContext(
-                restrictions = permissionService.getRestrictionsForPlayer(
-                    player = context.player,
-                    bukkitPlayer = player
-                ),
-                dbContext = context,
-            )
-    }
-
-    private suspend fun getFreshPlayerContextWithoutCaching(context: VCPlayerContext): VCPlayerContext? {
-        val updatedContext = claimService.getPlayerContextByKey(context.player.key) ?: return null
-        return VCPlayerContext(
-            restrictions = context.restrictions,
-            dbContext = updatedContext
-        )
-    }
-
-    private suspend fun <T> updatePlayerContextCache(context: VCPlayerContext, exFirst: suspend () -> T): T  {
-        val result = exFirst()
-        val updatedContext = this.getFreshPlayerContextWithoutCaching(context)?: return result
-        contextCache.put(updatedContext.player.mcUUID, updatedContext)
-        return result
-    }
-
-    suspend fun getFreshPlayerContext(context: VCPlayerContext): VCPlayerContext?{
-        val updatedContext = claimService.getPlayerContextByKey(context.player.key) ?: return null
-        val newContext = VCPlayerContext(
-            restrictions = context.restrictions,
-            dbContext = updatedContext
-        )
-        contextCache.put(updatedContext.player.mcUUID, newContext)
-        return newContext
-    }
-
-    fun getCachedPlayerContext(player: Player): VCPlayerContext? {
-        return contextCache.get(player)
-    }
 
 
     @Costly
@@ -448,6 +418,10 @@ class PrerequisiteService(
     suspend fun isChunkReserved(chunk: PlainChunk): Boolean {
         //TODO: Implement check against WorldGuard Regions here!
         return false
+    }
+
+    fun registerMovementService(service: MovementService) {
+        movementService = service
     }
 
 }

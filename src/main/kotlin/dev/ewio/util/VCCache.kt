@@ -41,6 +41,10 @@ class VCCache<K,V,OOI>(
         }
     }
 
+    fun get(key: K): V? {
+        return cache[key]
+    }
+
     fun put(key: K, value: V) {
         cache[key] = value
     }

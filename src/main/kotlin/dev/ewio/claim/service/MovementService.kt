@@ -1,10 +1,13 @@
 package dev.ewio.claim.service
 
+import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCMovementContext
+import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.listener.MoveListener
 import dev.ewio.util.VCCache
 import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerMoveEvent
 import java.util.UUID
@@ -18,16 +21,20 @@ class MovementService(
     val registerListener: (listener: MoveListener) -> Unit,
     val preService: PrerequisiteService,
     val coroutineScope: CoroutineScope,
+    val cc: CentralCache
 ) {
-    lateinit var moveListener: MoveListener
+    var moveListener: MoveListener
 
-    val movementCache: VCCache<UUID, VCMovementContext, PlayerMoveEvent> = VCCache(
-        fetch = { event ->
-            this.getMovementContext(event.player)
+    /*
+    val movementCache: VCCache<UUID, VCMovementContext, UUID> = VCCache(
+        fetch = { uuid ->
+            this.getMovementContext(uuid)
         },
-        extractKey = { event -> event.player.uniqueId },
+        extractKey = { it },
         coroutineScope = coroutineScope
     )
+
+     */
 
     init {
         moveListener = MoveListener(
@@ -36,14 +43,17 @@ class MovementService(
             }
         )
         registerListener(moveListener)
+        preService.registerMovementService(this)
     }
 
-    private suspend fun getMovementContext(player: Player) = preService.getPlayerContext(player)?.let{
-        VCMovementContext(
-            uuid = player.uniqueId,
-            usesAutoclaim = it.first.player.autoClaim,
-            usesBossbar = it.first.player.bossbar
-        )
+    private suspend fun getMovementContext(uuid: UUID): VCMovementContext {
+        preService.getCachedPlayerContext(uuid)?.let{
+            VCMovementContext(
+                uuid = it.player.mcUUID,
+            usesAutoclaim = it.player.autoClaim,
+            usesBossbar = it.player.bossbar
+            )
+        }?: preService.get^
     }
 
 
@@ -52,11 +62,34 @@ class MovementService(
 
     }
 
+
+
+
     private fun onPlayerMoveChunk(event: PlayerMoveEvent) {
         // Handle player moving between chunks
         log("Player ${event.player.name} moved from ${event.from.chunk.x},${event.from.chunk.z} to chunk: ${event.to.chunk.x},${event.to.chunk.z}")
+
+        coroutineScope.launch {
+            val context = cc.getCachedPlayerContext(event.player)
+
+            if(context != null) {
+                if(context.player.autoClaim){
+                    preService.handleAutoClaimOnMove(context, event)
+                }
+            }
+        }
     }
 
+    suspend fun activateAutoClaimForPlayer(playerContext: VCPlayerContext, claim: VCClaim) {
+
+        var mc = movementCache.get(playerContext.player.mcUUID)
+
+        movementCache.put(playerContext.player.uuid, VCMovementContext()
+            uuid = playerContext.player.uuid,
+            usesAutoclaim = true,
+            usesBossbar = playerContext.player.bossbar
+        ))
+    }
 
 
 }

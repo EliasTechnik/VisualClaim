@@ -123,6 +123,7 @@ messages:
 trigger-words:
     deleteclaim-confirm: "confirm"
     renameclaim-confirm: "confirm"
+    autoclaim-off: "off"
 
 #Debugging
 plugin-insights:

@@ -58,4 +58,15 @@ open class VCResult {
         object ChunkNotClaimed : Success()
         object ClaimedButWithoutOwner : Failure() //"This claim has no owner."
     }
+
+    sealed class AutoClaim{
+        data class AutoClaimEnabled(val forClaim: VCClaim) : Success()
+        object AutoClaimDisabled : Success()
+        data class ChunkClaimed(val claim: VCClaim, val chunk: VCChunk): Success()
+        object ChunkAlreadyClaimed : Failure()
+        data class ChunkClaimedByOtherPlayer(val otherPlayer: String) : Failure()
+        data class ChunkLimitReached(val maxChunks: Int) : Failure()
+        object ClaimNeedsCreationFirst : Failure()
+        data class StatusInfo(val isEnabled: Boolean, val claimingFor: VCClaim? = null) : Success()
+    }
 }
