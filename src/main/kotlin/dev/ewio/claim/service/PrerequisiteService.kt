@@ -388,8 +388,6 @@ class PrerequisiteService(
     }
 
 
-
-
     @Costly
     suspend fun getPlayerNames(): List<String> {
         return claimService.getAllPlayers().map { it.name }
