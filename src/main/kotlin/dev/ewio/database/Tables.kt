@@ -10,6 +10,7 @@ object VCPlayers : IntIdTable("vc_player") {
     val name = varchar("name", 16)
     val resolvedNameAt = long("resolved_name_at")
     val autoClaim = bool("auto_claim").default(false)
+    val autoClaimTargetClaimKey = integer("autoClaimTargetClaimKey")
     val bossbar = bool("boss_bar").default(true)
 
     //override val primaryKey = PrimaryKey(key)

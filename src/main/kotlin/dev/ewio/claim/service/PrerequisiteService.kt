@@ -32,8 +32,6 @@ class PrerequisiteService(
         coroutineScope = coroutineScope
     )
 
-
-
     /**
      * The createClaim function can be used to create a new claim or append a chunk to an existing claim.
      * It will also transfer a chunk from one existing claim to a new claim if the chunk is already claimed
@@ -111,7 +109,7 @@ class PrerequisiteService(
                         player = context.player
                     )
 
-                    return cc.updatePlayerContextCache(context) {
+                    return cc.updatePlayerContextCache(context.player.mcUUID) {
                         when (transferResult) {
                             is VCResult.TransferChunk.TransferSuccessful -> VCResult.CreateClaim.ChunkTransferredToClaim(targetClaim, vcChunk.plainChunk)
                             is VCResult.TransferChunk.VCChunkNotFound -> VCResult.UnknownFailure
@@ -150,7 +148,7 @@ class PrerequisiteService(
             return if(vcChunk == null){
                 VCResult.UnknownFailure
             }else {
-                cc.updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context.player.mcUUID) {
                     VCResult.CreateClaim.ClaimCreatedSuccessfully(targetClaim, vcChunk)
                 }
             }
@@ -179,7 +177,7 @@ class PrerequisiteService(
         if(claim != null){
             //the player owns this chunk
             //proceed to unclaim
-            return when( cc.updatePlayerContextCache(context, {claimService.removeChunkFromClaim(vcChunk)})){
+            return when( cc.updatePlayerContextCache(context.player.mcUUID, {claimService.removeChunkFromClaim(vcChunk)})){
                 is VCResult.UnclaimChunk.UnclaimSuccessful -> VCResult.UnclaimChunk.UnclaimSuccessful(
                     claimName = claim.displayName
                 )
@@ -190,7 +188,7 @@ class PrerequisiteService(
             //the player does not own this chunk
             if(forceUnclaim && context.restrictions.unclaimOther){
                 //proceed to unclaim
-                return cc.updatePlayerContextCache(context, { claimService.removeChunkFromClaim(vcChunk) })
+                return cc.updatePlayerContextCache(context.player.mcUUID, { claimService.removeChunkFromClaim(vcChunk) })
             }else{
                 val owner = claimService.getOwnerOfChunk(vcChunk)
 
@@ -222,7 +220,7 @@ class PrerequisiteService(
 
             //check permission
             return if(context.restrictions.deleteclaimOther){
-                cc.updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+                cc.updatePlayerContextCache(context.player.mcUUID, {claimService.deleteClaim(claim)})
             }else{
                 VCResult.DeleteClaim.NotOwnerOfClaim(claimName)
             }
@@ -230,7 +228,7 @@ class PrerequisiteService(
             //normal deletion
             val claim = context.claims.firstOrNull { it.displayName == claimName }
                 ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
-            return cc.updatePlayerContextCache(context, {claimService.deleteClaim(claim)})
+            return cc.updatePlayerContextCache(context.player.mcUUID, {claimService.deleteClaim(claim)})
 
         }
     }
@@ -258,7 +256,7 @@ class PrerequisiteService(
                 )
             }else{
                 //merge claims
-                cc.updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context.player.mcUUID) {
                     claimService.mergeClaims(
                         sourceClaim = claim,
                         targetClaim = existingClaimWithNewName,
@@ -268,7 +266,7 @@ class PrerequisiteService(
             }
         }else{
             //rename claim
-            cc.updatePlayerContextCache(context) {
+            cc.updatePlayerContextCache(context.player.mcUUID) {
                 claimService.renameClaim(
                     claim = claim,
                     newName = newName,
@@ -313,7 +311,7 @@ class PrerequisiteService(
                 )
             }else{
                 //merge claims
-                cc.updatePlayerContextCache(context) {
+                cc.updatePlayerContextCache(context.player.mcUUID) {
                     claimService.mergeClaims(
                         sourceClaim = claim,
                         targetClaim = existingClaimWithNewName,
@@ -323,7 +321,7 @@ class PrerequisiteService(
             }
         }else{
             //rename claim
-            cc.updatePlayerContextCache(context) {
+            cc.updatePlayerContextCache(context.player.mcUUID) {
                 claimService.renameClaim(
                     claim = claim,
                     newName = newName,
@@ -343,12 +341,9 @@ class PrerequisiteService(
 
         //make sure the claim exists
         val claim = context.claims.firstOrNull { it.displayName == claimName }
-            ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
+            ?: return VCResult.AutoClaim.ClaimNeedsCreationFirst(claimName)
 
-        movementService.activateAutoClaimForPlayer(
-            playerContext = context,
-            claim = claim
-        )
+        claimService.updatePlayer(context.player.copy(autoClaim = true))
     }
 
     suspend fun disableAutoclaim(
@@ -421,5 +416,10 @@ class PrerequisiteService(
     fun registerMovementService(service: MovementService) {
         movementService = service
     }
+
+    /**
+     * Wrapper to make this function available for command as they usually only have access to the prerequisiteService
+     */
+    suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? = cc.getPlayerContextFromSender(sender)
 
 }

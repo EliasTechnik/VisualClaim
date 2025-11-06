@@ -8,5 +8,6 @@ data class VCPlayer(
     val name: String,
     val resolvedNameAt: Long,
     val autoClaim: Boolean = false,
+    val autoClaimTargetClaimKey: Int = -1,
     val bossbar: Boolean = true
 )

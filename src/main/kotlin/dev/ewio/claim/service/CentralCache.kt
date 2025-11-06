@@ -18,138 +18,64 @@ class CentralCache(
 ) {
     private val contextCache = VCCache<UUID, VCPlayerContext>(
         fetch = { uuid ->
-            this.getFreshPlayerContextWithoutCaching(uuid)
+            val player = Bukkit.getPlayer(uuid)?: return@VCCache null
+            buildPlayerContext(player)
         }
     )
 
+    /**
+     * Throws a uuid at the claim service which puts it in its database. If the uuid is already known the context around that player is retrieved.
+     */
+    private suspend fun getPlayerContextFromDB(uuid: UUID): VCPlayerDBContext? = claimService.registerPlayerContextByUUID(uuid)
 
+    /**
+     * Builds a player context. IT DOES NOT CACHE!
+     */
+    private suspend fun buildPlayerContext(player: Player): VCPlayerContext? {
+        val dbContext = getPlayerContextFromDB(player.uniqueId)?: return null
+        return VCPlayerContext(
+                dbContext = dbContext,
+                restrictions = permissionService.getRestrictionsForPlayer(
+                    dbContext.player,
+                    player
+                )
+            )
+    }
 
+    /**
+     * This gets the player Context. Cached or fresh
+     */
+    suspend fun getPlayerContext(player: Player): VCPlayerContext? {
+        return contextCache.get(player.uniqueId)
+    }
+    /**
+     * This gets the player Context. Cached or fresh
+     */
+    suspend fun getPlayerContext(uuid: UUID): VCPlayerContext? {
+        val player = Bukkit.getPlayer(uuid) ?: return null
+        return getPlayerContext(player)
+    }
+
+    /**
+     * Convenient function which casts a player object and returns also the context
+     */
     suspend fun getPlayerContextFromSender(sender: CommandSender): Pair<VCPlayerContext, Player>? {
         val realPlayer = sender as? Player ?: return null
-        log("Fetching player context for ${realPlayer.name} (${realPlayer.uniqueId})")
-        getPlayerContextFromDB(realPlayer)?.let{
-            contextCache.put(realPlayer.uniqueId, it)
+        //log("Fetching player context for ${realPlayer.name} (${realPlayer.uniqueId})")
+        getPlayerContext(realPlayer)?.let{
             return Pair(it, realPlayer)
         }
         return null
     }
 
-    suspend fun getPlayerContextForUUID(uuid: UUID): Pair<VCPlayerContext, Player>? {
-        val realPlayer = Bukkit.getPlayer(uuid) ?: return null
-        getPlayerContextFromDB(uuid)?.let{
-            contextCache.put(uuid, it)
-            return it
-        }
-        return null
-    }
-
-
-    suspend fun getPlayerContext(uuid: UUID): VCPlayerContext? {
-        //register player if not exists
-        val dbContext = registerPlayer(uuid) ?: return null
-        val player = Bukkit.getPlayer(uuid) ?: return null
-        val restrictions = permissionService.getRestrictionsForPlayer(
-            player = dbContext.player,
-            bukkitPlayer = player
-        )
-
-        contextCache.put(uuid, VCPlayerContext(
-            restrictions = restrictions,
-            dbContext = dbContext
-            )
-        )
-
-
-        return contextCache.get(uuid)
-    }
-
-
     /**
-     * Registers a player by their UUID in the DB and returns their database context.
+     * This updates the cache. This needs to be called everytime a significant change is made.
      */
-    private suspend fun registerPlayer(uuid: UUID): VCPlayerDBContext? {
-        return claimService.registerPlayerContextByUUID(uuid)
-    }
-
-
-    /*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Fetches a fresh player context from the database without using the cache.
-     */
-    private suspend fun getPlayerContextFromDB(player: Player): VCPlayerContext? {
-        val context = claimService.registerPlayerContextByUUID(player.uniqueId)?: return null
-        return VCPlayerContext(
-            restrictions = permissionService.getRestrictionsForPlayer(
-                player = context.player,
-                bukkitPlayer = player
-            ),
-            dbContext = context,
-        )
-    }
-
-    /**
-     * Fetches a fresh player context from the database without using the cache.
-     */
-    private suspend fun getPlayerContextFromDB(uuid: UUID): VCPlayerContext? {
-        Bukkit.getPlayer(uuid)?.let { player ->
-            return getPlayerContextFromDB(player)
-        }
-        return null
-    }
-
-    /**
-     * Fetches a fresh player context from the database without using the cache.
-     */
-    private suspend fun getFreshPlayerContextWithoutCaching(context: VCPlayerContext): VCPlayerContext? {
-        val updatedContext = claimService.getPlayerContextByKey(context.player.key) ?: return null
-        return VCPlayerContext(
-            restrictions = context.restrictions,
-            dbContext = updatedContext
-        )
-    }
-
-    suspend fun <T> updatePlayerContextCache(context: VCPlayerContext, exFirst: suspend () -> T): T  {
+    suspend fun <T> updatePlayerContextCache(uuid: UUID, exFirst: suspend () -> T): T  {
         val result = exFirst()
-        val updatedContext = this.getFreshPlayerContextWithoutCaching(context)?: return result
+        val player = Bukkit.getPlayer(uuid)?: return result
+        val updatedContext = this.buildPlayerContext(player)?: return result
         contextCache.put(updatedContext.player.mcUUID, updatedContext)
         return result
     }
-
-
-
-    suspend fun getFreshPlayerContext(context: VCPlayerContext): VCPlayerContext?{
-        val updatedContext = claimService.getPlayerContextByKey(context.player.key) ?: return null
-        val newContext = VCPlayerContext(
-            restrictions = context.restrictions,
-            dbContext = updatedContext
-        )
-        contextCache.put(updatedContext.player.mcUUID, newContext)
-        return newContext
-    }
-
-    fun getCachedPlayerContext(player: Player): VCPlayerContext? {
-        return contextCache.get(player)
-    }
-
-    fun getCachedPlayerContext(uuid: UUID): VCPlayerContext? {
-        return contextCache.get(uuid)
-    }
-
-    */
-
 }

@@ -25,17 +25,6 @@ class MovementService(
 ) {
     var moveListener: MoveListener
 
-    /*
-    val movementCache: VCCache<UUID, VCMovementContext, UUID> = VCCache(
-        fetch = { uuid ->
-            this.getMovementContext(uuid)
-        },
-        extractKey = { it },
-        coroutineScope = coroutineScope
-    )
-
-     */
-
     init {
         moveListener = MoveListener(
             onMoveChunk = { event ->
@@ -46,50 +35,24 @@ class MovementService(
         preService.registerMovementService(this)
     }
 
-    private suspend fun getMovementContext(uuid: UUID): VCMovementContext {
-        preService.getCachedPlayerContext(uuid)?.let{
-            VCMovementContext(
-                uuid = it.player.mcUUID,
-            usesAutoclaim = it.player.autoClaim,
-            usesBossbar = it.player.bossbar
-            )
-        }?: preService.get^
-    }
-
-
-    private fun initCache(){
-        //val onlinePlayers = preService.getOnlinePlayers()
-
-    }
-
-
-
-
     private fun onPlayerMoveChunk(event: PlayerMoveEvent) {
         // Handle player moving between chunks
         log("Player ${event.player.name} moved from ${event.from.chunk.x},${event.from.chunk.z} to chunk: ${event.to.chunk.x},${event.to.chunk.z}")
 
         coroutineScope.launch {
-            val context = cc.getCachedPlayerContext(event.player)
+            val context = cc.getPlayerContext(event.player)
 
             if(context != null) {
                 if(context.player.autoClaim){
                     preService.handleAutoClaimOnMove(context, event)
                 }
+                if(context.player.bossbar){
+                    //TODO: handle bossbar
+                }
             }
         }
     }
 
-    suspend fun activateAutoClaimForPlayer(playerContext: VCPlayerContext, claim: VCClaim) {
-
-        var mc = movementCache.get(playerContext.player.mcUUID)
-
-        movementCache.put(playerContext.player.uuid, VCMovementContext()
-            uuid = playerContext.player.uuid,
-            usesAutoclaim = true,
-            usesBossbar = playerContext.player.bossbar
-        ))
-    }
 
 
 }

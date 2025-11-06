@@ -66,7 +66,7 @@ open class VCResult {
         object ChunkAlreadyClaimed : Failure()
         data class ChunkClaimedByOtherPlayer(val otherPlayer: String) : Failure()
         data class ChunkLimitReached(val maxChunks: Int) : Failure()
-        object ClaimNeedsCreationFirst : Failure()
+        data class ClaimNeedsCreationFirst(val claimName: String) : Failure()
         data class StatusInfo(val isEnabled: Boolean, val claimingFor: VCClaim? = null) : Success()
     }
 }

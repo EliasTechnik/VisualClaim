@@ -288,4 +288,8 @@ class ClaimService(
         return getPlayerByKey(claim.key)
     }
 
+    suspend fun updatePlayer(player: VCPlayer): VCPlayer? {
+        return playerRepo.upsert(player)
+    }
+
 }

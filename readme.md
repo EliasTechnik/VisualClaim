@@ -77,6 +77,7 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
+- finish autoclaim db extension
 - register player on login to always have context 
 - remove player from cache on logout
 
