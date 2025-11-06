@@ -10,6 +10,7 @@ import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCRestrictions
+import dev.ewio.claim.service.CentralCache
 import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
@@ -38,6 +39,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var permissionService: PermissionService
     lateinit var prerequisiteService: PrerequisiteService
     lateinit var movementService: MovementService
+    lateinit var centralCache: CentralCache
     lateinit var cfg: FileConfiguration
 
     lateinit var joinListner: JoinListener
@@ -71,11 +73,17 @@ class VisualClaim : JavaPlugin() {
             placeOnMap = { player, claim, chunks -> placeOnMap(player, claim, chunks) },
             deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) }
         )
+        this.centralCache = CentralCache(
+            coroutineScope = this.scope,
+            claimService = this.claimService,
+            permissionService = this.permissionService
+        )
         this.permissionService = PermissionService(defaultVCRestrictions = defaultRestrictions)
         this.prerequisiteService = PrerequisiteService(
             claimService = this.claimService,
             permissionService = this.permissionService,
-            coroutineScope = this.scope
+            coroutineScope = this.scope,
+            cc = centralCache
         )
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)
@@ -95,7 +103,8 @@ class VisualClaim : JavaPlugin() {
                 server.pluginManager.registerEvents(listener, this)
             },
             preService = this.prerequisiteService,
-            coroutineScope = this.scope
+            coroutineScope = this.scope,
+            cc = centralCache
         )
 
         //Listeners (which aren't part of services) can be registered here
@@ -103,9 +112,6 @@ class VisualClaim : JavaPlugin() {
         server.pluginManager.registerEvents(this.joinListner, this)
         this.leaveListener = LeaveListener()
         server.pluginManager.registerEvents(this.leaveListener, this)
-
-
-
 
 
         // Commands

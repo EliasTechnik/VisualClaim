@@ -78,4 +78,8 @@ class CentralCache(
         contextCache.put(updatedContext.player.mcUUID, updatedContext)
         return result
     }
+
+    fun getCachedPlayerContext(player: Player): VCPlayerContext? {
+        return contextCache.getIfCached(player.uniqueId)
+    }
 }

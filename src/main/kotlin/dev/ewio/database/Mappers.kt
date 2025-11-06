@@ -13,6 +13,7 @@ fun rowToVCPlayer(row: ResultRow) = VCPlayer(
     name = row[VCPlayers.name],
     resolvedNameAt = row[VCPlayers.resolvedNameAt],
     autoClaim = row[VCPlayers.autoClaim],
+    autoClaimTargetClaimKey = row[VCPlayers.autoClaimTargetClaimKey],
     bossbar = row[VCPlayers.bossbar]
 )
 

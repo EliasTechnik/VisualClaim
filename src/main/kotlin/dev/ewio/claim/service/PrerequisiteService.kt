@@ -358,6 +358,11 @@ class PrerequisiteService(
         event: PlayerMoveEvent
     ): VCResult.AutoClaim{
 
+        //check if autoclaim is configured right
+        if(context.player.autoClaimTargetClaimKey == -1){
+            return VCResult.AutoClaim.AutoClaimFailedNoTargetClaimSet
+        }
+
     }
 
     suspend fun getClaimAtChunk(
@@ -422,4 +427,5 @@ class PrerequisiteService(
      */
     suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? = cc.getPlayerContextFromSender(sender)
 
+    fun getCachedPlayerContext(player: Player): VCPlayerContext? = cc.getCachedPlayerContext(player)
 }

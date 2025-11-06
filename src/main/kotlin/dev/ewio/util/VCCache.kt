@@ -33,6 +33,10 @@ class VCCache<K,V>(
         }
     }
 
+    fun getIfCached(key: K): V? {
+        return cache[key]
+    }
+
     fun put(key: K, value: V) {
         cache[key] = value
     }
