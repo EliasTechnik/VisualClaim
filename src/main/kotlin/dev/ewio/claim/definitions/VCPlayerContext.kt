@@ -1,6 +1,7 @@
 package dev.ewio.claim.definitions
 
 import dev.ewio.util.log
+import org.bukkit.boss.BossBar
 import java.util.UUID
 
 /**

@@ -2,6 +2,7 @@ package dev.ewio
 
 import com.github.shynixn.mccoroutine.bukkit.launch
 import com.github.shynixn.mccoroutine.bukkit.scope
+import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.repository.ChunkRepository
 import dev.ewio.claim.repository.ClaimRepository
 import dev.ewio.claim.repository.PlayerRepository
@@ -15,6 +16,7 @@ import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
+import dev.ewio.claim.service.UIService
 import dev.ewio.command.AutoclaimCommand
 import dev.ewio.command.ClaimCommand
 import dev.ewio.command.ClaiminfoCommand
@@ -29,6 +31,7 @@ import dev.ewio.map.MapService
 import dev.ewio.map.NoopMapService
 import dev.ewio.map.Pl3xMapService
 import dev.ewio.util.GL
+import dev.ewio.util.log
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -44,6 +47,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var centralCache: CentralCache
     lateinit var cfg: FileConfiguration
     lateinit var messageService: MessageService
+    lateinit var uiService: UIService
 
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
@@ -82,13 +86,20 @@ class VisualClaim : JavaPlugin() {
         )
 
         val triggerWordsFromConfig = mutableListOf<String>()
-        cfg.getStringList("trigger-words")?.let{
-            triggerWordsFromConfig.addAll(it)
+        cfg.getString("trigger-words.deleteclaim-confirm")?.let{
+            triggerWordsFromConfig.add(it)
+        }
+        cfg.getString("trigger-words.renameclaim-confirm")?.let{
+            triggerWordsFromConfig.add(it)
+        }
+        cfg.getString("trigger-words.autoclaim-off")?.let{
+            triggerWordsFromConfig.add(it)
         }
         cfg.getString("migration-name")?.let{
             triggerWordsFromConfig.add(it)
         }
 
+        log("Trigger words: ${triggerWordsFromConfig.joinToString(",")}")
 
         this.permissionService = PermissionService(
             defaultVCRestrictions = defaultRestrictions,
@@ -99,11 +110,17 @@ class VisualClaim : JavaPlugin() {
             claimService = this.claimService,
             permissionService = this.permissionService
         )
+        this.uiService = UIService(
+            cc = centralCache,
+            ms = messageService,
+            getStringFromConfig = { path -> getStringFormConfig(path) }
+        )
         this.prerequisiteService = PrerequisiteService(
             claimService = this.claimService,
             permissionService = this.permissionService,
             coroutineScope = this.scope,
-            cc = centralCache
+            cc = centralCache,
+            ui = this.uiService
         )
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)
@@ -118,7 +135,7 @@ class VisualClaim : JavaPlugin() {
                 cfg.getString("migration-name")?: "_renamed"
             )
             if(count > 0){
-                GL.logger.info("Renamed $count claims with conflicting names. This happens when trigger-words are changed.")
+                log("Renamed $count claims with conflicting names. This happens when trigger-words are changed. Please restart the server to see the changes on the map.")
             }
         }
 
@@ -142,9 +159,33 @@ class VisualClaim : JavaPlugin() {
         )
 
         //Listeners (which aren't part of services) can be registered here
-        this.joinListner = JoinListener()
+        this.joinListner = JoinListener(
+            onJoin = { event ->
+                // Handle player joining the server
+                launch{
+                    centralCache.getPlayerContext(event.player)?.let{ context ->
+                        log("VC: Player ${context.player.name} has joined the server and his context was loaded.")
+                        uiService.registerBossBarReceiver(event.player, context)
+                        prerequisiteService.updateBossbar(event.player, context, PlainChunk.fromBukkitChunk(event.player.location.chunk))
+                    }
+                }
+            }
+        )
         server.pluginManager.registerEvents(this.joinListner, this)
-        this.leaveListener = LeaveListener()
+        this.leaveListener = LeaveListener(
+            onLeave = { event ->
+                launch{
+                    centralCache.getPlayerContext(event.player)?.let { context ->
+                        uiService.removeBossBarReceiver(event.player)
+
+                        //deactivate autoclaim on leave to not irritate users
+                        prerequisiteService.disableAutoclaim(context)
+
+                        centralCache.cleanupCacheForPlayer(event.player.uniqueId)
+                    }
+                }
+            }
+        )
         server.pluginManager.registerEvents(this.leaveListener, this)
 
 

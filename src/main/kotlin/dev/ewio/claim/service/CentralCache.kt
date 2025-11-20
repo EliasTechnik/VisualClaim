@@ -83,4 +83,8 @@ class CentralCache(
     fun getCachedPlayerContext(player: Player): VCPlayerContext? {
         return contextCache.getIfCached(player.uniqueId)
     }
+
+    fun cleanupCacheForPlayer(uuid: UUID) {
+        contextCache.invalidate(uuid)
+    }
 }

@@ -3,14 +3,17 @@ package dev.ewio.claim.service
 import dev.ewio.annotations.Costly
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCClaimDisplayData
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.SimpleCache
 import dev.ewio.util.VCCache
+import dev.ewio.util.error
 import dev.ewio.util.log
 import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
+import net.kyori.adventure.bossbar.BossBar
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerMoveEvent
@@ -20,7 +23,8 @@ class PrerequisiteService(
     private val claimService: ClaimService,
     private val permissionService: PermissionService,
     private val coroutineScope: CoroutineScope,
-    private val cc: CentralCache
+    private val cc: CentralCache,
+    private val ui: UIService
 ) {
 
     private lateinit var movementService: MovementService
@@ -451,6 +455,38 @@ class PrerequisiteService(
         }
     }
 
+    suspend fun updateBossbar(player: Player, context: VCPlayerContext, chunk: PlainChunk) {
+        val claim = claimService.getClaimAtChunk(chunk)?.let { claimedChunk ->
+            val owner = claimService.getPlayerByKey(claimedChunk.playerKey)
+            if(owner != null){
+                VCClaimDisplayData(
+                    claim = claimedChunk,
+                    ownerName = owner.name
+                )
+            }else{
+                null
+            }
+        }
+        ui.updateBossBar(player, claim, context)
+    }
+
+    suspend fun updateBossbarAfterClaim(player: Player, context: VCPlayerContext, claim: VCClaim?){
+        if(claim == null) {
+            ui.updateBossBar(player, null, context)
+        }else{
+            ui.updateBossBar(
+                player,
+                VCClaimDisplayData(
+                    claim = claim,
+                    ownerName = context.player.name
+                ),
+                context
+            )
+        }
+
+
+    }
+
     suspend fun getClaimAtChunk(
         chunk: PlainChunk
     ): VCResult {
@@ -514,4 +550,5 @@ class PrerequisiteService(
     suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? = cc.getPlayerContextFromSender(sender)
 
     fun getCachedPlayerContext(player: Player): VCPlayerContext? = cc.getCachedPlayerContext(player)
+
 }

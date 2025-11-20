@@ -20,7 +20,7 @@ class MessageService(
             val fullKey = "messages.$key"
             val value = config.getString(fullKey) ?: continue
             templates[key] = replaceLegacyFormattingCodes(value)
-            log("Loaded message template: $key -> $value")
+            //log("Loaded message template: $key -> $value")
         }
     }
 
@@ -47,6 +47,10 @@ class MessageService(
             s = s.replace("%$k%", v)
         }
         return s
+    }
+
+    fun getEmptyComponent(): Component {
+        return mm.deserialize("")
     }
 
     private fun replaceLegacyFormattingCodes(input: String): String {

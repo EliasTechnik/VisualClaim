@@ -63,6 +63,7 @@ class ClaimCommand(
                                 "claim_name" to result.claim.displayName
                             )
                         )
+                        preService.updateBossbarAfterClaim(realPlayer, context, result.claim)
                     }
                     is VCResult.CreateClaim.ChunkTransferredToClaim -> {
                         ms.send(
@@ -75,6 +76,7 @@ class ClaimCommand(
                                 "claim_name" to result.claim.displayName
                             )
                         )
+                        preService.updateBossbarAfterClaim(realPlayer, context, result.claim)
                     }
                     is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
                         ms.send(

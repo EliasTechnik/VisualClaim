@@ -51,6 +51,9 @@ class ClaimRepository {
             val insertedId = VCClaims.insertIgnoreAndGetId {
                 it[playerKey] = claim.playerKey
                 it[displayName] = claim.displayName
+                it[colorHex] = claim.color.hex
+                it[colorName] = claim.color.name
+                it[description] = claim.description
                 it[lastModified] = claim.lastModified
             }
             log("Inserted new claim for playerKey ${claim.playerKey}, assigned key: ${insertedId?.value}")
@@ -66,6 +69,9 @@ class ClaimRepository {
             VCClaims.update({ VCClaims.id eq claim.key }) { st ->
                 st[playerKey] = claim.playerKey
                 st[displayName] = claim.displayName
+                st[colorHex] = claim.color.hex
+                st[colorName] = claim.color.name
+                st[description] = claim.description
                 st[lastModified] = claim.lastModified
             }
             log("Updated claim with key ${claim.key} for playerKey ${claim.playerKey}")

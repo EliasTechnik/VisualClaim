@@ -42,7 +42,7 @@ color:
     gray: "#808080"
     pink: "#FFC0CB"
     cyan: "#00FFFF"
-    lime: "#00FF00"
+    lime: "#00FFAA"
     light_blue: "#ADD8E6"
     magenta: "#FF00FF"
     brown: "#A52A2A"
@@ -52,7 +52,10 @@ color:
     stroke: 0.3
     fill: 0.6
 
-
+# Color/Styling for BossBar. For Options see: https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Bossbar#color
+BossBar:
+  color: "YELLOW"
+  style: "SEGMENTED_6"
 
 
 # Messages shown to players. The placeholders in <> will be replaced with dynamic values. They can be obmitted but extra placeholders will not be recognized.
@@ -124,11 +127,11 @@ messages:
     confirm: "§aBist du sicher, dass du den Claim %claim_name% und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim %claim_name% %deleteclaim_confirm% §aum den Löschvorgang abzuschließen."
     none: "§aDu hast keine Claims zum Löschen."
   renameclaim:
-    success: "§aDer Claim %claim_name% wurde in <claim-new-name> umbenannt."
+    success: "§aDer Claim %claim_name% wurde in %claim_new_name% umbenannt."
     not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
-    merge-confirm: "§aBist du sicher, dass du den Claim %claim_name% mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename %claim_name% <claim-new-name> %renameclaim_confirm% §aum den Vorgang durchzuführen."
+    merge-confirm: "§aBist du sicher, dass du den Claim %claim_name% mit %claim_new_name% zusammenführen möchtest? Nutze §e/rename %claim_name% %claim_new_name% %renameclaim_confirm% §aum den Vorgang durchzuführen."
     none: "§aKeine Claims zum Umbenennen verfügbar."
-    merge-success: "§aDer Claim %claim_name% wurde mit <claim-new-name> zusammengeführt."
+    merge-success: "§aDer Claim %claim_name% wurde mit %claim_new_name% zusammengeführt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
   player-not-found: "§cDer Spieler %player% wurde nicht gefunden."
@@ -136,6 +139,9 @@ messages:
     layer-name: "Claims"
     hover-text:
       named-claim: "%claim_name% von %owner%"
+  BossBar:
+    title: "<green>Claim: %claim_name% | Besitzer: %owner%</green>"
+
 
 
 # These are words that need to be typed to confirm/trigger certain actions

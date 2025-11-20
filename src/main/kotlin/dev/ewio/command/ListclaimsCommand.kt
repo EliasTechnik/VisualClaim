@@ -110,7 +110,6 @@ class ListclaimsCommand(
                             )
                         }
                         ms.send(realPlayer, "list-claims.summary", mapOf(
-                            "player" to betterArgs[0],
                             "chunk_count" to context.chunks.size.toString(),
                             "max_chunks" to context.restrictions.maxChunks.toString(),
                             "claim_count" to context.claims.size.toString(),

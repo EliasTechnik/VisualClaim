@@ -57,6 +57,14 @@ fun log(message: String) {
     logInfo(message)
 }
 
+fun error(message: String) {
+    logSevere(message)
+}
+
+fun warn(message: String) {
+    logWarning(message)
+}
+
 fun countChunksInClaim(context: VCPlayerContext, claim: VCClaim): Int {
     val chunks = context.chunks.filter { it.claimKey == claim.key }
     return chunks.size

@@ -297,9 +297,8 @@ class ClaimService(
         var modifiedCount = 0
 
         allClaims.forEach { claim ->
-            triggerWords.forEach { triggerWord ->
+            triggerWords.filterNot{it == migrationSuffix}.forEach { triggerWord ->
                 if (claim.displayName.equals(triggerWord, ignoreCase = true)) {
-
                     val renamedClaim = claim.copy(displayName = migrationSuffix)
                     claimRepo.upsert(renamedClaim)
                     modifiedCount++

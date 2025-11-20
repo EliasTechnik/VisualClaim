@@ -149,7 +149,6 @@ class RenameclaimCommand(
                     }
 
                     is VCResult.RenameClaim.ConfirmMergeOtherPlayerClaimRequired -> {
-
                         ms.send(realPlayer, "renameclaim.merge-other-confirm", mapOf(
                             "claim_name" to "\"${result.oldName}\"",
                             "claim_new_name" to "\"${result.newName}\"",

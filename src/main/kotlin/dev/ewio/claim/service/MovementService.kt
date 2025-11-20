@@ -26,7 +26,7 @@ class MovementService(
     private val coroutineScope: CoroutineScope,
     private val cc: CentralCache,
     private val getStringFromConfig: (key: String) -> String,
-    private val ms: MessageService
+    private val ms: MessageService,
 ) {
     var moveListener: MoveListener
 
@@ -88,6 +88,7 @@ class MovementService(
                     "claim_name" to result.claim.displayName,
                     "player" to player.name
                 ))
+                preService.updateBossbarAfterClaim(player, context, result.claim)
             }
             else -> {
                 //if this is reached I have forgotten to handle a case
@@ -101,7 +102,7 @@ class MovementService(
         log("Player ${event.player.name} moved from ${event.from.chunk.x},${event.from.chunk.z} to chunk: ${event.to.chunk.x},${event.to.chunk.z}")
 
         coroutineScope.launch {
-            val context = cc.getPlayerContext(event.player)
+            var context = cc.getPlayerContext(event.player)
 
             //log("Fetched context for player ${event.player.name}: $context")
 
@@ -110,8 +111,10 @@ class MovementService(
                     val result = preService.handleAutoClaimOnMove(context, PlainChunk.fromBukkitChunk(event.to.chunk))
                     actOnAutoclaimResult(event.player, result, context)
                 }
+                //update context! The player might have claimed new chunks etc.
+                context = cc.getPlayerContext(event.player)?: context
                 if(context.player.bossbar){
-                    //TODO: handle bossbar
+                    preService.updateBossbar(event.player, context, PlainChunk.fromBukkitChunk(event.to.chunk))
                 }
             }
         }

@@ -3,6 +3,7 @@ package dev.ewio.database
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCColor
 import dev.ewio.claim.definitions.VCPlayer
 import org.jetbrains.exposed.sql.ResultRow
 import java.util.UUID
@@ -21,6 +22,11 @@ fun rowToVCClaim(row: ResultRow) = VCClaim(
     key = row[VCClaims.id].value,
     playerKey = row[VCClaims.playerKey],
     displayName = row[VCClaims.displayName],
+    color = VCColor(
+        hex = row[VCClaims.colorHex],
+        name = row[VCClaims.colorName]
+    ),
+    description = row[VCClaims.description],
     lastModified = row[VCClaims.lastModified]
 )
 

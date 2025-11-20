@@ -77,37 +77,15 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
-- finish autoclaim db extension
-- register player on login to always have context 
-- remove player from cache on logout
-
+- update bossBar automaticly after changes to the db
 - prevent claiming in protected areas (worldguard, spawn, etc)
-- prevent claimnames that match confirm keywords
 - add ARGB color support to config
 - add color customization (Fixed values from config from which the player can choose)
 - add help
 - add "non intrusive" claim visualization to HUD (togleable bossbar and particles on chunkborder)
 - ```\showclaim <name>``` - shows border of claim with particles for a short time (or until toggled off) (always on when autoclaiming)
 - ```/transferclaim <playername>:<claimname> <playername>``` - transfer claim to another player
-- autoclaim 
-- add forbidden words filter
 - test
 - Implement minimessage:
-  - implement central message service
   - migrate all messages to minimessage
 
-TODO:
-# The Plugin uses some internal placeholders that get replaced with dynamic values:
-# %chunk_x%
-# %chunk_z%
-# %claim_name%
-# %claim_new_name%
-# %max_chunks%
-# %max_claims%
-# %max_length%
-# %owner%
-# %player%
-# %chunk_count%
-# %claim_count%
-# %deleteclaim_confirm%
-# %renameclaim_confirm%
