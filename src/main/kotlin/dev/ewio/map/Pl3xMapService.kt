@@ -4,6 +4,7 @@ import dev.ewio.VisualClaim
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
+import dev.ewio.util.log
 
 import net.pl3x.map.core.Pl3xMap
 import net.pl3x.map.core.markers.layer.Layer
@@ -11,6 +12,7 @@ import net.pl3x.map.core.markers.layer.SimpleLayer
 import net.pl3x.map.core.markers.marker.Rectangle
 import net.pl3x.map.core.markers.option.Fill
 import net.pl3x.map.core.markers.option.Options
+import net.pl3x.map.core.markers.option.Popup
 import net.pl3x.map.core.markers.option.Stroke
 import net.pl3x.map.core.registry.Registry
 import org.bukkit.configuration.file.FileConfiguration
@@ -36,7 +38,7 @@ class Pl3xMapService: MapService {
         val api = Pl3xMap.api()
         for (world in api.worldRegistry.values()) {
             val reg: Registry<Layer> = world.layerRegistry
-            val layer = SimpleLayer("visualclaim", Supplier { cfg.get("Pl3xMap.layer-name")?.toString() ?: "Claims" })
+            val layer = SimpleLayer("visualclaim", Supplier { plugin.messageService.getString("Pl3xMap.layer-name")})
             layer.setShowControls(true).setLiveUpdate(true).zIndex = 250
             reg.register(layer)
             layers[UUID.nameUUIDFromBytes(world.name.toByteArray())] = layer // Key based on worldname
@@ -48,7 +50,7 @@ class Pl3xMapService: MapService {
     }
 
     override fun writeClaimMarker(player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) {
-        plugin.logger.info("Writing markers for claim ${claim.displayName} owned by ${player.name} over ${chunks.size} chunks.")
+        log("Writing markers for claim ${claim.displayName} owned by ${player.name} over ${chunks.size} chunks.")
 
         //add marker for each chunk
         chunks.forEach {
@@ -59,7 +61,7 @@ class Pl3xMapService: MapService {
     private fun writeChunkbasedClaimMarker(claim: VCClaim, player: VCPlayer, chunk: VCChunk) {
         //get world
         val world = Pl3xMap.api().worldRegistry.get(chunk.plainChunk.world) ?: return
-        plugin.logger.info("Adding marker for chunk ${chunk.plainChunk.world}:${chunk.plainChunk.x},${chunk.plainChunk.z}")
+        log("Adding marker for chunk ${chunk.plainChunk.world}:${chunk.plainChunk.x},${chunk.plainChunk.z}")
 
         val layer = world.layerRegistry.getOrDefault(
             "visualclaim",
@@ -71,12 +73,17 @@ class Pl3xMapService: MapService {
 
         val hoverText = getHoverText(claim, player)
 
+        val popup = Popup()
+        popup.content = hoverText
+
+
         val bx: Int = chunk.plainChunk.x * 16
         val bz: Int = chunk.plainChunk.z * 16
 
         val rect = Rectangle.of(markerKey(chunk), bx.toDouble(), bz.toDouble(), bx.toDouble() + 16, bz.toDouble() + 16)
         val opts = Options.builder()
             .tooltipContent(hoverText)
+            .popup(popup)
             .stroke(Stroke(strokeWeight, strokeColor))
             .fill(Fill(fillColor))
             .build()
@@ -88,11 +95,10 @@ class Pl3xMapService: MapService {
     }
 
     private fun getHoverText(claim: VCClaim, player: VCPlayer): String {
-        return plugin.cfg.get("Pl3xMap.hover-text.named-claim")
-            .toString()
-            .replace("<owner>", player.name)
-            .replace("<claim-name>", claim.displayName)
-
+        return plugin.messageService.getString("Pl3xMap.hover-text.named-claim", mapOf(
+            "owner" to player.name,
+            "claim_name" to claim.displayName
+        ))
     }
 
     private fun removeChunkMarker(chunk: VCChunk) {

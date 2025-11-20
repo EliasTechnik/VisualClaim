@@ -1,8 +1,10 @@
 package dev.ewio.command
 
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.bukkit.command.Command
@@ -27,6 +29,7 @@ class DeleteclaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
     private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
 
     override fun onCommand(
@@ -149,46 +152,46 @@ class DeleteclaimCommand(
 
                 when(result){
                     is VCResult.DeleteClaim.RemovedSuccessful ->  {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.deleteclaim.success")
-                                .replace("<claim-name>", "\"${result.claimName}\"")
-                        )
+                        ms.send(realPlayer, "deleteclaim.success", mapOf("claim_name" to result.claimName))
                     }
                     is VCResult.DeleteClaim.VCClaimNotFound -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.deleteclaim.not-found")
-                                .replace("<claim-name>", "\"${result.claimName}\"")
-                        )
+                        ms.send(realPlayer, "deleteclaim.not-found", mapOf("claim_name" to result.claimName))
                     }
                     is VCResult.DeleteClaim.ConfirmationRequired -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.deleteclaim.confirm")
-                                .replace("<claim-name>", "\"${result.claimName}\"")
-                                .replace("<deleteclaim-confirm>", getStringFromConfig("trigger-words.deleteclaim-confirm"))
+                        ms.send(
+                            player = realPlayer,
+                            key = "deleteclaim.confirm",
+                            placeholders = mapOf(
+                                "claim_name" to result.claimName,
+                                "deleteclaim-confirm" to getStringFromConfig("trigger-words.deleteclaim-confirm")
+                            )
                         )
                     }
                     is VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.deleteclaim.confirm-other")
-                                .replace("<claim-name>", "\"${result.claimName}\"")
-                                .replace("<deleteclaim-confirm>", getStringFromConfig("trigger-words.deleteclaim-confirm"))
+                        ms.send(
+                            player = realPlayer,
+                            key = "deleteclaim.confirm-other",
+                            placeholders = mapOf(
+                                "claim_name" to result.claimName,
+                                "deleteclaim-confirm" to getStringFromConfig("trigger-words.deleteclaim-confirm")
+                            )
                         )
                     }
                     is VCResult.DeleteClaim.NotOwnerOfClaim -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.deleteclaim.not-owner")
-                                .replace("<claim-name>", "\"${result.claimName}\"")
+                        ms.send(
+                            player = realPlayer,
+                            key = "deleteclaim.not-owner",
+                            placeholders = mapOf(
+                                "claim_name" to result.claimName,
+                            )
                         )
                     }
                     is VCResult.MalformedCommand -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("usage.deleteclaim")
-                        )
+                        ms.send(realPlayer, "usage.deleteclaim")
                     }
                     else -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
-                        )
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
                 }
             }

@@ -1,8 +1,10 @@
 package dev.ewio.command
 
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.bukkit.command.Command
@@ -14,7 +16,8 @@ import org.bukkit.entity.Player
 class RenameclaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String
+    private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
     /**
      * Renames a claim owned by the player.
@@ -43,9 +46,7 @@ class RenameclaimCommand(
                         // /renameclaim -p <player>
                         if (betterArgs[0] == "-p") {
                             //invalid usage
-                            realPlayer.sendMessage(
-                                getStringFromConfig("usage.renameclaim-other")
-                            )
+                            ms.send(realPlayer, "usage.renameclaim-other")
                             return@launch
                         } else {
                             //renaming own claim
@@ -63,9 +64,7 @@ class RenameclaimCommand(
                         // /renameclaim -p <player> <old-claim-name>
                         if (betterArgs[0] == "-p") {
                             //invalid usage
-                            realPlayer.sendMessage(
-                                getStringFromConfig("usage.renameclaim-other")
-                            )
+                            ms.send(realPlayer, "usage.renameclaim-other")
                             return@launch
                         } else {
                             //renaming own claim with possible merge confirmation
@@ -90,9 +89,7 @@ class RenameclaimCommand(
                             )
                         } else {
                             //invalid usage
-                            realPlayer.sendMessage(
-                                getStringFromConfig("usage.renameclaim")
-                            )
+                            ms.send(realPlayer, "usage.renameclaim")
                             return@launch
                         }
                     }
@@ -110,92 +107,68 @@ class RenameclaimCommand(
                             )
                         } else {
                             //invalid usage
-                            realPlayer.sendMessage(
-                                getStringFromConfig("usage.renameclaim")
-                            )
+                            ms.send(realPlayer, "usage.renameclaim")
                             return@launch
                         }
                     }
 
                     else -> {
                         //invalid usage
-                        realPlayer.sendMessage(
-                            getStringFromConfig("usage.renameclaim")
-                        )
+                        ms.send(realPlayer, "usage.renameclaim")
                         return@launch
                     }
                 }
 
                 when (result) {
                     is VCResult.RenameClaim.RenamedSuccessful -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.renameclaim.success")
-                                .replace("<claim-name>", result.oldName)
-                                .replace("<claim-new-name>", result.newName)
-                        )
+                        ms.send(realPlayer, "renameclaim.success", mapOf(
+                            "claim_name" to result.oldName,
+                            "claim_new_name" to result.newName
+                        ))
                     }
 
                     is VCResult.RenameClaim.MergeSuccessful -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.renameclaim.merge-success")
-                                .replace("<claim-name>", result.oldName)
-                                .replace("<claim-new-name>", result.newName)
-                        )
+                        ms.send(realPlayer, "renameclaim.merge-success", mapOf(
+                            "claim_name" to result.oldName,
+                            "claim_new_name" to result.newName
+                        ))
                     }
 
                     is VCResult.RenameClaim.OldNameNotFound -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.renameclaim.not-found")
-                                .replace("<claim-name>", result.oldName)
-                        )
+                        ms.send(realPlayer, "renameclaim.not-found", mapOf(
+                            "claim_name" to result.oldName
+                        ))
                     }
 
                     is VCResult.RenameClaim.ConfirmMergeRequired -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.renameclaim.merge-confirm")
-                                .replace("<claim-name>", "\"${result.oldName}\"")
-                                .replace("<claim-new-name>", "\"${result.newName}\"")
-                                .replace(
-                                    "<renameclaim-confirm>",
-                                    getStringFromConfig("trigger-words.renameclaim-confirm")
-                                )
-                        )
+                        ms.send(realPlayer, "renameclaim.merge-confirm", mapOf(
+                            "claim_name" to "\"${result.oldName}\"",
+                            "claim_new_name" to "\"${result.newName}\"",
+                            "renameclaim_confirm" to getStringFromConfig("trigger-words.renameclaim-confirm")
+                        ))
                     }
 
                     is VCResult.RenameClaim.ConfirmMergeOtherPlayerClaimRequired -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.renameclaim.merge-other-confirm")
-                                .replace("<claim-name>", "\"${result.oldName}\"")
-                                .replace("<claim-new-name>", "\"${result.newName}\"")
-                                .replace(
-                                    "<renameclaim-confirm>",
-                                    getStringFromConfig("trigger-words.renameclaim-confirm")
-                                )
-                        )
-                    }
 
+                        ms.send(realPlayer, "renameclaim.merge-other-confirm", mapOf(
+                            "claim_name" to "\"${result.oldName}\"",
+                            "claim_new_name" to "\"${result.newName}\"",
+                            "renameclaim_confirm" to getStringFromConfig("trigger-words.renameclaim-confirm")
+                        ))
+                    }
                     is VCResult.UnknownFailure -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
-                        )
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
-
                     is VCResult.MissingPermission -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.missing-permission")
-                        )
+                        ms.send(realPlayer, "missing-permission")
                     }
-
                     is VCResult.RenameClaim.ClaimNameNotAllowed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.claim-name-not-allowed")
-                        )
+                        ms.send(realPlayer, "claim.claim-name-not-allowed")
                     }
-
                     else -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
-                        )
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
                 }
             }

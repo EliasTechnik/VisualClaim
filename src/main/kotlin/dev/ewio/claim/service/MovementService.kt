@@ -22,10 +22,11 @@ import kotlin.to
 
 class MovementService(
     val registerListener: (listener: MoveListener) -> Unit,
-    val preService: PrerequisiteService,
-    val coroutineScope: CoroutineScope,
-    val cc: CentralCache,
-    private val getStringFromConfig: (key: String) -> String
+    private val preService: PrerequisiteService,
+    private val coroutineScope: CoroutineScope,
+    private val cc: CentralCache,
+    private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ) {
     var moveListener: MoveListener
 
@@ -50,48 +51,43 @@ class MovementService(
     suspend fun actOnAutoclaimResult(player: Player, result: VCResult, context: VCPlayerContext){
         when(result){
             is VCResult.UnknownFailure -> {
-                player.sendMessage(getStringFromConfig("messages.unknown-error"))
+                log("Unknown Failure")
+                ms.send(player, "unknown-error")
             }
             is VCResult.MissingPermission -> {
-                player.sendMessage(getStringFromConfig("messages.missing-permission"))
+                ms.send(player, "missing-permission")
             }
             is VCResult.AutoClaim.AutoClaimFailedNoTargetClaimSet -> {
-                player.sendMessage(getStringFromConfig("messages.autoclaim.no-target-claim-set"))
+                ms.send(player, "autoclaim.no-target-claim-set")
                 preService.disableAutoclaim(context)
             }
             is VCResult.AutoClaim.ChunkLimitReached -> {
-                player.sendMessage(
-                    getStringFromConfig("messages.claim.max-chunks-reached")
-                        .replace("<max-chunks>", context.restrictions.maxChunks.toString())
-                )
+                ms.send(player, "claim.max-chunks-reached", mapOf("max_chunks" to context.restrictions.maxChunks.toString()))
                 preService.disableAutoclaim(context)
             }
             is VCResult.AutoClaim.ChunkCanNotBeClaimed -> {
-                player.sendMessage(
-                    getStringFromConfig("messages.claim.can-not-be-claimed")
-                )
+                ms.send(player, "claim.can-not-be-claimed")
             }
             is VCResult.AutoClaim.ChunkClaimedByOtherPlayer -> {
-                player.sendMessage(getStringFromConfig("messages.claim.claimed-by-other"))
+                ms.send(player, "claim.claimed-by-other")
             }
             is VCResult.AutoClaim.ChunkAlreadyClaimed -> {
-                player.sendMessage(
-                    getStringFromConfig("messages.claim.claimed-already")
-                )
+                ms.send(player, "claim.claimed-already")
             }
             is VCResult.AutoClaim.ChunkBelongsToDifferentClaim -> {
-                player.sendMessage(getStringFromConfig("messages.autoclaim.chunk-belongs-to-different-claim")
-                    .replace("<x>", result.chunk.x.toString())
-                    .replace("<z>", result.chunk.z.toString())
-                    .replace("<claim-name>", result.otherClaimName))
+                ms.send(player, "autoclaim.chunk-belongs-to-different-claim", mapOf(
+                    "chunk_x" to result.chunk.x.toString(),
+                    "chunk_z" to result.chunk.z.toString(),
+                    "claim_name" to result.otherClaimName
+                ))
             }
             is VCResult.AutoClaim.ChunkClaimed -> {
-                player.sendMessage(getStringFromConfig("messages.claim.success")
-                    .replace("<x>", result.chunk.plainChunk.x.toString())
-                    .replace("<z>", result.chunk.plainChunk.z.toString())
-                    .replace("<claim-name>", result.claim.displayName)
-                    .replace("<player>", player.name)
-                )
+                ms.send(player, "claim.success", mapOf(
+                    "chunk_x" to result.chunk.plainChunk.x.toString(),
+                    "chunk_z" to result.chunk.plainChunk.z.toString(),
+                    "claim_name" to result.claim.displayName,
+                    "player" to player.name
+                ))
             }
             else -> {
                 //if this is reached I have forgotten to handle a case

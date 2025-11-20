@@ -2,6 +2,7 @@ package dev.ewio.command
 
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.GL
 import dev.ewio.util.getCorrectlySplitArgs
@@ -17,6 +18,7 @@ class ClaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
     private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -31,7 +33,7 @@ class ClaimCommand(
                 var (context, realPlayer) = it
                 val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
-                log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")
+                //log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")
 
                 val result = if(betterArgs.isEmpty()) {
                     //no name given, use last claim or show usage
@@ -51,76 +53,62 @@ class ClaimCommand(
                 //result handling here
                 when(result) {
                     is VCResult.CreateClaim.ClaimCreatedSuccessfully -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.success")
-                                .replace("<x>", result.chunk.plainChunk.x.toString())
-                                .replace("<z>", result.chunk.plainChunk.z.toString())
-                                .replace("<player>",context.player.name)
-                                .replace("<claim-name>",result.claim.displayName)
+                        ms.send(
+                            player = realPlayer,
+                            key = "claim.success",
+                            placeholders = mapOf(
+                                "chunk_x" to result.chunk.plainChunk.x.toString(),
+                                "chunk_z" to result.chunk.plainChunk.z.toString(),
+                                "player" to context.player.name,
+                                "claim_name" to result.claim.displayName
+                            )
                         )
                     }
                     is VCResult.CreateClaim.ChunkTransferredToClaim -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.addedToClaim")
-                                .replace("<x>", result.chunk.x.toString())
-                                .replace("<z>", result.chunk.z.toString())
-                                .replace("<player>",context.player.name)
-                                .replace("<claim-name>",result.claim.displayName)
+                        ms.send(
+                            player = realPlayer,
+                            key = "claim.addedToClaim",
+                            placeholders = mapOf(
+                                "chunk_x" to result.chunk.x.toString(),
+                                "chunk_z" to result.chunk.z.toString(),
+                                "player" to context.player.name,
+                                "claim_name" to result.claim.displayName
+                            )
                         )
                     }
                     is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.claimed-already")
+                        ms.send(
+                            player = realPlayer,
+                            key = "claim.claimed-already"
                         )
                     }
                     is VCResult.CreateClaim.ChunkClaimedByOtherPlayer -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.claimed-by-other")
-                                .replace("<other-player>", result.otherPlayer)
-                        )
+                        ms.send(realPlayer, "claim.claimed-by-other")
                     }
                     is VCResult.CreateClaim.ChunkLimitReached -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.max-chunks-reached")
-                                .replace("<max-chunks>", result.maxChunks.toString())
-                        )
+                        ms.send(realPlayer, "claim.max-chunks-reached", mapOf("max-chunks" to result.maxChunks.toString()))
                     }
                     is VCResult.CreateClaim.ClaimLimitReached -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.max-claims-reached")
-                                .replace("<max-claims>", result.maxClaims.toString())
-                        )
+                        ms.send(realPlayer, "claim.max-claims-reached", mapOf("max-claims" to result.maxClaims.toString()))
                     }
                     is VCResult.CreateClaim.ChunkCanNotBeClaimed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.can-not-be-claimed")
-                        )
+                        ms.send(realPlayer, "claim.can-not-be-claimed")
                     }
                     is VCResult.CreateClaim.NoExistingClaimFound -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("usage.claim")
-                        )
+                        ms.send(realPlayer, "usage.claim")
                     }
                     is VCResult.CreateClaim.ClaimNameTooLong -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.name-too-long")
-                                .replace("<max-length>", result.maxLength.toString())
-                        )
+                        ms.send(realPlayer, "claim.name-too-long", mapOf("max-length" to result.maxLength.toString()))
                     }
                     is VCResult.MissingPermission -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.missing-permission")
-                        )
+                        ms.send(realPlayer, "missing-permission")
                     }
                     is VCResult.CreateClaim.ClaimNameNotAllowed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claim.claim-name-not-allowed")
-                        )
+                        ms.send(realPlayer, "claim.claim-name-not-allowed")
                     }
                     else -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
-                        )
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
                 }
             }

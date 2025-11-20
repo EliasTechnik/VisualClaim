@@ -1,12 +1,3 @@
-# Standard-Name, wenn kein Name in Anführungszeichen angegeben ist
-
-Pl3xMap:
-  layer-name: "Claims"
-  hover-text:
-    named-claim: "<claim-name> von <owner>"
-
-
-
 # Limits (0 oder negativ = deaktiviert)
 limits:
   max-claims-per-player: 150
@@ -61,8 +52,28 @@ color:
     stroke: 0.3
     fill: 0.6
 
-#command usage
-usage:
+
+
+
+# Messages shown to players. The placeholders in <> will be replaced with dynamic values. They can be obmitted but extra placeholders will not be recognized.
+# The Plugin uses some internal placeholders that get replaced with dynamic values:
+# %chunk_x% - Chunk X Coordinate
+# %chunk_z% - Chunk Z Coordinate
+# %claim_name% - Claim Name
+# %claim_new_name% - New Claim Name
+# %max_chunks% - max chunks per player
+# %max_claims% - max claims per player
+# %max_length% - max claim name length
+# %owner% - Owner of the claim
+# %player% - Player name
+# %chunk_count% - Number of chunks claimed by the player
+# %claim_count% - Number of claims created by the player
+# %deleteclaim_confirm% - trigger word to confirm claim deletion
+# %renameclaim_confirm% - trigger word to confirm claim renaming/merging
+
+messages:
+  #command usage
+  usage:
     claim: "§aNutze §e/claim \"claim-name\"§a um den Chunk in dem du stehst zu claimen. Der Name wird anderen Spielern und auf der Karte angezeigt. Lässt du den Namen weg, wird der chunk zu deinem zuletzt bearbeiteten Claim hinzugefügt."
     autoclaim: "§aNutze §e/autoclaim \"claim-name\"§a um automatisch die chunks zu claimen in denen du dich befindest. Mit §e/autoclaim off§a schaltest du es wieder aus. Um AutoClaim zu nutzen, musst du zuerst einen Claim mit §e/claim \"claim-name\"§a erstellen."
     claiminfo: "§aNutze §e/claiminfo§a um Informationen über den Chunk in dem du stehst zu erhalten."
@@ -72,58 +83,59 @@ usage:
     deleteclaim: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
     unclaim: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
     claimcolor: "§aMit /claimcolor \"claim-name\" <farbe> änderst du die Farbe der Markierung für deine Claims auf der Karte."
-
-
-# Messages shown to players. The placeholders in <> will be replaced with dynamic values. They can be obmitted but extra placeholders will not be recognized.
-
-messages:
+  # command results
   claim:
-    success: "§aChunk <x>,<z> wurde für <player> geclaimt. Er gehört nun zum/zur <claim-name>"
-    addedToClaim: "§aChunk <x>,<z> wurde für <player> geclaim und zum/zur <claim-name> hinzugefügt."
+    success: "§aChunk %chunk_x%,%chunk_z% wurde für %player% geclaimt. Er gehört nun zum/zur %claim_name%"
+    addedToClaim: "§aChunk %chunk_x%,%chunk_z% wurde für %player% geclaim und zum/zur %claim_name% hinzugefügt."
     claimed-already: "§aDieser Chunk ist bereits von dir geclaimt. Nutze §e/unclaim§a um ihn freizugeben."
     claimed-by-other: "§aDieser Chunk ist bereits von jemand anderen geclaimt."
-    claim-belongs-to-other: "§aDer Claim <claim-name> gehört einen anderen Spieler."
-    could-not-create-claim: "§cDer Claim <claim-name> konnte hier nicht erstellt werden."
+    claim-belongs-to-other: "§aDer Claim %claim_name% gehört einen anderen Spieler."
+    could-not-create-claim: "§cDer Claim %claim_name% konnte hier nicht erstellt werden."
     can-not-be-claimed: "§cDer Chunk kann nicht geclaimt werden."
-    max-claims-reached: "§aDu hast die maximale Anzahl an Claims erreicht. Du kannst maximal <maxclaims> Claims erstellen."
-    max-chunks-reached: "§aDu hast die maximale Anzahl an geclaimten Chunks erreicht. Du kannst maximal <maxchunks> Chunks claimen."
-    name-too-long: "§aDer Claim-Name darf maximal <max-length> Zeichen lang sein."
+    max-claims-reached: "§aDu hast die maximale Anzahl an Claims erreicht. Du kannst maximal %max_claims% Claims erstellen."
+    max-chunks-reached: "§aDu hast die maximale Anzahl an geclaimten Chunks erreicht. Du kannst maximal %max_chunks% Chunks claimen."
+    name-too-long: "§aDer Claim-Name darf maximal %max_length% Zeichen lang sein."
     claim-name-not-allowed: "§aDiesen Claimnamen darfst du leider nicht verwenden."
   autoclaim:
-    enabled: "§aAutoClaim für Claim <claim-name> aktiviert."
+    enabled: "§aAutoClaim für Claim %claim_name% aktiviert."
     disabled: "§aAutoClaim deaktiviert."
-    no-target-claim-set: "§aDer Claim existiert nicht. Nutze zuerst §e/claim \"<claim-name>\"§a um ihn zu erstellen und diesen ersten Chunk zu claimen."
-    chunk-belongs-to-different-claim: "§aDer Chunk <x>,<z> gehört zu einem anderen Claim und wurde nicht erneut geclaimt. Nutze §e/unclaim§a um ihn freizugeben."
+    no-target-claim-set: "§aDer Claim existiert nicht. Nutze zuerst §e/claim \"%claim_name%\"§a um ihn zu erstellen und diesen ersten Chunk zu claimen."
+    chunk-belongs-to-different-claim: "§aDer Chunk %chunk_x%,%chunk_z% gehört zu einem anderen Claim und wurde nicht erneut geclaimt. Nutze §e/unclaim§a um ihn freizugeben."
   unclaim:
-    success: "§aChunk <x>,<z> aus Claim <claim-name> entfernt."
+    success: "§aChunk %chunk_x%,%chunk_z% aus Claim %claim_name% entfernt."
     none: "§aHier ist kein Claim gesetzt."
-    other-owner: "§aDieser Chunk gehört <owner>. Du kannst nur deine eigenen Chunks unclaimen."
-    usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
+    other-owner: "§aDieser Chunk gehört %owner%. Du kannst nur deine eigenen Chunks unclaimen."
+    usage: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"%claim_name%\"§a, um den gesamten Claim zu löschen."
   claiminfo:
     free: "§aDieser Chunk ist frei und gehört niemandem."
-    claimed: "§aDieser Chunk gehört <owner> im Claim <claim-name>."
+    claimed: "§aDieser Chunk gehört %owner% im Claim %claim_name%."
   no-claims: "§aDu hast noch keine Claims gesetzt. Nutze /claim um einen Chunk zu claimen."
   list-claims:
     header: "§aDeine Claims:"
-    header-other: "§aClaims von <player>:"
-    summary: "§aInsgesamt hast du <chunk-count> von <maxchunks> Chunks geclaimt und <claim-count> von <maxclaims> möglichen Claims erstellt. "
-    summary-other: "§aInsgesamt hat <player> <chunk-count> von <maxchunks> Chunks geclaimt und <claim-count> von <maxclaims> möglichen Claims erstellt. "
-    no-claims-other: "§aSpieler <player> hat keine Claims."
+    header-other: "§aClaims von %player%:"
+    entry: "§6- %claim_name%: %chunk_count% Chunks"
+    summary: "§aInsgesamt hast du %chunk_count% von %max_chunks% Chunks geclaimt und %claim_count% von %max_claims% möglichen Claims erstellt. "
+    summary-other: "§aInsgesamt hat %player% %chunk_count% von %max_chunks% Chunks geclaimt und %claim_count% von %max_claims% möglichen Claims erstellt. "
+    no-claims-other: "§aSpieler %player% hat keine Claims."
   deleteclaim:
-    success: "§aDer Claim <claim-name> wurde gelöscht und alle Chunks wurden freigegeben."
-    not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
-    not-owner: "§aDu besitzt keinen Claim mit dem Namen <claim-name>."
-    confirm: "§aBist du sicher, dass du den Claim <claim-name> und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim <claim-name> <deleteclaim-confirm> §aum den Löschvorgang abzuschließen."
+    success: "§aDer Claim %claim_name% wurde gelöscht und alle Chunks wurden freigegeben."
+    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
+    not-owner: "§aDu besitzt keinen Claim mit dem Namen %claim_name%."
+    confirm: "§aBist du sicher, dass du den Claim %claim_name% und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim %claim_name% %deleteclaim_confirm% §aum den Löschvorgang abzuschließen."
     none: "§aDu hast keine Claims zum Löschen."
   renameclaim:
-    success: "§aDer Claim <claim-name> wurde in <claim-new-name> umbenannt."
-    not-found: "§aEinen Claim mit dem Namen <claim-name> wurde nicht gefunden."
-    merge-confirm: "§aBist du sicher, dass du den Claim <claim-name> mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename <claim-name> <claim-new-name> <renameclaim-confirm> §aum den Vorgang durchzuführen."
+    success: "§aDer Claim %claim_name% wurde in <claim-new-name> umbenannt."
+    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
+    merge-confirm: "§aBist du sicher, dass du den Claim %claim_name% mit <claim-new-name> zusammenführen möchtest? Nutze §e/rename %claim_name% <claim-new-name> %renameclaim_confirm% §aum den Vorgang durchzuführen."
     none: "§aKeine Claims zum Umbenennen verfügbar."
-    merge-success: "§aDer Claim <claim-name> wurde mit <claim-new-name> zusammengeführt."
+    merge-success: "§aDer Claim %claim_name% wurde mit <claim-new-name> zusammengeführt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
-  player-not-found: "§cDer Spieler <player> wurde nicht gefunden."
+  player-not-found: "§cDer Spieler %player% wurde nicht gefunden."
+  Pl3xMap:
+    layer-name: "Claims"
+    hover-text:
+      named-claim: "%claim_name% von %owner%"
 
 
 # These are words that need to be typed to confirm/trigger certain actions

@@ -2,6 +2,7 @@ package dev.ewio.command
 
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +15,8 @@ import org.bukkit.entity.Player
 class AutoclaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String
+    private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
 
     /**
@@ -66,26 +68,36 @@ class AutoclaimCommand(
                 when(result){
                     is VCResult.AutoClaim.StatusInfo -> {
                         if(result.isEnabled){
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.autoclaim.enabled")
-                                    .replace("<claim-name>", context.getAutoClaimTarget()?.displayName?: "unknown")
+                            ms.send(
+                                player = realPlayer,
+                                key = "autoclaim.enabled",
+                                placeholders = mapOf(
+                                    "claim_name" to (context.getAutoClaimTarget()?.displayName?: "unknown")
+                                )
                             )
                         }else{
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.autoclaim.disabled")
-                                    .replace("<claim-name>", context.getAutoClaimTarget()?.displayName?: "unknown")
+                            ms.send(
+                                player = realPlayer,
+                                key = "autoclaim.disabled",
+                                placeholders = mapOf(
+                                    "claim_name" to (context.getAutoClaimTarget()?.displayName?: "unknown")
+                                )
                             )
                         }
                     }
                     is VCResult.MalformedCommand -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("usage.autoclaim")
+                        ms.send(
+                            player = realPlayer,
+                            key = "usage.autoclaim"
                         )
                     }
                     is VCResult.AutoClaim.AutoClaimEnabled -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.autoclaim.enabled")
-                                .replace("<claim-name>", result.forClaim.displayName)
+                        ms.send(
+                            player = realPlayer,
+                            key = "autoclaim.enabled",
+                            placeholders = mapOf(
+                                "claim_name" to (result.forClaim.displayName?: "unknown")
+                            )
                         )
                         //trigger an autoclaim for the current chunk right away
                         //do not forget to fetch the context again!
@@ -95,25 +107,31 @@ class AutoclaimCommand(
 
                     }
                     is VCResult.AutoClaim.AutoClaimDisabled -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.autoclaim.disabled")
+                        ms.send(
+                            player = realPlayer,
+                            key = "autoclaim.disabled"
                         )
                     }
                     is VCResult.AutoClaim.ClaimNeedsCreationFirst -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.no-target-claim-set")
-                                .replace("<claim-name>", result.claimName)
+                        ms.send(
+                            player = realPlayer,
+                            key = "autoclaim.no-target-claim-set",
+                            placeholders = mapOf(
+                                "claim_name" to result.claimName
+                            )
                         )
                     }
                     is VCResult.MissingPermission -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.missing-permission")
+                        ms.send(
+                            player = realPlayer,
+                            key = "missing-permission"
                         )
                     }
                     else -> {
                         //if this is reached I have forgotten to handle a case
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
+                        ms.send(
+                            player = realPlayer,
+                            key = "unknown-error"
                         )
                     }
                 }

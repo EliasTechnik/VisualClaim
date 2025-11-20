@@ -3,8 +3,10 @@ package dev.ewio.command
 import dev.ewio.VisualClaim
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -16,7 +18,8 @@ import org.bukkit.command.TabExecutor
 class ClaiminfoCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String
+    private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
     override fun onTabComplete(
         sender: CommandSender,
@@ -41,9 +44,7 @@ class ClaiminfoCommand(
                 //invalid usage
                 preService.getPlayerContext(sender)?.let {
                     val (_, realPlayer) = it
-                    realPlayer.sendMessage(
-                        getStringFromConfig("usage.claiminfo-usage")
-                    )
+                    ms.send(realPlayer, "usage.claiminfo-usage")
                 }
                 return@launch
             }
@@ -55,24 +56,22 @@ class ClaiminfoCommand(
 
                 when (val claimResult = preService.getClaimAtChunk(chunk)) {
                     is VCResult.ClaimInfo.chunkClaimed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claiminfo.claimed")
-                                .replace("<owner>", claimResult.ownerName)
-                                .replace("<claim-name>", claimResult.claimName)
-                        )
+                        ms.send(
+                            realPlayer,
+                            "claiminfo.claimed",
+                            mapOf(
+                                "owner" to claimResult.ownerName,
+                                "claim_name" to claimResult.claimName
+                            ))
                     }
 
                     is VCResult.ClaimInfo.ChunkNotClaimed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.claiminfo.free")
-                        )
+                        ms.send(realPlayer, "claiminfo.free")
                     }
 
                     else -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-owner")
-                        )
-
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
                 }
             }

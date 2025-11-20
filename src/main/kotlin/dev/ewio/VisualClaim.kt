@@ -11,6 +11,7 @@ import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCRestrictions
 import dev.ewio.claim.service.CentralCache
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
@@ -42,6 +43,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var movementService: MovementService
     lateinit var centralCache: CentralCache
     lateinit var cfg: FileConfiguration
+    lateinit var messageService: MessageService
 
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
@@ -66,7 +68,11 @@ class VisualClaim : JavaPlugin() {
         //init database
         VCDB.connect(File(dataFolder, "VisualClaim.db").absolutePath)
 
+
         //services
+        this.messageService = MessageService(cfg)
+        messageService.load()
+
         this.claimService = ClaimService(
             claimRepo = ClaimRepository(),//InMemoryRepository<VCClaim>(extractKey = { it.key }),
             playerRepo = PlayerRepository(),//InMemoryRepository<VCPlayer>(extractKey = { it.key }),
@@ -131,7 +137,8 @@ class VisualClaim : JavaPlugin() {
             preService = this.prerequisiteService,
             coroutineScope = this.scope,
             cc = centralCache,
-            getStringFromConfig = { path -> getStringFormConfig(path) }
+            getStringFromConfig = { path -> getStringFormConfig(path) },
+            ms = messageService
         )
 
         //Listeners (which aren't part of services) can be registered here
@@ -146,7 +153,8 @@ class VisualClaim : JavaPlugin() {
             ClaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
 
@@ -154,7 +162,8 @@ class VisualClaim : JavaPlugin() {
             ListclaimsCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
 
@@ -162,16 +171,17 @@ class VisualClaim : JavaPlugin() {
                 ClaiminfoCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                    ms = messageService
             )
         )
-
 
         getCommand("unclaim")?.setExecutor(
             UnclaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
 
@@ -179,21 +189,24 @@ class VisualClaim : JavaPlugin() {
             DeleteclaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
         getCommand("renameclaim")?.setExecutor(
             RenameclaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
         getCommand("autoclaim")?.setExecutor(
             AutoclaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) }
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
             )
         )
 

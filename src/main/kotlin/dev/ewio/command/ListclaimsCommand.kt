@@ -2,6 +2,7 @@ package dev.ewio.command
 
 import dev.ewio.VisualClaim
 import dev.ewio.claim.service.ClaimService
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.countChunksInClaim
 import dev.ewio.util.getCorrectlySplitArgs
@@ -16,7 +17,8 @@ import org.bukkit.entity.Player
 class ListclaimsCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String
+    private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ): TabExecutor {
     override fun onTabComplete(
         sender: CommandSender,
@@ -64,89 +66,56 @@ class ListclaimsCommand(
                         otherPlayer?.let {
                             preService.getCachedPlayerContext(it)?.let { targetContext ->
                                 if (targetContext.claims.isEmpty()) {
-                                    realPlayer.sendMessage(
-                                        getStringFromConfig("messages.list-claims.no-claims-other")
-                                            .replace("<player>", betterArgs[0])
-                                    )
+                                    ms.send(realPlayer, "list-claims.no-claims-other", mapOf("player" to betterArgs[0]))
                                 } else {
                                     realPlayer.sendMessage(
                                         getStringFromConfig("messages.list-claims.header-other")
                                             .replace("<player>", betterArgs[0])
                                     )
+                                    ms.send(realPlayer, "list-claims.header-other", mapOf("player" to betterArgs[0]))
                                     for (claim in targetContext.claims) {
-                                        if (getStringFromConfig("plugin-insights.enabled").toBoolean()) {
-                                            realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(targetContext, claim)} Chunks) [ID: ${claim.key}]")
-                                        } else {
-                                            realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(targetContext, claim)} Chunks)")
-                                        }
+                                        ms.send(realPlayer, "list-claims.entry", mapOf(
+                                            "claim_name" to claim.displayName,
+                                            "chunk_count" to countChunksInClaim(targetContext, claim).toString()
+                                            )
+                                        )
                                     }
-                                    realPlayer.sendMessage(
-                                        getStringFromConfig("messages.list-claims.summary-other")
-                                            .replace(
-                                                "<player>",
-                                                betterArgs[0]
-                                            )
-                                            .replace(
-                                                "<chunk-count>",
-                                                targetContext.chunks.size.toString()
-                                            )
-                                            .replace(
-                                                "<maxchunks>",
-                                                targetContext.restrictions.maxChunks.toString()
-                                            )
-                                            .replace(
-                                                "<claim-count>",
-                                                targetContext.claims.size.toString()
-                                            )
-                                            .replace(
-                                                "<maxclaims>",
-                                                targetContext.restrictions.maxClaims.toString()
-                                            )
+                                    ms.send(realPlayer, "list-claims.summary-other", mapOf(
+                                        "player" to betterArgs[0],
+                                        "chunk_count" to targetContext.chunks.size.toString(),
+                                        "max_chunks" to targetContext.restrictions.maxChunks.toString(),
+                                        "claim_count" to targetContext.claims.size.toString(),
+                                        "max_claims" to targetContext.restrictions.maxClaims.toString()
+                                        )
                                     )
                                 }
                             } ?: run {
-                                realPlayer.sendMessage(
-                                    getStringFromConfig("messages.player-not-found")
-                                        .toString()
-                                        .replace("<player>", betterArgs[0])
-                                )
+                                ms.send(realPlayer, "player-not-found", mapOf("player" to betterArgs[0]))
                             }
                         }?: run {
-                            realPlayer.sendMessage(
-                                getStringFromConfig("messages.player-not-found")
-                                    .toString()
-                                    .replace("<player>", betterArgs[0])
-                            )
+                            ms.send(realPlayer, "player-not-found", mapOf("player" to betterArgs[0]))
                         }
                     }
                 }else{
                     //list own claims
                     if(context.claims.isEmpty()){
-                        realPlayer.sendMessage(getStringFromConfig("messages.no-claims").toString())
+                        ms.send(realPlayer, "no-claims")
                     } else {
                         realPlayer.sendMessage(getStringFromConfig("messages.list-claims.header").toString())
                         for(claim in context.claims){
-                            if (getStringFromConfig("plugin-insights.enabled").toBoolean()) {
-                                realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(context, claim)} Chunks) [ID: ${claim.key}]")
-                            } else {
-                                realPlayer.sendMessage("§6- ${claim.displayName} (${countChunksInClaim(context, claim)} Chunks)")
-                            }
+                            ms.send(realPlayer, "list-claims.entry", mapOf(
+                                "claim_name" to claim.displayName,
+                                "chunk_count" to countChunksInClaim(context, claim).toString()
+                                )
+                            )
                         }
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.list-claims.summary")
-                                .toString()
-                                .replace(
-                                    "<chunk-count>",
-                                    context.chunks.size.toString())
-                                .replace(
-                                    "<maxchunks>",
-                                    context.restrictions.maxChunks .toString())
-                                .replace(
-                                    "<claim-count>",
-                                    context.claims.size.toString())
-                                .replace(
-                                    "<maxclaims>",
-                                    context.restrictions.maxClaims .toString())
+                        ms.send(realPlayer, "list-claims.summary", mapOf(
+                            "player" to betterArgs[0],
+                            "chunk_count" to context.chunks.size.toString(),
+                            "max_chunks" to context.restrictions.maxChunks.toString(),
+                            "claim_count" to context.claims.size.toString(),
+                            "max_claims" to context.restrictions.maxClaims.toString()
+                            )
                         )
                     }
                 }

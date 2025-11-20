@@ -2,8 +2,10 @@ package dev.ewio.command
 
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
+import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.bukkit.command.Command
@@ -14,6 +16,7 @@ class UnclaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
     private val getStringFromConfig: (key: String) -> String,
+    private val ms: MessageService
 ) : TabExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -46,37 +49,30 @@ class UnclaimCommand(
                         )
                     } else {
                         //invalid argument
-                        realPlayer.sendMessage(
-                            getStringFromConfig("usage.unclaim")
-                        )
+                        ms.send(realPlayer, "usage.unclaim")
                         return@launch
                     }
                 }
 
                 when(result){
                     is VCResult.UnclaimChunk.UnclaimSuccessful -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unclaim.success")
-                                .replace("<x>", chunk.x.toString())
-                                .replace("<z>", chunk.z.toString())
-                                .replace("<claim-name>", result.claimName)
-                        )
+                        ms.send(realPlayer, "unclaim.success", mapOf(
+                            "chunk_x" to chunk.x.toString(),
+                            "chunk_z" to chunk.z.toString(),
+                            "claim_name" to result.claimName
+                        ))
                     }
                     is VCResult.UnclaimChunk.UnclaimAlreadyUnclaimed -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unclaim.none")
-                        )
+                        ms.send(realPlayer, "unclaim.none")
                     }
                     is VCResult.UnclaimChunk.UnclaimFailedWrongOwner -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unclaim.other-owner")
-                                .replace("<owner>", result.ownerName)
-                        )
+                        ms.send(realPlayer, "unclaim.other-owner", mapOf(
+                            "owner" to result.ownerName
+                        ))
                     }
                     is VCResult.UnknownFailure -> {
-                        realPlayer.sendMessage(
-                            getStringFromConfig("messages.unknown-error")
-                        )
+                        log("Unknown Failure")
+                        ms.send(realPlayer, "unknown-error")
                     }
                 }
             }
