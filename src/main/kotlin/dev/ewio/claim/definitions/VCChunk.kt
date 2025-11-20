@@ -20,6 +20,10 @@ data class PlainChunk(
             )
         }
     }
+
+    override fun toString(): String {
+        return "PlainChunk(world='$world', x=$x, z=$z)"
+    }
 }
 
 data class VCChunk(
@@ -37,5 +41,9 @@ data class VCChunk(
                 0
             )
         )
+    }
+
+    override fun toString(): String {
+        return "VCChunk(key=$key, claimKey=$claimKey, plainChunk=$plainChunk)"
     }
 }

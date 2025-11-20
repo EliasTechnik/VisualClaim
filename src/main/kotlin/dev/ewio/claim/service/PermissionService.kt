@@ -6,7 +6,8 @@ import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionAttachmentInfo
 
 class PermissionService(
-    val defaultVCRestrictions: VCRestrictions
+    val defaultVCRestrictions: VCRestrictions,
+    val triggerWords: List<String>
 ) {
 
     fun getPermission(realPlayer: Player, permissionPrefix: String):String? {
@@ -34,6 +35,11 @@ class PermissionService(
             }
         }
         return null
+    }
+
+    fun isNameAllowed(claimName: String):Boolean{
+        //checks if a name is allowed and does not conflict with command keywords
+        return !triggerWords.any { it.equals(claimName, ignoreCase = true) }
     }
 
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {

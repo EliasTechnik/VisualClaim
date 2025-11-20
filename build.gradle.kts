@@ -37,6 +37,9 @@ dependencies {
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-api:2.22.0")
     implementation("com.github.shynixn.mccoroutine:mccoroutine-bukkit-core:2.22.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+
+    //Mini-message
+    implementation("net.kyori:adventure-text-minimessage:4.25.0")
 }
 
 tasks {

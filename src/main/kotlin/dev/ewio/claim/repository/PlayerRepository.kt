@@ -24,6 +24,7 @@ class PlayerRepository {
                 it[resolvedNameAt] = player.resolvedNameAt
                 it[autoClaim] = player.autoClaim
                 it[bossbar] = player.bossbar
+                it[autoClaimTargetClaimKey] = player.autoClaimTargetClaimKey
             }
 
             log("Inserted new player with UUID ${player.mcUUID}, assigned key: ${insertedId?.value}")
@@ -40,6 +41,9 @@ class PlayerRepository {
                 st[resolvedNameAt] = player.resolvedNameAt
                 st[autoClaim] = player.autoClaim
                 st[bossbar] = player.bossbar
+                st[autoClaim] = player.autoClaim
+                st[bossbar] = player.bossbar
+                st[autoClaimTargetClaimKey] = player.autoClaimTargetClaimKey
             }
             return@newSuspendedTransaction player
         }

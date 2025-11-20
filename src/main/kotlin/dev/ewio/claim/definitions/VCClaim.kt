@@ -14,5 +14,9 @@ data class VCClaim(
             "dummy",
         )
     }
+
+    override fun toString(): String {
+        return "VCClaim(key=$key, playerKey=$playerKey, displayName='$displayName', lastModified=$lastModified)"
+    }
 }
 

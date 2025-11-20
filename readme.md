@@ -92,3 +92,22 @@ The cache can be manually refreshed with every command execution. (even invalid 
 - autoclaim 
 - add forbidden words filter
 - test
+- Implement minimessage:
+  - implement central message service
+  - migrate all messages to minimessage
+
+TODO:
+# The Plugin uses some internal placeholders that get replaced with dynamic values:
+# %chunk_x%
+# %chunk_z%
+# %claim_name%
+# %claim_new_name%
+# %max_chunks%
+# %max_claims%
+# %max_length%
+# %owner%
+# %player%
+# %chunk_count%
+# %claim_count%
+# %deleteclaim_confirm%
+# %renameclaim_confirm%

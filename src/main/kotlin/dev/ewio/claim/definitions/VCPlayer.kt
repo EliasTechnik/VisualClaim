@@ -10,4 +10,8 @@ data class VCPlayer(
     val autoClaim: Boolean = false,
     val autoClaimTargetClaimKey: Int = -1,
     val bossbar: Boolean = true
-)
+){
+    override fun toString(): String {
+        return "VCPlayer(key=$key, mcUUID=$mcUUID, name='$name', resolvedNameAt=$resolvedNameAt, autoClaim=$autoClaim, autoClaimTargetClaimKey=$autoClaimTargetClaimKey, bossbar=$bossbar)"
+    }
+}

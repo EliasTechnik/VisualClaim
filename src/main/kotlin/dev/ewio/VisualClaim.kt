@@ -14,6 +14,7 @@ import dev.ewio.claim.service.CentralCache
 import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
+import dev.ewio.command.AutoclaimCommand
 import dev.ewio.command.ClaimCommand
 import dev.ewio.command.ClaiminfoCommand
 import dev.ewio.command.DeleteclaimCommand
@@ -73,12 +74,25 @@ class VisualClaim : JavaPlugin() {
             placeOnMap = { player, claim, chunks -> placeOnMap(player, claim, chunks) },
             deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) }
         )
+
+        val triggerWordsFromConfig = mutableListOf<String>()
+        cfg.getStringList("trigger-words")?.let{
+            triggerWordsFromConfig.addAll(it)
+        }
+        cfg.getString("migration-name")?.let{
+            triggerWordsFromConfig.add(it)
+        }
+
+
+        this.permissionService = PermissionService(
+            defaultVCRestrictions = defaultRestrictions,
+            triggerWords = triggerWordsFromConfig
+        )
         this.centralCache = CentralCache(
             coroutineScope = this.scope,
             claimService = this.claimService,
             permissionService = this.permissionService
         )
-        this.permissionService = PermissionService(defaultVCRestrictions = defaultRestrictions)
         this.prerequisiteService = PrerequisiteService(
             claimService = this.claimService,
             permissionService = this.permissionService,
@@ -90,6 +104,18 @@ class VisualClaim : JavaPlugin() {
         } else {
             NoopMapService()
         }
+
+        //migrate claims if they contain trigger words as names
+        launch{
+            val count = claimService.removeTriggerWordsFromClaims(
+                permissionService.triggerWords,
+                cfg.getString("migration-name")?: "_renamed"
+            )
+            if(count > 0){
+                GL.logger.info("Renamed $count claims with conflicting names. This happens when trigger-words are changed.")
+            }
+        }
+
 
         if(mapService.isActive()){
             launch {
@@ -104,7 +130,8 @@ class VisualClaim : JavaPlugin() {
             },
             preService = this.prerequisiteService,
             coroutineScope = this.scope,
-            cc = centralCache
+            cc = centralCache,
+            getStringFromConfig = { path -> getStringFormConfig(path) }
         )
 
         //Listeners (which aren't part of services) can be registered here
@@ -162,13 +189,25 @@ class VisualClaim : JavaPlugin() {
                 getStringFromConfig = { path -> getStringFormConfig(path) }
             )
         )
+        getCommand("autoclaim")?.setExecutor(
+            AutoclaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) }
+            )
+        )
+
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")
     }
 
     override fun onDisable() {
         // Plugin shutdown logic
-        mapService.shutdown()
+        try {
+            mapService.shutdown()
+        } catch (e: Exception) {
+            GL.logger.severe("Error shutting down map service: ${e.message}")
+        }
         VCDB.shutdown()
     }
 

@@ -1,5 +1,6 @@
 package dev.ewio.claim.definitions
 
+import dev.ewio.util.log
 import java.util.UUID
 
 /**
@@ -28,6 +29,17 @@ data class VCPlayerContext(
         restrictions = restrictions,
         retrievalTimestamp = dbContext.retrievalTimestamp
     )
+
+    fun getAutoClaimTarget(): VCClaim? {
+        val targetKey = player.autoClaimTargetClaimKey
+        log("AutoClaim target key for player ${player.mcUUID} is $targetKey")
+        return claims.find { it.key == targetKey }
+    }
+
+    override fun toString(): String {
+        return "VCPlayerContext(player=${player}, claims=${claims.toString()}, chunks=${chunks.toString()}, restrictions=$restrictions, retrievalTimestamp=$retrievalTimestamp)"
+    }
+
 }
 
 /**

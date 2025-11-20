@@ -60,6 +60,11 @@ class PrerequisiteService(
             return VCResult.CreateClaim.ClaimNameTooLong(context.restrictions.maxClaimNameLength)
         }
 
+        //check if claim name is allowed
+        if (!permissionService.isNameAllowed(claimName)) {
+            return VCResult.CreateClaim.ClaimNameNotAllowed
+        }
+
         //check if chunk is claimable (eg. not reserved)
         if(isChunkReserved(chunk)) return VCResult.CreateClaim.ChunkCanNotBeClaimed
 
@@ -246,6 +251,10 @@ class PrerequisiteService(
             return VCResult.RenameClaim.ClaimNameTooLong(context.restrictions.maxClaimNameLength)
         }
 
+        if(!permissionService.isNameAllowed(newName)) {
+            return VCResult.RenameClaim.ClaimNameNotAllowed
+        }
+
         val existingClaimWithNewName = context.claims.firstOrNull { it.displayName == newName }
         return if(existingClaimWithNewName != null){
             //a claim with the new name already exists
@@ -335,6 +344,7 @@ class PrerequisiteService(
         context: VCPlayerContext,
         claimName: String
     ): VCResult {
+        //log("Enabling autoclaim for player ${context.player.name} (${context.player.mcUUID}) to claim $claimName")
         if(!context.restrictions.canClaim){
             return VCResult.MissingPermission
         }
@@ -343,26 +353,102 @@ class PrerequisiteService(
         val claim = context.claims.firstOrNull { it.displayName == claimName }
             ?: return VCResult.AutoClaim.ClaimNeedsCreationFirst(claimName)
 
-        claimService.updatePlayer(context.player.copy(autoClaim = true))
+        cc.updatePlayerContextCache(context.player.mcUUID) {
+            claimService.updatePlayer(
+                player = context.player.copy(
+                    autoClaim = true,
+                    autoClaimTargetClaimKey = claim.key))
+        }
+        //log("Cached updated.")
+
+        return VCResult.AutoClaim.AutoClaimEnabled(claim, movementService)
     }
 
     suspend fun disableAutoclaim(
         context: VCPlayerContext
     ): VCResult {
+        //log("Disabling autoclaim for player ${context.player.name} (${context.player.mcUUID})")
         //disable autoclaim
-        return VCResult.UnknownFailure
+        if(!context.restrictions.canClaim){
+            return VCResult.MissingPermission
+        }
+
+        cc.updatePlayerContextCache(context.player.mcUUID) {
+            claimService.updatePlayer(context.player.copy(autoClaim = false))
+        }
+
+        return VCResult.AutoClaim.AutoClaimDisabled
     }
 
     suspend fun handleAutoClaimOnMove(
         context: VCPlayerContext,
-        event: PlayerMoveEvent
-    ): VCResult.AutoClaim{
+        chunk: PlainChunk
+    ): VCResult{
 
         //check if autoclaim is configured right
-        if(context.player.autoClaimTargetClaimKey == -1){
+        val claimToAppendTo = context.getAutoClaimTarget()?: run {
             return VCResult.AutoClaim.AutoClaimFailedNoTargetClaimSet
         }
 
+        //check if the player can claim
+        if (!context.restrictions.canClaim) return VCResult.MissingPermission
+
+        //check if limit is reached
+        if (context.chunks.size >= context.restrictions.maxChunks) {
+            return VCResult.AutoClaim.ChunkLimitReached(context.restrictions.maxChunks)
+        }
+
+        //check if chunk is claimable (eg. not reserved)
+        if(isChunkReserved(chunk)) return VCResult.AutoClaim.ChunkCanNotBeClaimed
+
+        //check if chunk is free
+        val existingClaim = claimService.getClaimAtChunk(chunk)
+        if(existingClaim != null) {
+            //the chunk is already part of a claim
+
+            //check owner
+            val owner = claimService.getOwnerOfClaim(existingClaim)
+            if (owner == null) {
+                //that is a db inconsistency
+                error("Claim ($existingClaim) without valid owner!")
+                return VCResult.UnknownFailure
+            }
+
+            if (owner.key != context.player.key) {
+                //the chunk is owned by another player
+                return VCResult.AutoClaim.ChunkClaimedByOtherPlayer(
+                    otherPlayer = owner.name
+                )
+            }
+
+            //check if the claim is the same as the target claim
+            if (existingClaim.key == claimToAppendTo.key) {
+                //the chunk is already part of the same claim
+                return VCResult.AutoClaim.ChunkAlreadyClaimed
+            } else {
+                return VCResult.AutoClaim.ChunkBelongsToDifferentClaim(
+                    otherClaimName = existingClaim.displayName,
+                    chunk = chunk
+                )
+            }
+        }else{
+            //the chunk is free
+
+            //append chunk to target claim
+            val vcChunk = claimService.appendChunkToExistingClaim(
+                chunk,
+                claimToAppendTo,
+                context.player
+            )
+
+            return if(vcChunk == null){
+                VCResult.UnknownFailure
+            }else {
+                cc.updatePlayerContextCache(context.player.mcUUID) {
+                    VCResult.AutoClaim.ChunkClaimed(claimToAppendTo, vcChunk)
+                }
+            }
+        }
     }
 
     suspend fun getClaimAtChunk(

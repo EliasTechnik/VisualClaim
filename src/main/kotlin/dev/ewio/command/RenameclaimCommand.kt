@@ -186,6 +186,12 @@ class RenameclaimCommand(
                         )
                     }
 
+                    is VCResult.RenameClaim.ClaimNameNotAllowed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.claim-name-not-allowed")
+                        )
+                    }
+
                     else -> {
                         realPlayer.sendMessage(
                             getStringFromConfig("messages.unknown-error")

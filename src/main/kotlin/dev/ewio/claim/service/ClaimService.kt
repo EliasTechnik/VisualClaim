@@ -292,4 +292,23 @@ class ClaimService(
         return playerRepo.upsert(player)
     }
 
+    suspend fun removeTriggerWordsFromClaims(triggerWords: List<String>, migrationSuffix: String): Int {
+        val allClaims = claimRepo.all()
+        var modifiedCount = 0
+
+        allClaims.forEach { claim ->
+            triggerWords.forEach { triggerWord ->
+                if (claim.displayName.equals(triggerWord, ignoreCase = true)) {
+
+                    val renamedClaim = claim.copy(displayName = migrationSuffix)
+                    claimRepo.upsert(renamedClaim)
+                    modifiedCount++
+                    log("Renamed claim ${claim.key} '${claim.displayName}' to '${renamedClaim.displayName}' to remove trigger words.")
+                }
+            }
+        }
+
+        return modifiedCount
+    }
+
 }

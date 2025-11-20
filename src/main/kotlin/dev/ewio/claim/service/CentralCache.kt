@@ -76,6 +76,7 @@ class CentralCache(
         val player = Bukkit.getPlayer(uuid)?: return result
         val updatedContext = this.buildPlayerContext(player)?: return result
         contextCache.put(updatedContext.player.mcUUID, updatedContext)
+        //log("Updated cache for player ${player.name} to: ${getPlayerContext(uuid).toString()}")
         return result
     }
 

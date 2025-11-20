@@ -112,6 +112,11 @@ class ClaimCommand(
                             getStringFromConfig("messages.missing-permission")
                         )
                     }
+                    is VCResult.CreateClaim.ClaimNameNotAllowed -> {
+                        realPlayer.sendMessage(
+                            getStringFromConfig("messages.claim.claim-name-not-allowed")
+                        )
+                    }
                     else -> {
                         realPlayer.sendMessage(
                             getStringFromConfig("messages.unknown-error")

@@ -1,5 +1,7 @@
 package dev.ewio.claim.definitions
 
+import dev.ewio.claim.service.MovementService
+
 open class VCResult {
     sealed class Success : VCResult()
 
@@ -22,6 +24,7 @@ open class VCResult {
         object NoExistingClaimFound : Failure()
         //object ClaimCouldNotBeCreated : Failure()
         data class ClaimNameTooLong(val maxLength: Int): Failure()
+        object ClaimNameNotAllowed: Failure()
     }
 
     sealed class TransferChunk{
@@ -51,6 +54,7 @@ open class VCResult {
         data class ConfirmMergeRequired(val oldName: String, val newName: String) : Failure() //"A claim with the new name already exists. You must confirm the merge."
         data class ConfirmMergeOtherPlayerClaimRequired(val oldName: String, val newName: String, val playerName: String) : Failure() //"A claim with the new name owned by another player already exists. You must confirm the merge."
         data class ClaimNameTooLong(val maxLength: Int) : Failure() //"The claim name is too long."
+        object ClaimNameNotAllowed: Failure()
     }
 
     sealed class ClaimInfo{
@@ -60,7 +64,7 @@ open class VCResult {
     }
 
     sealed class AutoClaim{
-        data class AutoClaimEnabled(val forClaim: VCClaim) : Success()
+        data class AutoClaimEnabled(val forClaim: VCClaim, val movementService: MovementService) : Success()
         object AutoClaimDisabled : Success()
         data class ChunkClaimed(val claim: VCClaim, val chunk: VCChunk): Success()
         object ChunkAlreadyClaimed : Failure()
@@ -68,5 +72,8 @@ open class VCResult {
         data class ChunkLimitReached(val maxChunks: Int) : Failure()
         data class ClaimNeedsCreationFirst(val claimName: String) : Failure()
         data class StatusInfo(val isEnabled: Boolean, val claimingFor: VCClaim? = null) : Success()
+        object AutoClaimFailedNoTargetClaimSet: Failure()
+        object ChunkCanNotBeClaimed: Failure()
+        data class ChunkBelongsToDifferentClaim(val chunk: PlainChunk, val otherClaimName: String): Failure()
     }
 }
