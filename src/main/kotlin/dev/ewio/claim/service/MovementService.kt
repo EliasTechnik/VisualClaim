@@ -1,12 +1,10 @@
 package dev.ewio.claim.service
 
 import dev.ewio.claim.definitions.PlainChunk
-import dev.ewio.claim.definitions.VCClaim
-import dev.ewio.claim.definitions.VCMovementContext
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.listener.MoveListener
-import dev.ewio.util.VCCache
+import dev.ewio.util.VCWrappedLookupTable
 import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -29,6 +27,15 @@ class MovementService(
     private val ms: MessageService,
 ) {
     var moveListener: MoveListener
+
+    //a special lookuptable to keep track of the players in each chunk position.
+    val positionCache: VCWrappedLookupTable<String, UUID> = VCWrappedLookupTable(
+        wrap = { item, oldWrap ->
+            val mutableList = oldWrap?.toMutableList() ?: mutableListOf()
+            mutableList.add(item)
+            mutableList
+        }
+    )
 
     init {
         moveListener = MoveListener(
@@ -88,7 +95,7 @@ class MovementService(
                     "claim_name" to result.claim.displayName,
                     "player" to player.name
                 ))
-                preService.updateBossbarAfterClaim(player, context, result.claim)
+                //preService.updateBossbarAfterClaim(player, context, result.claim) // TODO: remove if notify callchain works
             }
             else -> {
                 //if this is reached I have forgotten to handle a case
@@ -100,6 +107,8 @@ class MovementService(
     private fun onPlayerMoveChunk(event: PlayerMoveEvent) {
         // Handle player moving between chunks
         log("Player ${event.player.name} moved from ${event.from.chunk.x},${event.from.chunk.z} to chunk: ${event.to.chunk.x},${event.to.chunk.z}")
+
+        updatePositionCache(PlainChunk.fromBukkitChunk(event.to.chunk), event.player.uniqueId)
 
         coroutineScope.launch {
             var context = cc.getPlayerContext(event.player)
@@ -116,6 +125,52 @@ class MovementService(
                 if(context.player.bossbar){
                     preService.updateBossbar(event.player, context, PlainChunk.fromBukkitChunk(event.to.chunk))
                 }
+            }
+        }
+    }
+
+    fun setPlayerInitialPosition(chunk: PlainChunk, playerUUID: UUID) {
+        log("Setting initial position for player $playerUUID with key ${chunk.toKey()}")
+        positionCache.put(chunk.toKey(), playerUUID)
+    }
+
+    fun removePlayerFromPositionCache(playerUUID: UUID) {
+        val oldPosKey = positionCache.getByItem(playerUUID)
+        if(oldPosKey != null){
+            positionCache.removeItem(oldPosKey, playerUUID)
+        }
+    }
+
+    private fun updatePositionCache(chunk: PlainChunk, playerUUID: UUID) {
+        val key = chunk.toKey()
+
+        //remove uuid from old position
+        val oldPosKey = positionCache.getByItem(playerUUID)
+        if(oldPosKey != null){
+            positionCache.removeItem(oldPosKey, playerUUID)
+        }
+
+        positionCache.put(key, playerUUID)
+        log("Updated position cache for player $playerUUID to chunk key $key")
+    }
+
+    /**
+     * Call this to notify possible players at this chunk coordinates.
+     */
+    fun notifyPosition(chunk: PlainChunk, onNotify: (playerList: List<UUID>) -> Unit) {
+        log("Notifying players at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
+        val key = chunk.toKey()
+        positionCache.getByKey(key)?.let{
+            log("Found players at chunk: $it")
+            onNotify(it)
+        }
+    }
+
+    fun notifyPlayerPosition(playerUUID: UUID, onNotify: (PlainChunk) -> Unit){
+        val key = positionCache.getByItem(playerUUID)
+        if(key != null) {
+            PlainChunk.fromKey(key)?.let {
+                onNotify(it)
             }
         }
     }

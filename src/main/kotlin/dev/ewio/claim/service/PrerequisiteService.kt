@@ -14,6 +14,7 @@ import dev.ewio.util.log
 import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
 import net.kyori.adventure.bossbar.BossBar
+import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.event.player.PlayerMoveEvent
@@ -456,6 +457,7 @@ class PrerequisiteService(
     }
 
     suspend fun updateBossbar(player: Player, context: VCPlayerContext, chunk: PlainChunk) {
+        log("Updating bossbar for player ${player.name} (${player.uniqueId}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
         val claim = claimService.getClaimAtChunk(chunk)?.let { claimedChunk ->
             val owner = claimService.getPlayerByKey(claimedChunk.playerKey)
             if(owner != null){
@@ -470,6 +472,17 @@ class PrerequisiteService(
         ui.updateBossBar(player, claim, context)
     }
 
+    suspend fun updateBossbar(playerUUID: UUID, chunk: PlainChunk){
+        log("Updating bossbar for player UUID $playerUUID at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
+       cc.getPlayerContext(playerUUID)?.let{ context ->
+           Bukkit.getPlayer(playerUUID)?.let{ player ->
+               log("Fetched player ${player.name} (${player.uniqueId}) for bossbar update.")
+               updateBossbar(player, context, chunk)
+           }
+       }
+    }
+
+    /*
     suspend fun updateBossbarAfterClaim(player: Player, context: VCPlayerContext, claim: VCClaim?){
         if(claim == null) {
             ui.updateBossBar(player, null, context)
@@ -486,6 +499,10 @@ class PrerequisiteService(
 
 
     }
+
+     */
+
+
 
     suspend fun getClaimAtChunk(
         chunk: PlainChunk

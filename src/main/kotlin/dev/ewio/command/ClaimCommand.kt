@@ -63,7 +63,7 @@ class ClaimCommand(
                                 "claim_name" to result.claim.displayName
                             )
                         )
-                        preService.updateBossbarAfterClaim(realPlayer, context, result.claim)
+                        //preService.updateBossbarAfterClaim(realPlayer, context, result.claim) // TODO: remove if notify callchain works
                     }
                     is VCResult.CreateClaim.ChunkTransferredToClaim -> {
                         ms.send(
@@ -76,7 +76,7 @@ class ClaimCommand(
                                 "claim_name" to result.claim.displayName
                             )
                         )
-                        preService.updateBossbarAfterClaim(realPlayer, context, result.claim)
+                        //preService.updateBossbarAfterClaim(realPlayer, context, result.claim) // TODO: remove if notify callchain works
                     }
                     is VCResult.CreateClaim.ChunkAlreadyClaimedBySameClaim -> {
                         ms.send(

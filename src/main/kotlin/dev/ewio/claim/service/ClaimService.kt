@@ -20,7 +20,8 @@ class ClaimService(
     val claimRepo: ClaimRepository,
     val chunkRepo: ChunkRepository,
     val placeOnMap: (player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) -> Unit,
-    val deleteFromMap: (chunks: List<VCChunk>) -> Unit
+    val deleteFromMap: (chunks: List<VCChunk>) -> Unit,
+    val notifyOnUpdate: (chunks: List<VCChunk>) -> Unit
 ) {
 
     /**
@@ -117,6 +118,7 @@ class ClaimService(
             )
             chunkRepo.upsert(newChunk)
             placeOnMap(player,targetClaim, listOf(newChunk))
+            notifyOnUpdate(listOf(newChunk))
             return VCResult.TransferChunk.TransferSuccessful
         }
     }
@@ -138,6 +140,8 @@ class ClaimService(
         )
         vcChunk?.let{
             placeOnMap(player,claim, listOf(it))
+            log("Notifying on update for chunk ${it.plainChunk.world}:${it.plainChunk.x}:${it.plainChunk.z}")
+            notifyOnUpdate(listOf(it))
         }
         return vcChunk
     }
@@ -157,6 +161,7 @@ class ClaimService(
         } else {
             chunkRepo.deleteByKey(dbChunk.key)
             deleteFromMap(listOf(dbChunk)) //remove from map visualization
+            notifyOnUpdate(listOf(dbChunk))
             return VCResult.UnclaimChunk.UnclaimSuccessful("")
         }
     }
@@ -165,6 +170,7 @@ class ClaimService(
         //remove from map
         val chunks = chunkRepo.listByClaim(claim.key)
         deleteFromMap(chunks)
+        notifyOnUpdate(chunks)
 
         //delete all chunks of the claim
         claimRepo.deleteCascade(claim.key)
@@ -184,6 +190,7 @@ class ClaimService(
                 VCResult.UnknownFailure
             }else{
                 placeOnMap(player,updatedClaim, chunks) //re-add to map
+                notifyOnUpdate(chunks)
                 VCResult.RenameClaim.RenamedSuccessful(claim.displayName, updatedClaim.displayName)
             }
         }
@@ -217,6 +224,7 @@ class ClaimService(
         //re-add target claim to map
         val allTargetChunks = chunkRepo.listByClaim(targetClaim.key)
         placeOnMap(player,targetClaim, allTargetChunks)
+        notifyOnUpdate(allTargetChunks)
 
         return VCResult.RenameClaim.MergeSuccessful(sourceClaim.displayName, targetClaim.displayName)
     }
@@ -285,7 +293,7 @@ class ClaimService(
     }
 
     suspend fun getOwnerOfClaim(claim: VCClaim): VCPlayer? {
-        return getPlayerByKey(claim.key)
+        return getPlayerByKey(claim.playerKey)
     }
 
     suspend fun updatePlayer(player: VCPlayer): VCPlayer? {

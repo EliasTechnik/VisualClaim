@@ -19,6 +19,14 @@ data class PlainChunk(
                 chunk.z
             )
         }
+        fun fromKey(key: String): PlainChunk? {
+            val parts = key.split(":")
+            if(parts.size != 3) return null
+            val world = parts[0]
+            val x = parts[1].toIntOrNull() ?: return null
+            val z = parts[2].toIntOrNull() ?: return null
+            return PlainChunk(world, x, z)
+        }
     }
 
     override fun toString(): String {

@@ -153,7 +153,7 @@ class DeleteclaimCommand(
                 when(result){
                     is VCResult.DeleteClaim.RemovedSuccessful ->  {
                         ms.send(realPlayer, "deleteclaim.success", mapOf("claim_name" to result.claimName))
-                        preService.updateBossbarAfterClaim(realPlayer, context, null)
+                        //preService.updateBossbarAfterClaim(realPlayer, context, null) //TODO: remove if notify callchain works
                     }
                     is VCResult.DeleteClaim.VCClaimNotFound -> {
                         ms.send(realPlayer, "deleteclaim.not-found", mapOf("claim_name" to result.claimName))

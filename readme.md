@@ -77,7 +77,7 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
-- update bossBar automaticly after changes to the db
+- make the debug option disable the debug log messages
 - prevent claiming in protected areas (worldguard, spawn, etc)
 - add ARGB color support to config
 - add color customization (Fixed values from config from which the player can choose)

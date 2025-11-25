@@ -36,6 +36,7 @@ import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.util.UUID
 
 
 class VisualClaim : JavaPlugin() {
@@ -48,7 +49,6 @@ class VisualClaim : JavaPlugin() {
     lateinit var cfg: FileConfiguration
     lateinit var messageService: MessageService
     lateinit var uiService: UIService
-
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
 
@@ -82,7 +82,8 @@ class VisualClaim : JavaPlugin() {
             playerRepo = PlayerRepository(),//InMemoryRepository<VCPlayer>(extractKey = { it.key }),
             chunkRepo = ChunkRepository(), //InMemoryRepository<VCChunk>(extractKey = { it.key }),
             placeOnMap = { player, claim, chunks -> placeOnMap(player, claim, chunks) },
-            deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) }
+            deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) },
+            notifyOnUpdate = { chunks -> notifyOnPositionRelatedUpdate(chunks) }
         )
 
         val triggerWordsFromConfig = mutableListOf<String>()
@@ -166,7 +167,14 @@ class VisualClaim : JavaPlugin() {
                     centralCache.getPlayerContext(event.player)?.let{ context ->
                         log("VC: Player ${context.player.name} has joined the server and his context was loaded.")
                         uiService.registerBossBarReceiver(event.player, context)
-                        prerequisiteService.updateBossbar(event.player, context, PlainChunk.fromBukkitChunk(event.player.location.chunk))
+                        val chunk = PlainChunk.fromBukkitChunk(event.player.location.chunk)
+                        prerequisiteService.updateBossbar(event.player, context, chunk)
+                        movementService.setPlayerInitialPosition(chunk, event.player.uniqueId)
+                        movementService.notifyPlayerPosition(context.player.mcUUID, onNotify = {
+                            launch {
+                                updateUI(context.player.mcUUID, it)
+                            }
+                        })
                     }
                 }
             }
@@ -177,6 +185,7 @@ class VisualClaim : JavaPlugin() {
                 launch{
                     centralCache.getPlayerContext(event.player)?.let { context ->
                         uiService.removeBossBarReceiver(event.player)
+                        movementService.removePlayerFromPositionCache(event.player.uniqueId)
 
                         //deactivate autoclaim on leave to not irritate users
                         prerequisiteService.disableAutoclaim(context)
@@ -265,6 +274,7 @@ class VisualClaim : JavaPlugin() {
         VCDB.shutdown()
     }
 
+
     fun isPl3xMapPresent(): Boolean {
         return Bukkit.getPluginManager().getPlugin("Pl3xMap") != null
     }
@@ -279,5 +289,26 @@ class VisualClaim : JavaPlugin() {
 
     private fun getStringFormConfig(path: String): String {
         return cfg.getString(path) ?: path
+    }
+
+    private suspend fun updateUI(player: UUID, chunk: PlainChunk){
+        log("Updating UI for player $player at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
+        prerequisiteService.updateBossbar(player, chunk)
+    }
+
+    private fun notifyOnPositionRelatedUpdate(chunks: List<VCChunk>) {
+        log("Notifying position related update for ${chunks.size} chunks")
+        chunks.forEach {
+            movementService.notifyPosition(
+                chunk = it.plainChunk,
+                onNotify = { playerList ->
+                    playerList.forEach { playerUUID ->
+                        launch {
+                            updateUI(playerUUID, it.plainChunk)
+                        }
+                    }
+                }
+            )
+        }
     }
 }
