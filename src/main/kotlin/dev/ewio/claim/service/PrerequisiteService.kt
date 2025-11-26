@@ -482,27 +482,23 @@ class PrerequisiteService(
        }
     }
 
-    /*
-    suspend fun updateBossbarAfterClaim(player: Player, context: VCPlayerContext, claim: VCClaim?){
-        if(claim == null) {
-            ui.updateBossBar(player, null, context)
-        }else{
-            ui.updateBossBar(
-                player,
-                VCClaimDisplayData(
-                    claim = claim,
-                    ownerName = context.player.name
-                ),
-                context
-            )
-        }
+    suspend fun showClaim(
+        context: VCPlayerContext,
+        claimString: String,
+        player: Player
+    ){
+        val claim = context.claims.firstOrNull { it.displayName == claimString }
+            ?: return
 
-
+        log("Showing claim border for claim ${claim.displayName} to player ${player.name} (${player.uniqueId})")
+        val chunks = context.chunks.filter { it.claimKey == claim.key }
+        log("Claim ${claim.displayName} has ${chunks.size} chunks owned by player ${context.player.name} (${context.player.mcUUID})")
+        ui.showClaimBorder(
+            claim = claim,
+            player = player,
+            chunksOfClaim = chunks
+        )
     }
-
-     */
-
-
 
     suspend fun getClaimAtChunk(
         chunk: PlainChunk

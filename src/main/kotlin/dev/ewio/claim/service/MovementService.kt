@@ -155,7 +155,7 @@ class MovementService(
     }
 
     /**
-     * Call this to notify possible players at this chunk coordinates.
+     * Call this to get possible players at this chunk coordinates.
      */
     fun notifyPosition(chunk: PlainChunk, onNotify: (playerList: List<UUID>) -> Unit) {
         log("Notifying players at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
@@ -165,7 +165,9 @@ class MovementService(
             onNotify(it)
         }
     }
-
+    /**
+     * Call this to get the (last known) chunk position of a player.
+     */
     fun notifyPlayerPosition(playerUUID: UUID, onNotify: (PlainChunk) -> Unit){
         val key = positionCache.getByItem(playerUUID)
         if(key != null) {

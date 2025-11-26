@@ -23,6 +23,7 @@ import dev.ewio.command.ClaiminfoCommand
 import dev.ewio.command.DeleteclaimCommand
 import dev.ewio.command.ListclaimsCommand
 import dev.ewio.command.RenameclaimCommand
+import dev.ewio.command.ShowClaimCommand
 import dev.ewio.command.UnclaimCommand
 import dev.ewio.database.VCDB
 import dev.ewio.listener.JoinListener
@@ -114,6 +115,7 @@ class VisualClaim : JavaPlugin() {
         this.uiService = UIService(
             cc = centralCache,
             ms = messageService,
+            plugin = this,
             getStringFromConfig = { path -> getStringFormConfig(path) }
         )
         this.prerequisiteService = PrerequisiteService(
@@ -259,6 +261,15 @@ class VisualClaim : JavaPlugin() {
                 ms = messageService
             )
         )
+        getCommand("showclaim")?.setExecutor(
+            ShowClaimCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
+            )
+        )
+
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")

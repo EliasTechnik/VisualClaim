@@ -4,6 +4,7 @@ limits:
   max-chunks-per-player: 1000
   max-claim-name-length: 32 #max 250
 
+show-claim-duration-seconds: 60 # How long the claim border is shown when using /showclaim
 
 # Farben für Kartenmarker (ARGB Integer)
 marker:
@@ -86,6 +87,7 @@ messages:
     deleteclaim: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
     unclaim: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
     claimcolor: "§aMit /claimcolor \"claim-name\" <farbe> änderst du die Farbe der Markierung für deine Claims auf der Karte."
+    showclaim: "§aMit /showclaim \"claim-name\" werden die Grenzen des Claims für eine bestimmte Zeit angezeigt."
   # command results
   claim:
     success: "§aChunk %chunk_x%,%chunk_z% wurde für %player% geclaimt. Er gehört nun zum/zur %claim_name%"
@@ -135,6 +137,9 @@ messages:
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
   player-not-found: "§cDer Spieler %player% wurde nicht gefunden."
+  showclaim:
+    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
+    shown: "§aDie Grenzen des Claims %claim_name% werden für %show-claim-duration-seconds% Sekunden angezeigt."
   Pl3xMap:
     layer-name: "Claims"
     hover-text:

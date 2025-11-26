@@ -77,6 +77,9 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
+- debug list other
+- make claim visualize on each interaction
+- fine tune claim visualisation
 - make the debug option disable the debug log messages
 - prevent claiming in protected areas (worldguard, spawn, etc)
 - add ARGB color support to config

@@ -8,7 +8,33 @@ data class PlainChunk(
     val z: Int
 ){
     fun toKey(): String {
-        return "$world:$x:$z"
+        return "$world:${x}:${z}"
+    }
+
+    fun toKey(xOffset: Int, zOffset: Int): String {
+        return "$world:${x+xOffset}:${z+zOffset}"
+    }
+
+    /**
+     *
+     *  UL --- UR
+     *  |       |
+     *  |       |
+     *  LL --- LR
+     *
+     *  */
+
+    fun getUpperLeftCornerBlock(): VCPoint2D {
+        return VCPoint2D(x * 16, z * 16 + 15)
+    }
+    fun getUpperRightCornerBlock(): VCPoint2D {
+        return VCPoint2D(x * 16 + 15, z * 16 + 15)
+    }
+    fun getLowerLeftCornerBlock(): VCPoint2D {
+        return VCPoint2D(x * 16, z * 16)
+    }
+    fun getLowerRightCornerBlock(): VCPoint2D {
+        return VCPoint2D(x * 16 + 15, z * 16)
     }
 
     companion object {

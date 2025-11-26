@@ -35,6 +35,10 @@ commands:
     description: Rename a claim
     usage: /renameclaim "<oldname>" "<newname>"
     permission: visualclaim.command.renameclaim
+  showclaim:
+    description: Show the borders of a claim
+    usage: /showclaim "<name>"
+    permission: visualclaim.command.showclaim
 
 permissions:
   visualclaim.claim:
