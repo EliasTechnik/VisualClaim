@@ -135,7 +135,7 @@ class RenameclaimCommand(
                     }
 
                     is VCResult.RenameClaim.OldNameNotFound -> {
-                        ms.send(realPlayer, "renameclaim.not-found", mapOf(
+                        ms.send(realPlayer, "claim-not-found", mapOf(
                             "claim_name" to result.oldName
                         ))
                     }

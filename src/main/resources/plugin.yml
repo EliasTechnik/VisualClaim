@@ -20,8 +20,8 @@ commands:
     usage: /deleteclaim "<name>"
     permission: visualclaim.command.deleteclaim
   autoclaim:
-    description: Toggle autoclaim
-    usage: /autoclaim <on|off>
+    description: Toggle autoclaim for a claim
+    usage: /autoclaim <"name"|off>
     permission: visualclaim.command.autoclaim
   claiminfo:
     description: See who claimed that chunk you are standing on
@@ -39,6 +39,20 @@ commands:
     description: Show the borders of a claim
     usage: /showclaim "<name>"
     permission: visualclaim.command.showclaim
+  claimlore:
+    description: Lets you read and set lore for a given claim
+    usage: /claimlore "<name>" ["<lore>"]
+    permission: visualclaim.command.claimlore
+  claimcolor:
+    description: Lets you set a color for your claim
+    usage: /claimcolor "<name>" <color>
+    permission: visualclaim.command.claimcolor
+  chunkloader:
+    description: Lets you load this chunk permanently
+    usage: /chunkloader [add/remove]
+    permissions: visualclaim.command.chunkloader
+
+
 
 permissions:
   visualclaim.claim:

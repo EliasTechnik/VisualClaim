@@ -4,7 +4,9 @@ import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCColor
+import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayer
+import dev.ewio.claim.definitions.VCPoint
 import org.jetbrains.exposed.sql.ResultRow
 import java.util.UUID
 
@@ -38,4 +40,13 @@ fun rowToVCChunk(row: ResultRow) = VCChunk(
         x = row[VCChunks.x],
         z = row[VCChunks.z]
     )
+)
+
+fun rowToVCLoadedChunk(row: ResultRow) = VCLoadedChunk(
+    key = row[VCLoadedChunks.id].value,
+    playerKey = row[VCLoadedChunks.playerKey],
+    playerLocation = VCPoint.fromKey(row[VCLoadedChunks.playerLocation])!!,
+    chunk = PlainChunk.fromKey(row[VCLoadedChunks.chunk])!!,
+    firstLoaded = row[VCLoadedChunks.firstLoaded],
+    name = row[VCLoadedChunks.name]
 )

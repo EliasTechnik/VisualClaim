@@ -58,3 +58,19 @@ object VCChunks : IntIdTable("vc_chunk") {
 
     //override val primaryKey = PrimaryKey(key)
 }
+
+object VCLoadedChunks : IntIdTable("vc_loaded_chunk") {
+    val playerKey = integer("player_key").references(
+        VCPlayers.id,
+        onDelete = ReferenceOption.CASCADE,
+        onUpdate = ReferenceOption.CASCADE
+    )
+    val playerLocation = text("player_location") // VCPoint als ShortKey
+    val chunk = text("chunk") // PlainChunk als Shortkey
+    val firstLoaded = long("first_loaded")
+    val name = varchar("name", 250)
+
+    init {
+        index(isUnique = true, columns = arrayOf(playerKey, chunk))
+    }
+}

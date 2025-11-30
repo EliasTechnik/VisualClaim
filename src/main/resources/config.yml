@@ -1,8 +1,14 @@
-# Limits (0 oder negativ = deaktiviert)
+# Limits (0 or negativ = no limits)
+# These are default limits. For a more granular control see permissions
 limits:
   max-claims-per-player: 150
   max-chunks-per-player: 1000
   max-claim-name-length: 32 #max 250
+  max-lore-length: 1024
+  max-chunk-loaders: 10 #How much chunks a player can perma load
+
+chunkloader: true # set this to false if you dont want to use the chunkloader
+
 
 show-claim-duration-seconds: 60 # How long the claim border is shown when using /showclaim
 
@@ -124,21 +130,37 @@ messages:
     no-claims-other: "§aSpieler %player% hat keine Claims."
   deleteclaim:
     success: "§aDer Claim %claim_name% wurde gelöscht und alle Chunks wurden freigegeben."
-    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
     not-owner: "§aDu besitzt keinen Claim mit dem Namen %claim_name%."
     confirm: "§aBist du sicher, dass du den Claim %claim_name% und alle seine Chunks löschen möchtest? Nutze §e/deleteclaim %claim_name% %deleteclaim_confirm% §aum den Löschvorgang abzuschließen."
     none: "§aDu hast keine Claims zum Löschen."
   renameclaim:
     success: "§aDer Claim %claim_name% wurde in %claim_new_name% umbenannt."
-    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
     merge-confirm: "§aBist du sicher, dass du den Claim %claim_name% mit %claim_new_name% zusammenführen möchtest? Nutze §e/rename %claim_name% %claim_new_name% %renameclaim_confirm% §aum den Vorgang durchzuführen."
     none: "§aKeine Claims zum Umbenennen verfügbar."
     merge-success: "§aDer Claim %claim_name% wurde mit %claim_new_name% zusammengeführt."
+  claimlore:
+    get: "§cDer Claim %claim_name% hat folgende Beschreibung: &e%claim_lore%"
+    set: "§aDie Beschreibung für den Claim %claim_name% wurde überschrieben."
+    too-long: "§aDie Beschreibung darf maximal %max_length% Zeichen lang sein."
+  claimcolor:
+    set: "§aDie Farbe für den Claim %claim_name% wurde auf %color_name% gesetzt."
+    invalid-color: "§aDie angegebene Farbe ist ungültig."
+  chunkloader:
+    enabled: "§aDieser Chunk wird nun permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
+    max-reached: "§aDu hast die maximale Anzahl an Chunk-Loadern erreicht. Du kannst maximal %max_chunk_loaders% Chunks permanent laden. Entferne zuerst einen bestehenden Chunk-Loader mit §e/chunkloader remove§a."
+    already-enabled: "§aDieser Chunk wird bereits permanent geladen."
+    disabled: "§aDieser Chunk wird nicht mehr permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
+    already-enabled-other: "§aDieser Chunk wird von %owner% permanent geladen."
+  chunkloaderlist:
+    header: "§aDeine Chunk-Loader: (%current_chunk_loaders% von %max_chunk_loaders% Möglichen)"
+    entry: "§6- Welt: %world%, Koordinaten: %x%,%y%,%z%"
+    no-chunkloaders: "§aDu hast keine Chunk-Loader gesetzt."
+
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
   player-not-found: "§cDer Spieler %player% wurde nicht gefunden."
+  claim-not-found: "§cEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
   showclaim:
-    not-found: "§aEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
     shown: "§aDie Grenzen des Claims %claim_name% werden für %show-claim-duration-seconds% Sekunden angezeigt."
   Pl3xMap:
     layer-name: "Claims"
