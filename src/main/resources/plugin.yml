@@ -49,7 +49,7 @@ commands:
     permission: visualclaim.command.claimcolor
   chunkloader:
     description: Lets you load this chunk permanently
-    usage: /chunkloader [add/remove]
+    usage: /chunkloader [add/remove/list]
     permissions: visualclaim.command.chunkloader
 
 

@@ -4,6 +4,7 @@ import dev.ewio.annotations.Costly
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCClaimDisplayData
+import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
@@ -563,5 +564,32 @@ class PrerequisiteService(
     suspend fun getPlayerContext(sender: CommandSender): Pair<VCPlayerContext, Player>? = cc.getPlayerContextFromSender(sender)
 
     fun getCachedPlayerContext(player: Player): VCPlayerContext? = cc.getCachedPlayerContext(player)
+
+    // --------- ChunkLoader -------------//
+
+    suspend fun listChunkLoader(context: VCPlayerContext, target: String? = null): VCResult {
+        if(target == null){
+            //return the players chunkloaders
+            return VCResult.ListChunkLoaders.ChunkLoadersFound(context.chunkLoader)
+        }else{
+            //check permission
+            if(!context.restrictions.listOtherPlayerChunkLoader){
+                return VCResult.MissingPermission
+            }
+            //get target player
+            val targetPlayer = claimService.getPlayerByName(target) ?: return VCResult.ListChunkLoaders.VCPlayerNotFound
+            return VCResult.ListChunkLoaders.ChunkLoadersOtherFound(claimService.getVCLoadedChunksForPlayer(targetPlayer), targetPlayer.name)
+        }
+    }
+
+    fun addChunkLoader(): VCResult {
+        //TODO: implement
+        return VCResult.UnknownFailure
+    }
+
+    fun removeChunkLoader(): VCResult {
+        //TODO: implement
+        return VCResult.UnknownFailure
+    }
 
 }

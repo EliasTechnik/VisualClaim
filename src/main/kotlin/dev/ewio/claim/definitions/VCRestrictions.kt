@@ -8,5 +8,6 @@ data class VCRestrictions(
     val canClaim: Boolean = false, //whether the player can claim chunks
     val unclaimOther: Boolean = false, //whether the player can unclaim other players' chunks
     val deleteclaimOther: Boolean = false, //whether the player can delete other players' claims
-    val renameOtherPlayerClaims: Boolean = false //whether the player can rename other players' claims
+    val renameOtherPlayerClaims: Boolean = false, //whether the player can rename other players' claims
+    val listOtherPlayerChunkLoader: Boolean = false //whether the player can list other players' chunk loaders
 )

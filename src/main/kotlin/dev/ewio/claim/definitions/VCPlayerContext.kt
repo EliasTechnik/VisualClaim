@@ -10,6 +10,7 @@ import java.util.UUID
  * @property player The VCPlayer instance.
  * @property claims A list of VCClaim instances associated with the player.
  * @property chunks A list of VCChunk instances associated with the player's claims.
+ * @property chunkLoader A list of VCLoadedChunk instances associated with the player.
  * @property retrievalTimestamp The timestamp when this context was created.
  *
  * VCPlayerContext is useful for bundling together all relevant data about a player but changing values there does not
@@ -20,6 +21,7 @@ data class VCPlayerContext(
     val player: VCPlayer,
     val claims: List<VCClaim>,
     val chunks: List<VCChunk>,
+    val chunkLoader: List<VCLoadedChunk>,
     val restrictions: VCRestrictions,
     val retrievalTimestamp: Long = System.currentTimeMillis()
 ){
@@ -27,6 +29,7 @@ data class VCPlayerContext(
         player = dbContext.player,
         claims = dbContext.claims,
         chunks = dbContext.chunks,
+        chunkLoaders = dbContext.chunkLoader,
         restrictions = restrictions,
         retrievalTimestamp = dbContext.retrievalTimestamp
     )
@@ -38,7 +41,7 @@ data class VCPlayerContext(
     }
 
     override fun toString(): String {
-        return "VCPlayerContext(player=${player}, claims=${claims.toString()}, chunks=${chunks.toString()}, restrictions=$restrictions, retrievalTimestamp=$retrievalTimestamp)"
+        return "VCPlayerContext(player=${player}, claims=${claims.toString()}, chunks=${chunks.toString()}, chunkLoaders=${chunkLoader.toString()}restrictions=$restrictions, retrievalTimestamp=$retrievalTimestamp)"
     }
 
 }
@@ -49,6 +52,7 @@ data class VCPlayerContext(
  * @property player The VCPlayer instance.
  * @property claims A list of VCClaim instances associated with the player.
  * @property chunks A list of VCChunk instances associated with the player's claims.
+ * @property chunkLoader A list of VCLoadedChunk instances associated with the player.
  * @property retrievalTimestamp The timestamp when this context was created.
  *
  * VCPlayerDBContext is used for transferring data from the database to application layers. It mostly gets converted to VCPlayerContext
@@ -60,6 +64,7 @@ data class VCPlayerDBContext(
     val player: VCPlayer,
     val claims: List<VCClaim>,
     val chunks: List<VCChunk>,
+    val chunkLoader: List<VCLoadedChunk>,
     val retrievalTimestamp: Long = System.currentTimeMillis()
 )
 

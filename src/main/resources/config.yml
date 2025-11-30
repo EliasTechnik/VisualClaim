@@ -91,9 +91,10 @@ messages:
     renameclaim: "§aNutze §e/renameclaim \"alter-name\" \"neuer-name\"§a um einen Claim umzubenennen."
     renameclaim-other: "§aNutze §e/renameclaim -p <Spieler> \"alter-name\" \"neuer-name\"§a um einen Claim eines anderen Spielers umzubenennen."
     deleteclaim: "§aNutze §e/deleteclaim \"name\"§a um einen Claim mit allen seinen Chunks zu löschen."
-    unclaim: "§aMit /unclaim löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
-    claimcolor: "§aMit /claimcolor \"claim-name\" <farbe> änderst du die Farbe der Markierung für deine Claims auf der Karte."
-    showclaim: "§aMit /showclaim \"claim-name\" werden die Grenzen des Claims für eine bestimmte Zeit angezeigt."
+    unclaim: "§aMit §e/unclaim§a löscht du nur den Chunk in dem du stehst aus einen Claim. Nutze §e/deleteclaim \"<name>\"§a, um den gesamten Claim zu löschen."
+    claimcolor: "§aMit §e/claimcolor \"claim-name\" <farbe>§a änderst du die Farbe der Markierung für deine Claims auf der Karte."
+    showclaim: "§aMit §e/showclaim \"claim-name\"§a werden die Grenzen des Claims für eine bestimmte Zeit angezeigt."
+    chunkloader: "§aMit §e/chunkloader add <name>§a lädst du den Chunk in dem du stehst permanent. Mit §e/chunkloader remove <name>§a entfernst du den Chunk-Loader wieder. Mit §e/chunkloader list§a siehst du eine Liste deiner Chunk-Loader."
   # command results
   claim:
     success: "§aChunk %chunk_x%,%chunk_z% wurde für %player% geclaimt. Er gehört nun zum/zur %claim_name%"

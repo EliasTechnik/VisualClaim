@@ -30,7 +30,7 @@ class ClaimCommand(
             val betterArgs = getCorrectlySplitArgs(args.toList(),0)
 
             preService.getPlayerContext(sender)?.let{
-                var (context, realPlayer) = it
+            var (context, realPlayer) = it
                 val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
 
                 //log("Player ${context.player.name} (${context.player.mcUUID}) is attempting to claim chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with args: $betterArgs")

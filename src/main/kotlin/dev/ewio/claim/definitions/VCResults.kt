@@ -76,4 +76,24 @@ open class VCResult {
         object ChunkCanNotBeClaimed: Failure()
         data class ChunkBelongsToDifferentClaim(val chunk: PlainChunk, val otherClaimName: String): Failure()
     }
+
+    sealed class AddChunkLoader{
+        data class ChunkLoaderAdded(val cl: VCLoadedChunk): Success()
+        data class ChunkAlreadyLoaded(val cl: VCLoadedChunk): Failure()
+        data class ChunkLoadedByOtherPlayer(val other: VCPlayer): Failure()
+        object ChunkCanNotBeLoaded: Failure()
+        data class MaxChunkLoadersReached(val max: Int): Failure()
+    }
+
+    sealed class RemoveChunkLoader{
+        data class ChunkLoaderRemoved(val cl: VCLoadedChunk): Success()
+        object ChunkLoaderNotFound: Failure()
+    }
+
+    sealed class ListChunkLoaders{
+        data class ChunkLoadersFound(val loaders: List<VCLoadedChunk>): Success()
+        data class ChunkLoadersOtherFound(val loaders: List<VCLoadedChunk>, val owner: String ): Success()
+        object NoChunkLoadersFound: Failure()
+        object VCPlayerNotFound: Failure()
+    }
 }

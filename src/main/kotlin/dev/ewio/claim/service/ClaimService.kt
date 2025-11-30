@@ -7,10 +7,12 @@ import dev.ewio.claim.repository.PlayerRepository
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
+import dev.ewio.claim.repository.ChunkLoaderRepository
 import dev.ewio.util.log
 import org.bukkit.Bukkit
 import java.util.UUID
@@ -19,6 +21,7 @@ class ClaimService(
     val playerRepo: PlayerRepository,
     val claimRepo: ClaimRepository,
     val chunkRepo: ChunkRepository,
+    val chunkLoaderRepo: ChunkLoaderRepository,
     val placeOnMap: (player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) -> Unit,
     val deleteFromMap: (chunks: List<VCChunk>) -> Unit,
     val notifyOnUpdate: (chunks: List<VCChunk>) -> Unit
@@ -49,13 +52,15 @@ class ClaimService(
             //get remaining data
             val claims = claimRepo.listByPlayer(player.key)
             val chunks = chunkRepo.listByPlayer(player.key)
+            val chunkLoaders = chunkLoaderRepo.listByPlayer(player.key)
 
             log("Loaded player context for player ${player.name} (UUID: ${player.mcUUID}), Claims: ${claims.size}, Chunks: ${chunks.size}")
 
             return VCPlayerDBContext(
                 player = player,
                 claims = claims,
-                chunks = chunks
+                chunks = chunks,
+                chunkLoader = chunkLoaders
             )
         }
     }
@@ -69,11 +74,13 @@ class ClaimService(
             //get remaining data
             val claims = claimRepo.listByPlayer(player.key)
             val chunks = chunkRepo.listByPlayer(player.key)
+            val chunkLoaders = chunkLoaderRepo.listByPlayer(player.key)
 
             return VCPlayerDBContext(
                 player = player,
                 claims = claims,
-                chunks = chunks
+                chunks = chunks,
+                chunkLoader = chunkLoaders
             )
         }
     }
@@ -316,6 +323,18 @@ class ClaimService(
         }
 
         return modifiedCount
+    }
+
+    suspend fun getVCLoadedChunksForPlayer(player: VCPlayer): List<VCLoadedChunk> {
+        return chunkLoaderRepo.listByPlayer(player.key)
+    }
+
+    suspend fun addVCLoadedChunk(chunkLoader: VCLoadedChunk): VCLoadedChunk? {
+        return chunkLoaderRepo.upsert(chunkLoader)
+    }
+
+    suspend fun removeVCLoadedChunkByKey(key: Int) {
+        chunkLoaderRepo.deleteByKey(key)
     }
 
 }
