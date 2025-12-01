@@ -9,5 +9,8 @@ data class VCRestrictions(
     val unclaimOther: Boolean = false, //whether the player can unclaim other players' chunks
     val deleteclaimOther: Boolean = false, //whether the player can delete other players' claims
     val renameOtherPlayerClaims: Boolean = false, //whether the player can rename other players' claims
-    val listOtherPlayerChunkLoader: Boolean = false //whether the player can list other players' chunk loaders
+    val listOtherPlayerChunkLoader: Boolean = false, //whether the player can list other players' chunk loaders
+    val canLoadChunks: Boolean = false, //whether the player can load chunks
+    val maxChunkLoaders: Int, //the maximum number of chunk loaders a player can have (-1 = unlimited)
+
 )

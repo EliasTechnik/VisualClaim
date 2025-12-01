@@ -4,21 +4,16 @@ import dev.ewio.annotations.Costly
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCClaimDisplayData
-import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayerContext
-import dev.ewio.claim.definitions.VCPlayerDBContext
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.SimpleCache
-import dev.ewio.util.VCCache
 import dev.ewio.util.error
 import dev.ewio.util.log
 import dev.ewio.util.logSevere
 import kotlinx.coroutines.CoroutineScope
-import net.kyori.adventure.bossbar.BossBar
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import org.bukkit.event.player.PlayerMoveEvent
 import java.util.UUID
 
 class PrerequisiteService(
@@ -582,12 +577,29 @@ class PrerequisiteService(
         }
     }
 
-    fun addChunkLoader(): VCResult {
-        //TODO: implement
+    fun addChunkLoader(context: VCPlayerContext, name: String): VCResult {
+
+        //check if the player can add chunkloaders (permission and limits)
+        if(!context.restrictions.canLoadChunks){
+            return VCResult.MissingPermission
+        }
+
+        if(context.chunkLoader.size >= context.restrictions.maxChunkLoaders && context.restrictions.maxChunkLoaders != -1){
+            return VCResult.AddChunkLoader.MaxChunkLoadersReached(context.restrictions.maxChunkLoaders)
+        }
+
+        //check if the name is valid
+        if(name.isBlank() || name.length > context.restrictions.maxClaimNameLength){
+            return VCResult.AddChunkLoader.NameInvalid
+        }
+
+        //check if there is already a chunkloader with this name
+
+
         return VCResult.UnknownFailure
     }
 
-    fun removeChunkLoader(): VCResult {
+    fun removeChunkLoader(context: VCPlayerContext, name: String): VCResult {
         //TODO: implement
         return VCResult.UnknownFailure
     }

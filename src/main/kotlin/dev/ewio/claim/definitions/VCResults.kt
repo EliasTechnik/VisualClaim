@@ -83,6 +83,7 @@ open class VCResult {
         data class ChunkLoadedByOtherPlayer(val other: VCPlayer): Failure()
         object ChunkCanNotBeLoaded: Failure()
         data class MaxChunkLoadersReached(val max: Int): Failure()
+        object NameInvalid: Failure()
     }
 
     sealed class RemoveChunkLoader{

@@ -51,6 +51,9 @@ class PermissionService(
         val unclaimOther = getPermission(bukkitPlayer, "VisualClaim.unclaimOther") != null
         val deleteclaimOther = getPermission(bukkitPlayer, "VisualClaim.deleteOther") != null
         val renameOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.renameOther") != null
+        val canLoadChunks = getPermission(bukkitPlayer, "VisualClaim.loadChunks") != null
+        val listOtherPlayerChunkLoader = getPermission(bukkitPlayer, "VisualClaim.listOtherChunkLoader") != null
+        val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
 
 
         return VCRestrictions(
@@ -61,7 +64,9 @@ class PermissionService(
             canClaim = canClaim,
             unclaimOther = unclaimOther,
             deleteclaimOther = deleteclaimOther,
-            renameOtherPlayerClaims = renameOtherPlayerClaims
+            renameOtherPlayerClaims = renameOtherPlayerClaims,
+            listOtherPlayerChunkLoader = listOtherPlayerChunkLoader,
+            canLoadChunks = canLoadChunks
         )
     }
 

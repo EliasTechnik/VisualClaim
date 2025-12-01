@@ -14,7 +14,7 @@ import org.bukkit.command.TabExecutor
  */
 
 
-class ChunkloaderCommand(
+class ChunkLoaderCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
     private val getStringFromConfig: (key: String) -> String,
@@ -38,7 +38,7 @@ class ChunkloaderCommand(
                     val result = when(betterArgs[0]){
                         "add" -> {
                             if(betterArgs.size >= 2){
-
+                                preService.addChunkLoader(context, betterArgs[1])
                             }else{
                                 ms.send(realPlayer, "usage.chunkloader")
                                 return@launch
