@@ -3,18 +3,14 @@ package dev.ewio.claim.service
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCClaimDisplayData
-import dev.ewio.claim.definitions.VCEdge
 import dev.ewio.claim.definitions.VCEdge2D
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.util.EdgeHelper
 import dev.ewio.util.log
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.bossbar.BossBar
-import org.bukkit.Bukkit
-import org.bukkit.Color
 import org.bukkit.Location
 import org.bukkit.Particle
-import org.bukkit.World
 import org.bukkit.entity.Player
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
@@ -48,16 +44,19 @@ class UIService(
     private val getStringFromConfig: (key: String) -> String?
 ) {
                             // uuid, VCUIBossBarData
-    val bossBarMap: MutableMap<String, VCUIBossBarData> = mutableMapOf()
-    var bossBarColor: BossBar.Color
-    var bossBarStyle: BossBar.Overlay
+    val claimBossBarMap: MutableMap<String, VCUIBossBarData> = mutableMapOf()
+    val clBossBarMap: MutableMap<String, VCUIBossBarData> = mutableMapOf()
+    var claimBossBarColor: BossBar.Color
+    var claimBossBarStyle: BossBar.Overlay
+    var clBossBarColor: BossBar.Color
+    var clBossBarStyle: BossBar.Overlay
                             // uuid, VCUIParticleData
     val particleMap: MutableMap<String, VCUIParticleData> = mutableMapOf()
 
 
     init{
-        val color = getStringFromConfig("BossBar.color") ?: "WHITE"
-        bossBarColor = when(color.uppercase()){
+        var color = getStringFromConfig("ClaimBossBar.color") ?: "WHITE"
+        claimBossBarColor = when(color.uppercase()){
             "GREEN" -> BossBar.Color.GREEN
             "BLUE" -> BossBar.Color.BLUE
             "PURPLE" -> BossBar.Color.PURPLE
@@ -67,14 +66,35 @@ class UIService(
             else -> BossBar.Color.WHITE
         }
 
-        val style = getStringFromConfig("BossBar.style") ?: "PROGRESS"
-        bossBarStyle = when(style.uppercase()) {
+        var style = getStringFromConfig("ClaimBossBar.style") ?: "PROGRESS"
+        claimBossBarStyle = when(style.uppercase()) {
             "NOTCHED_6" -> BossBar.Overlay.NOTCHED_6
             "NOTCHED_10" -> BossBar.Overlay.NOTCHED_10
             "NOTCHED_12" -> BossBar.Overlay.NOTCHED_12
             "NOTCHED_20" -> BossBar.Overlay.NOTCHED_20
             else -> BossBar.Overlay.PROGRESS
         }
+
+        color = getStringFromConfig("ChunkLoaderBossBar.color") ?: "WHITE"
+        clBossBarColor = when(color.uppercase()){
+            "GREEN" -> BossBar.Color.GREEN
+            "BLUE" -> BossBar.Color.BLUE
+            "PURPLE" -> BossBar.Color.PURPLE
+            "PINK" -> BossBar.Color.PINK
+            "YELLOW" -> BossBar.Color.YELLOW
+            "RED" -> BossBar.Color.RED
+            else -> BossBar.Color.WHITE
+        }
+
+        style = getStringFromConfig("ChunkLoaderBossBar.style") ?: "PROGRESS"
+        clBossBarStyle = when(style.uppercase()) {
+            "NOTCHED_6" -> BossBar.Overlay.NOTCHED_6
+            "NOTCHED_10" -> BossBar.Overlay.NOTCHED_10
+            "NOTCHED_12" -> BossBar.Overlay.NOTCHED_12
+            "NOTCHED_20" -> BossBar.Overlay.NOTCHED_20
+            else -> BossBar.Overlay.PROGRESS
+        }
+
     }
 
     /**
@@ -86,21 +106,36 @@ class UIService(
     fun registerBossBarReceiver(player: Player, context: VCPlayerContext){
 
         val target = Audience.audience(player)
-        val bossBar = BossBar.bossBar(
+        val claimBossBar = BossBar.bossBar(
             ms.getEmptyComponent(),
             1.0f,
-            BossBar.Color.GREEN,
-            BossBar.Overlay.PROGRESS
+            claimBossBarColor,
+            claimBossBarStyle
         )
 
-        val data = VCUIBossBarData(
+        val dataClaim = VCUIBossBarData(
             targetPlayer = player,
-            bossBar = bossBar,
+            bossBar = claimBossBar,
             audience = target,
             showBossBar = context.player.bossbar
         )
 
-        bossBarMap[player.uniqueId.toString()] = data
+        val clBossBar = BossBar.bossBar(
+            ms.getEmptyComponent(),
+            1.0f,
+            clBossBarColor,
+            clBossBarStyle
+        )
+
+        val dataChunkLoader= VCUIBossBarData(
+            targetPlayer = player,
+            bossBar = clBossBar,
+            audience = target,
+            showBossBar = context.player.bossbar
+        )
+
+        claimBossBarMap[player.uniqueId.toString()] = dataClaim
+        clBossBarMap[player.uniqueId.toString()] = dataChunkLoader
     }
 
 
@@ -112,32 +147,63 @@ class UIService(
      */
     fun removeBossBarReceiver(player: Player){
 
-        val bossBarPackage = bossBarMap[player.uniqueId.toString()] ?: return
+        val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+        val chunkLoaderBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
 
         //hide bossbar
-        bossBarPackage.audience.hideBossBar(bossBarPackage.bossBar)
+        claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
+        chunkLoaderBossBarPackage.audience.hideBossBar(chunkLoaderBossBarPackage.bossBar)
 
-        bossBarMap.remove(player.uniqueId.toString())
+        claimBossBarMap.remove(player.uniqueId.toString())
+        clBossBarMap.remove(player.uniqueId.toString())
     }
 
-    fun updateBossBar(player: Player, claim: VCClaimDisplayData?, context: VCPlayerContext){
-        if(claim != null && context.player.bossbar) {
-            //show a bossbar with claim info
-            val bossBarPackage = bossBarMap[player.uniqueId.toString()] ?: return
-            bossBarPackage.bossBar.name(ms.format("BossBar.title", mapOf(
-                "claim_name" to claim.claim.displayName,
-                "owner" to claim.ownerName
+    /**
+     * Updates the boss bar for the specified player based on the provided claim data and player context.
+     */
+    fun updateBossBar(player: Player, displayData: VCClaimDisplayData, context: VCPlayerContext){
+        if(context.player.bossbar) {
+            if(displayData.claim != null && displayData.ownerName != null){
+                //show a bossbar with claim info
+                val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+                claimBossBarPackage.bossBar.name(ms.format("ClaimBossBar.title", mapOf(
+                    "claim_name" to displayData.claim.displayName,
+                    "owner" to displayData.ownerName
                 )
-            ))
+                ))
 
-            bossBarPackage.bossBar.color(bossBarColor)
-            bossBarPackage.bossBar.overlay(bossBarStyle)
+                claimBossBarPackage.bossBar.color(claimBossBarColor)
+                claimBossBarPackage.bossBar.overlay(claimBossBarStyle)
 
-            bossBarPackage.audience.showBossBar(bossBarPackage.bossBar)
+                claimBossBarPackage.audience.showBossBar(claimBossBarPackage.bossBar)
+            }else{
+                val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+                claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
+            }
+
+            if(displayData.chunkloader != null){
+                //show a bossbar with chunkloader info
+                val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+                clBossBarPackage.bossBar.name(ms.format("ChunkLoaderBossBar.title", mapOf(
+                    "chunkloader_name" to displayData.chunkloader.name
+                )
+                ))
+
+                clBossBarPackage.bossBar.color(clBossBarColor)
+                clBossBarPackage.bossBar.overlay(clBossBarStyle)
+
+                clBossBarPackage.audience.showBossBar(clBossBarPackage.bossBar)
+            }else{
+                val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+                clBossBarPackage.audience.hideBossBar(clBossBarPackage.bossBar)
+            }
+
         }else{
             //hide bossbar
-            val bossBarPackage = bossBarMap[player.uniqueId.toString()] ?: return
-            bossBarPackage.audience.hideBossBar(bossBarPackage.bossBar)
+            val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+            val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+            claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
+            clBossBarPackage.audience.hideBossBar(clBossBarPackage.bossBar)
         }
     }
 

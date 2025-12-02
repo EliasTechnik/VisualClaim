@@ -1,4 +1,4 @@
-package dev.ewio.map
+package dev.ewio.claim.map
 
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim

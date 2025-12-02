@@ -1,4 +1,7 @@
 package dev.ewio.claim.definitions
+
+import org.bukkit.Location
+
 /**
  * A point in 3D space.
  *
@@ -25,6 +28,10 @@ data class VCPoint(
             val y = parts[2].toDoubleOrNull() ?: return null
             val z = parts[3].toDoubleOrNull() ?: return null
             return VCPoint(world, x, y, z)
+        }
+
+        fun fromPlayerLocation(location: Location): VCPoint {
+            return VCPoint(location.world.name, location.x, location.y, location.z)
         }
     }
 }

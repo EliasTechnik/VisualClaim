@@ -1,21 +1,13 @@
 package dev.ewio.claim.repository
 
 import dev.ewio.claim.definitions.VCClaim
-import dev.ewio.claim.definitions.VCPlayer
-import dev.ewio.database.VCClaims
-import dev.ewio.database.VCPlayers
-import dev.ewio.database.rowToVCClaim
-import dev.ewio.database.rowToVCPlayer
+import dev.ewio.claim.database.VCClaims
+import dev.ewio.claim.database.rowToVCClaim
 import dev.ewio.util.log
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.insertIgnoreAndGetId
-import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update

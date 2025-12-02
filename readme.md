@@ -77,6 +77,7 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
+- tidy up permissions
 - debug list other
 - make claim visualize on each interaction
 - fine tune claim visualisation

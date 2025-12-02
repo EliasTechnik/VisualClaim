@@ -1,4 +1,4 @@
-package dev.ewio.command
+package dev.ewio.claim.command
 
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService

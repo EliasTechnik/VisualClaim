@@ -1,10 +1,9 @@
-package dev.ewio.command
+package dev.ewio.claim.command
 
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
-import dev.ewio.util.GL
 import dev.ewio.util.getCorrectlySplitArgs
 import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope

@@ -30,7 +30,8 @@ data class VCClaim(
 }
 
 data class VCClaimDisplayData(
-    val claim: VCClaim,
-    val ownerName: String,
+    val claim: VCClaim?,
+    val ownerName: String?,
+    val chunkloader: VCLoadedChunk? = null
 )
 

@@ -1,4 +1,4 @@
-package dev.ewio.database
+package dev.ewio.claim.database
 
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk

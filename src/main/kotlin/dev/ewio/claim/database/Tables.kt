@@ -1,8 +1,7 @@
-package dev.ewio.database
+package dev.ewio.claim.database
 
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
 
 object VCPlayers : IntIdTable("vc_player") {
     //val key = integer("key").uniqueIndex()

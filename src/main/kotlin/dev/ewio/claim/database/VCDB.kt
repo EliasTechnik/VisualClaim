@@ -1,13 +1,10 @@
-package dev.ewio.database
+package dev.ewio.claim.database
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import java.io.File
-import java.sql.Connection
 import java.sql.DriverManager
 
 object VCDB {
@@ -54,7 +51,7 @@ object VCDB {
 
         transaction(db) {
             SchemaUtils.createMissingTablesAndColumns(
-                VCPlayers, VCClaims, VCChunks
+                VCPlayers, VCClaims, VCChunks, VCLoadedChunks
             )
         }
     }

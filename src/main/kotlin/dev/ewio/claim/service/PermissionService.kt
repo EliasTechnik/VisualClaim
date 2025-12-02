@@ -66,7 +66,8 @@ class PermissionService(
             deleteclaimOther = deleteclaimOther,
             renameOtherPlayerClaims = renameOtherPlayerClaims,
             listOtherPlayerChunkLoader = listOtherPlayerChunkLoader,
-            canLoadChunks = canLoadChunks
+            canLoadChunks = canLoadChunks,
+            maxChunkLoaders = maxChunkLoaders
         )
     }
 

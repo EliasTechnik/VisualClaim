@@ -79,3 +79,15 @@ permissions:
   visualclaim.renameother:
     description: "Allows renaming other players' claims"
     default: false
+  visualclaim.showother:
+    description: "Allows showing other players' claim borders"
+    default: false
+  visualclaim.setloreother:
+    description: "Allows setting lore for other players' claims"
+    default: false
+  visualclaim.setcolorother:
+    description: "Allows setting colors for other players' claims"
+    default: false
+  visualclaim.loadChunks:
+    description: "Allows using chunkloaders"
+    default: true

@@ -1,7 +1,5 @@
-package dev.ewio.command
+package dev.ewio.claim.command
 
-import dev.ewio.VisualClaim
-import dev.ewio.claim.service.ClaimService
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.countChunksInClaim

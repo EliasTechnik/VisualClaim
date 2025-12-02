@@ -29,7 +29,7 @@ data class VCPlayerContext(
         player = dbContext.player,
         claims = dbContext.claims,
         chunks = dbContext.chunks,
-        chunkLoaders = dbContext.chunkLoader,
+        chunkLoader = dbContext.chunkLoader,
         restrictions = restrictions,
         retrievalTimestamp = dbContext.retrievalTimestamp
     )

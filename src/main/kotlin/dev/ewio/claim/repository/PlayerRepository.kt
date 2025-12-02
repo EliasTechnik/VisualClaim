@@ -1,12 +1,10 @@
 package dev.ewio.claim.repository
 
 import dev.ewio.claim.definitions.*
-import dev.ewio.database.VCPlayers
-import dev.ewio.database.rowToVCPlayer
+import dev.ewio.claim.database.VCPlayers
+import dev.ewio.claim.database.rowToVCPlayer
 import dev.ewio.util.log
-import dev.ewio.util.logInfo
 import kotlinx.coroutines.Dispatchers
-import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.insertIgnoreAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction

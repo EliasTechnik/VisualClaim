@@ -60,9 +60,12 @@ color:
     fill: 0.6
 
 # Color/Styling for BossBar. For Options see: https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Bossbar#color
-BossBar:
-  color: "YELLOW"
+ClaimBossBar:
+  color: "GREEN"
   style: "SEGMENTED_6"
+ChunkLoaderBossBar:
+  color: "YELLOW"
+  style: "PROGRESS"
 
 
 # Messages shown to players. The placeholders in <> will be replaced with dynamic values. They can be obmitted but extra placeholders will not be recognized.
@@ -147,19 +150,23 @@ messages:
     set: "§aDie Farbe für den Claim %claim_name% wurde auf %color_name% gesetzt."
     invalid-color: "§aDie angegebene Farbe ist ungültig."
   chunkloader:
-    enabled: "§aDieser Chunk wird nun permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
+    enabled: "§aDieser Chunk (%chunkloader_name%) wird nun permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
     max-reached: "§aDu hast die maximale Anzahl an Chunk-Loadern erreicht. Du kannst maximal %max_chunk_loaders% Chunks permanent laden. Entferne zuerst einen bestehenden Chunk-Loader mit §e/chunkloader remove§a."
-    already-enabled: "§aDieser Chunk wird bereits permanent geladen."
-    disabled: "§aDieser Chunk wird nicht mehr permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
+    already-enabled: "§aDieser Chunk wird bereits unter den Namen %chunkloader_name% permanent geladen."
+    disabled: "§aDer Chunkloader %chunkloader_name% wurde entfernt und sein Chunk wird nicht mehr permanent geladen. Du hast nun %current_chunk_loaders% von %max_chunk_loaders% Chunk-Loadern verwendet."
     already-enabled-other: "§aDieser Chunk wird von %owner% permanent geladen."
+    can-not-be-loaded: "§cDieser Chunk kann nicht permanent geladen werden."
+    name-invalid: "§aDer angegebene Name ist ungültig."
+    not-found: "§aEs wurde kein Chunk-Loader mit diesen Namen gefunden."
   chunkloaderlist:
-    header: "§aDeine Chunk-Loader: (%current_chunk_loaders% von %max_chunk_loaders% Möglichen)"
-    entry: "§6- Welt: %world%, Koordinaten: %x%,%y%,%z%"
+    header: "§aDeine Chunk-Loader: (%current_chunk_loaders% von %max_chunk_loaders% möglichen)"
+    header-other: "§Chunk-Loader von %owner%:"
+    entry: "§6- %chunkloader_name% in Welt: %world%, Koordinaten: %x%, %y%, %z%"
     no-chunkloaders: "§aDu hast keine Chunk-Loader gesetzt."
-
+    no-chunkloaders-other: "§aSpieler %owner% hat keine Chunk-Loader gesetzt."
   unknown-error: "§cEin unbekannter Fehler ist aufgetreten. Bitte kontaktiere einen Administrator."
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
-  player-not-found: "§cDer Spieler %player% wurde nicht gefunden."
+  player-not-found: "§cDer Spieler %player_name% wurde nicht gefunden."
   claim-not-found: "§cEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
   showclaim:
     shown: "§aDie Grenzen des Claims %claim_name% werden für %show-claim-duration-seconds% Sekunden angezeigt."
@@ -167,8 +174,10 @@ messages:
     layer-name: "Claims"
     hover-text:
       named-claim: "%claim_name% von %owner%"
-  BossBar:
+  ClaimBossBar:
     title: "<green>Claim: %claim_name% | Besitzer: %owner%</green>"
+  ChunkLoaderBossBar:
+    title: "<yellow>ChunkLoader: %chunkloader_name% aktiv."
 
 
 

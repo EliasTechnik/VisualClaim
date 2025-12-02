@@ -3,7 +3,7 @@ package dev.ewio.claim.service
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.definitions.VCResult
-import dev.ewio.listener.MoveListener
+import dev.ewio.claim.listener.MoveListener
 import dev.ewio.util.VCWrappedLookupTable
 import dev.ewio.util.log
 import kotlinx.coroutines.CoroutineScope

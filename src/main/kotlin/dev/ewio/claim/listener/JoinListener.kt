@@ -1,4 +1,4 @@
-package dev.ewio.listener
+package dev.ewio.claim.listener
 
 import dev.ewio.util.log
 import org.bukkit.event.EventHandler

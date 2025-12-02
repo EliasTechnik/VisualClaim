@@ -17,22 +17,26 @@ import dev.ewio.claim.service.MovementService
 import dev.ewio.claim.service.PermissionService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.claim.service.UIService
-import dev.ewio.command.AutoclaimCommand
-import dev.ewio.command.ClaimCommand
-import dev.ewio.command.ClaiminfoCommand
-import dev.ewio.command.DeleteclaimCommand
-import dev.ewio.command.ListclaimsCommand
-import dev.ewio.command.RenameclaimCommand
-import dev.ewio.command.ShowClaimCommand
-import dev.ewio.command.UnclaimCommand
-import dev.ewio.database.VCDB
-import dev.ewio.listener.JoinListener
-import dev.ewio.listener.LeaveListener
-import dev.ewio.map.MapService
-import dev.ewio.map.NoopMapService
-import dev.ewio.map.Pl3xMapService
+import dev.ewio.claim.command.AutoclaimCommand
+import dev.ewio.claim.command.ChunkLoaderCommand
+import dev.ewio.claim.command.ClaimCommand
+import dev.ewio.claim.command.ClaiminfoCommand
+import dev.ewio.claim.command.DeleteclaimCommand
+import dev.ewio.claim.command.ListclaimsCommand
+import dev.ewio.claim.command.RenameclaimCommand
+import dev.ewio.claim.command.ShowClaimCommand
+import dev.ewio.claim.command.UnclaimCommand
+import dev.ewio.claim.database.VCDB
+import dev.ewio.claim.listener.JoinListener
+import dev.ewio.claim.listener.LeaveListener
+import dev.ewio.claim.map.MapService
+import dev.ewio.claim.map.NoopMapService
+import dev.ewio.claim.map.Pl3xMapService
+import dev.ewio.claim.repository.ChunkLoaderRepository
+import dev.ewio.claim.service.ChunkLoaderService
 import dev.ewio.util.GL
 import dev.ewio.util.log
+import kotlinx.coroutines.runBlocking
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
@@ -50,6 +54,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var cfg: FileConfiguration
     lateinit var messageService: MessageService
     lateinit var uiService: UIService
+    lateinit var chunkLoaderService: ChunkLoaderService
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
 
@@ -63,11 +68,19 @@ class VisualClaim : JavaPlugin() {
         val defaultRestrictions = VCRestrictions(
             maxClaims = cfg.getInt("limits.max-claims-per-player", 10),
             maxChunks = cfg.getInt("limits.max-chunks-per-player", 100),
-            maxClaimNameLength = if(cfg.getInt("limits.max-claim-name-length", 32) <= 250) {
+            maxClaimNameLength = if (cfg.getInt("limits.max-claim-name-length", 32) <= 250) {
                 cfg.getInt("limits.max-claim-name-length", 32)
             } else {
                 250 //database limit
-            }
+            },
+            listOtherPlayerClaims = false,
+            canClaim = false,
+            unclaimOther = false,
+            deleteclaimOther = false,
+            renameOtherPlayerClaims = false,
+            listOtherPlayerChunkLoader = false,
+            canLoadChunks = false,
+            maxChunkLoaders = cfg.getInt("limits.max-chunkloaders", 5)
         )
 
         //init database
@@ -78,13 +91,18 @@ class VisualClaim : JavaPlugin() {
         this.messageService = MessageService(cfg)
         messageService.load()
 
+        this.chunkLoaderService = ChunkLoaderService()
+
         this.claimService = ClaimService(
             claimRepo = ClaimRepository(),//InMemoryRepository<VCClaim>(extractKey = { it.key }),
             playerRepo = PlayerRepository(),//InMemoryRepository<VCPlayer>(extractKey = { it.key }),
             chunkRepo = ChunkRepository(), //InMemoryRepository<VCChunk>(extractKey = { it.key }),
+            chunkLoaderRepo = ChunkLoaderRepository(),
             placeOnMap = { player, claim, chunks -> placeOnMap(player, claim, chunks) },
             deleteFromMap = { deletedClaim -> deleteFromMap(deletedClaim) },
-            notifyOnUpdate = { chunks -> notifyOnPositionRelatedUpdate(chunks) }
+            notifyOnUpdate = { chunks -> notifyOnPositionRelatedUpdate(chunks) },
+            forceLoadChunk = { chunkLoaderService.loadChunk(it) },
+            forceUnloadChunk = { chunkLoaderService.unloadChunk(it) }
         )
 
         val triggerWordsFromConfig = mutableListOf<String>()
@@ -269,7 +287,19 @@ class VisualClaim : JavaPlugin() {
                 ms = messageService
             )
         )
+        getCommand("chunkloader")?.setExecutor(
+            ChunkLoaderCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                getStringFromConfig = { path -> getStringFormConfig(path) },
+                ms = messageService
+            )
+        )
 
+        //post-enable tasks
+        launch {
+            claimService.loadAllChunkLoaders()
+        }
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
         logger.info("VisualClaim activated.")
@@ -282,6 +312,12 @@ class VisualClaim : JavaPlugin() {
         } catch (e: Exception) {
             GL.logger.severe("Error shutting down map service: ${e.message}")
         }
+        //It seems that unloading chunk loaders on shutdown is not necessary
+        /*
+        runBlocking{
+            claimService.unloadAllChunkLoaders()
+        }
+         */
         VCDB.shutdown()
     }
 
@@ -307,15 +343,15 @@ class VisualClaim : JavaPlugin() {
         prerequisiteService.updateBossbar(player, chunk)
     }
 
-    private fun notifyOnPositionRelatedUpdate(chunks: List<VCChunk>) {
+    private fun notifyOnPositionRelatedUpdate(chunks: List<PlainChunk>) {
         log("Notifying position related update for ${chunks.size} chunks")
         chunks.forEach {
             movementService.notifyPosition(
-                chunk = it.plainChunk,
+                chunk = it,
                 onNotify = { playerList ->
                     playerList.forEach { playerUUID ->
                         launch {
-                            updateUI(playerUUID, it.plainChunk)
+                            updateUI(playerUUID, it)
                         }
                     }
                 }

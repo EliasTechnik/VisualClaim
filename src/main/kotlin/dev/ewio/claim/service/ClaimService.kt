@@ -24,7 +24,9 @@ class ClaimService(
     val chunkLoaderRepo: ChunkLoaderRepository,
     val placeOnMap: (player: VCPlayer, claim: VCClaim, chunks: List<VCChunk>) -> Unit,
     val deleteFromMap: (chunks: List<VCChunk>) -> Unit,
-    val notifyOnUpdate: (chunks: List<VCChunk>) -> Unit
+    val notifyOnUpdate: (chunks: List<PlainChunk>) -> Unit,
+    val forceLoadChunk: (chunkLoader: VCLoadedChunk) -> Unit,
+    val forceUnloadChunk: (chunkLoader: VCLoadedChunk) -> Unit
 ) {
 
     /**
@@ -125,7 +127,7 @@ class ClaimService(
             )
             chunkRepo.upsert(newChunk)
             placeOnMap(player,targetClaim, listOf(newChunk))
-            notifyOnUpdate(listOf(newChunk))
+            notifyOnUpdate(listOf(newChunk.plainChunk))
             return VCResult.TransferChunk.TransferSuccessful
         }
     }
@@ -148,7 +150,7 @@ class ClaimService(
         vcChunk?.let{
             placeOnMap(player,claim, listOf(it))
             log("Notifying on update for chunk ${it.plainChunk.world}:${it.plainChunk.x}:${it.plainChunk.z}")
-            notifyOnUpdate(listOf(it))
+            notifyOnUpdate(listOf(it.plainChunk))
         }
         return vcChunk
     }
@@ -168,7 +170,7 @@ class ClaimService(
         } else {
             chunkRepo.deleteByKey(dbChunk.key)
             deleteFromMap(listOf(dbChunk)) //remove from map visualization
-            notifyOnUpdate(listOf(dbChunk))
+            notifyOnUpdate(listOf(dbChunk.plainChunk))
             return VCResult.UnclaimChunk.UnclaimSuccessful("")
         }
     }
@@ -177,7 +179,7 @@ class ClaimService(
         //remove from map
         val chunks = chunkRepo.listByClaim(claim.key)
         deleteFromMap(chunks)
-        notifyOnUpdate(chunks)
+        notifyOnUpdate(chunks.map { it.plainChunk })
 
         //delete all chunks of the claim
         claimRepo.deleteCascade(claim.key)
@@ -197,7 +199,7 @@ class ClaimService(
                 VCResult.UnknownFailure
             }else{
                 placeOnMap(player,updatedClaim, chunks) //re-add to map
-                notifyOnUpdate(chunks)
+                notifyOnUpdate(chunks.map { it.plainChunk })
                 VCResult.RenameClaim.RenamedSuccessful(claim.displayName, updatedClaim.displayName)
             }
         }
@@ -231,7 +233,7 @@ class ClaimService(
         //re-add target claim to map
         val allTargetChunks = chunkRepo.listByClaim(targetClaim.key)
         placeOnMap(player,targetClaim, allTargetChunks)
-        notifyOnUpdate(allTargetChunks)
+        notifyOnUpdate(allTargetChunks.map { it.plainChunk })
 
         return VCResult.RenameClaim.MergeSuccessful(sourceClaim.displayName, targetClaim.displayName)
     }
@@ -329,12 +331,40 @@ class ClaimService(
         return chunkLoaderRepo.listByPlayer(player.key)
     }
 
+    suspend fun getVCChunkLoaderByChunk(chunk: PlainChunk): VCLoadedChunk? {
+        return chunkLoaderRepo.findByChunkKey(chunk.toKey())
+    }
+
     suspend fun addVCLoadedChunk(chunkLoader: VCLoadedChunk): VCLoadedChunk? {
-        return chunkLoaderRepo.upsert(chunkLoader)
+        val cl = chunkLoaderRepo.upsert(chunkLoader)
+        if(cl != null){
+            forceLoadChunk(cl)
+            notifyOnUpdate(listOf(cl.chunk))
+        }
+        return cl
     }
 
     suspend fun removeVCLoadedChunkByKey(key: Int) {
+        val cl = chunkLoaderRepo.findByKey(key)
+        if(cl != null){
+            forceUnloadChunk(cl)
+            notifyOnUpdate(listOf(cl.chunk))
+        }
         chunkLoaderRepo.deleteByKey(key)
+    }
+
+    suspend fun loadAllChunkLoaders(){
+        val allChunkLoaders = chunkLoaderRepo.all()
+        allChunkLoaders.forEach { cl ->
+            forceLoadChunk(cl)
+        }
+    }
+
+    suspend fun unloadAllChunkLoaders(){
+        val allChunkLoaders = chunkLoaderRepo.all()
+        allChunkLoaders.forEach { cl ->
+            forceUnloadChunk(cl)
+        }
     }
 
 }

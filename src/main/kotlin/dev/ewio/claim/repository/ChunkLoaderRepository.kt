@@ -1,9 +1,9 @@
 package dev.ewio.claim.repository
 
 import dev.ewio.claim.definitions.VCLoadedChunk
-import dev.ewio.database.VCLoadedChunks
-import dev.ewio.database.VCPlayers
-import dev.ewio.database.rowToVCLoadedChunk
+import dev.ewio.claim.database.VCLoadedChunks
+import dev.ewio.claim.database.VCPlayers
+import dev.ewio.claim.database.rowToVCLoadedChunk
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.deleteWhere

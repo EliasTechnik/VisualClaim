@@ -1,10 +1,13 @@
 package dev.ewio.claim.service
 
 import dev.ewio.annotations.Costly
+import dev.ewio.claim.database.VCLoadedChunks
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCClaimDisplayData
+import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayerContext
+import dev.ewio.claim.definitions.VCPoint
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.util.SimpleCache
 import dev.ewio.util.error
@@ -454,28 +457,39 @@ class PrerequisiteService(
 
     suspend fun updateBossbar(player: Player, context: VCPlayerContext, chunk: PlainChunk) {
         log("Updating bossbar for player ${player.name} (${player.uniqueId}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
-        val claim = claimService.getClaimAtChunk(chunk)?.let { claimedChunk ->
-            val owner = claimService.getPlayerByKey(claimedChunk.playerKey)
-            if(owner != null){
-                VCClaimDisplayData(
-                    claim = claimedChunk,
-                    ownerName = owner.name
-                )
-            }else{
+        val chunkLoader = claimService.getVCChunkLoaderByChunk(chunk)?.let {
+            //make sure the chunkloader belongs to the player (we only want to show own chunkloaders)
+            if(it.playerKey != context.player.key){
                 null
+            }else{
+                it
             }
         }
-        ui.updateBossBar(player, claim, context)
+
+        val claim = claimService.getClaimAtChunk(chunk)
+
+        val owner = if(claim != null){
+            claimService.getPlayerByKey(claim.playerKey)?.name
+        }else{
+            null
+        }
+
+        val displayData = VCClaimDisplayData(
+            claim = claim,
+            ownerName = owner,
+            chunkloader = chunkLoader
+        )
+        ui.updateBossBar(player, displayData, context)
     }
 
     suspend fun updateBossbar(playerUUID: UUID, chunk: PlainChunk){
         log("Updating bossbar for player UUID $playerUUID at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world}")
-       cc.getPlayerContext(playerUUID)?.let{ context ->
-           Bukkit.getPlayer(playerUUID)?.let{ player ->
+        cc.getPlayerContext(playerUUID)?.let{ context ->
+            Bukkit.getPlayer(playerUUID)?.let{ player ->
                log("Fetched player ${player.name} (${player.uniqueId}) for bossbar update.")
                updateBossbar(player, context, chunk)
-           }
-       }
+            }
+        }
     }
 
     suspend fun showClaim(
@@ -577,31 +591,77 @@ class PrerequisiteService(
         }
     }
 
-    fun addChunkLoader(context: VCPlayerContext, name: String): VCResult {
+    suspend fun addChunkLoader(context: VCPlayerContext, name: String, player: Player): VCResult {
 
+        log("Player ${context.player.name} (${context.player.mcUUID}) is trying to add a chunkloader with name: $name")
         //check if the player can add chunkloaders (permission and limits)
         if(!context.restrictions.canLoadChunks){
             return VCResult.MissingPermission
         }
-
+        log("Player ${context.player.name} (${context.player.mcUUID}) has permission to add chunkloaders.")
         if(context.chunkLoader.size >= context.restrictions.maxChunkLoaders && context.restrictions.maxChunkLoaders != -1){
             return VCResult.AddChunkLoader.MaxChunkLoadersReached(context.restrictions.maxChunkLoaders)
         }
-
+        log("Player ${context.player.name} (${context.player.mcUUID}) has not reached the max chunkloader limit (${context.chunkLoader.size}/${context.restrictions.maxChunkLoaders}).")
         //check if the name is valid
         if(name.isBlank() || name.length > context.restrictions.maxClaimNameLength){
             return VCResult.AddChunkLoader.NameInvalid
         }
-
+        log("Player ${context.player.name} (${context.player.mcUUID}) provided a valid chunkloader name: $name")
         //check if there is already a chunkloader with this name
+        val chunk = PlainChunk.fromBukkitChunk(player.location.chunk)
+        val existingCL = claimService.getVCChunkLoaderByChunk(chunk)
 
+        if(existingCL != null){
+            log("ChunkLoader already exists at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} for player key ${existingCL.playerKey}")
+            if(existingCL.playerKey == context.player.key){
+                return VCResult.AddChunkLoader.ChunkAlreadyLoaded(existingCL)
+            }else{
+                val owner = claimService.getPlayerByKey(existingCL.playerKey)
+                if(owner == null){
+                    error("ChunkLoader ($existingCL) without valid owner!")
+                    return VCResult.UnknownFailure
+                }else {
+                    return VCResult.AddChunkLoader.ChunkLoadedByOtherPlayer(
+                        other = owner
+                    )
+                }
+            }
+        }else{
+            //proceed to add chunkloader
+            log("Adding chunkloader for player ${context.player.name} (${context.player.mcUUID}) at chunk X:${chunk.x} Z:${chunk.z} in world ${chunk.world} with name: $name")
+            val newCL = cc.updatePlayerContextCache(context.player.mcUUID) {
+                claimService.addVCLoadedChunk(
+                    VCLoadedChunk(
+                        playerKey = context.player.key,
+                        name = name,
+                        key = -1,
+                        playerLocation = VCPoint.fromPlayerLocation(player.location),
+                        chunk = chunk,
+                        firstLoaded = System.currentTimeMillis()
+                    )
+                )
+            }
 
-        return VCResult.UnknownFailure
+            return if(newCL != null){
+                VCResult.AddChunkLoader.ChunkLoaderAdded(newCL)
+            }else{
+                VCResult.UnknownFailure
+            }
+        }
     }
 
-    fun removeChunkLoader(context: VCPlayerContext, name: String): VCResult {
-        //TODO: implement
-        return VCResult.UnknownFailure
+    suspend fun removeChunkLoader(context: VCPlayerContext, name: String): VCResult {
+        log("Player ${context.player.name} (${context.player.mcUUID}) is trying to remove a chunkloader with name: $name")
+        //find chunkloader
+        val cl = context.chunkLoader.firstOrNull { it.name.equals(name, ignoreCase = true) }
+            ?: return VCResult.RemoveChunkLoader.ChunkLoaderNotFound
+        //proceed to remove chunkloader
+        val result = cc.updatePlayerContextCache(context.player.mcUUID) {
+            claimService.removeVCLoadedChunkByKey(cl.key)
+            VCResult.RemoveChunkLoader.ChunkLoaderRemoved(cl)
+        }
+        return result
     }
 
 }
