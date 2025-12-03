@@ -63,7 +63,7 @@ class CentralCache(
         val realPlayer = sender as? Player ?: return null
         //log("Fetching player context for ${realPlayer.name} (${realPlayer.uniqueId})")
         getPlayerContext(realPlayer)?.let{
-            return Pair(it, realPlayer)
+            return Pair(it.copy(restrictions = permissionService.getRestrictionsForPlayer(it.player, realPlayer)), realPlayer)
         }
         return null
     }

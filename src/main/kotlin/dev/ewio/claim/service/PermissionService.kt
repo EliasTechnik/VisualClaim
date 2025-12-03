@@ -2,6 +2,7 @@ package dev.ewio.claim.service
 
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCRestrictions
+import dev.ewio.util.log
 import org.bukkit.entity.Player
 import org.bukkit.permissions.PermissionAttachmentInfo
 
@@ -10,12 +11,10 @@ class PermissionService(
     val triggerWords: List<String>
 ) {
 
-    fun getPermission(realPlayer: Player, permissionPrefix: String):String? {
-        // Alle effektiven (expandierten) Nodes durchsuchen
+    private fun getPermissionSuffix(realPlayer: Player, permissionPrefix: String):String? {
         for (pai: PermissionAttachmentInfo in realPlayer.effectivePermissions) {
             if (!pai.value) continue // nur gesetzte/true Nodes
             val node = pai.permission.lowercase()
-
             if (node.startsWith(permissionPrefix.lowercase())) {
                 val suffix = node.removePrefix(permissionPrefix)
                 return suffix.ifEmpty { null }
@@ -24,8 +23,19 @@ class PermissionService(
         return null
     }
 
+    fun hasPermission(realPlayer: Player, permissionPrefix: String):Boolean {
+        for (pai: PermissionAttachmentInfo in realPlayer.effectivePermissions) {
+            if (!pai.value) continue // nur gesetzte/true Nodes
+            val node = pai.permission.lowercase()
+            if (node.startsWith(permissionPrefix.lowercase())) {
+                return true
+            }
+        }
+        return false
+    }
+
     fun getUpperLimitFromPermission(realPlayer: Player, permissionPrefix: String):Int?{
-        val perm = getPermission(realPlayer, permissionPrefix)
+        val perm = getPermissionSuffix(realPlayer, permissionPrefix)
         perm?.let{
             if(it == "*" || it == "unlimited" || it == "-1"){
                 return -1
@@ -43,19 +53,19 @@ class PermissionService(
     }
 
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {
-        val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
-        val listOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.listOther") != null
-        val maxClaims = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaims.") ?: defaultVCRestrictions.maxClaims
-        val maxChunks = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunks.") ?: defaultVCRestrictions.maxChunks
-        val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
-        val unclaimOther = getPermission(bukkitPlayer, "VisualClaim.unclaimOther") != null
-        val deleteclaimOther = getPermission(bukkitPlayer, "VisualClaim.deleteOther") != null
-        val renameOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.renameOther") != null
+        val canClaim = hasPermission(bukkitPlayer, "visualclaim.claim")
+        val listOtherPlayerClaims = hasPermission(bukkitPlayer, "visualclaim.listOther")
+        val maxClaims = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxclaims.") ?: defaultVCRestrictions.maxClaims
+        val maxChunks = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxchunks.") ?: defaultVCRestrictions.maxChunks
+        val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
+        val unclaimOther = hasPermission(bukkitPlayer, "visualclaim.unclaimOther")
+        val deleteclaimOther = hasPermission(bukkitPlayer, "visualclaim.deleteOther")
+        val renameOtherPlayerClaims = hasPermission(bukkitPlayer, "visualclaim.renameOther")
 
-        val canLoadChunks = getPermission(bukkitPlayer, "VisualClaim.loadChunks") != null
-        val listOtherPlayerChunkLoader = getPermission(bukkitPlayer, "VisualClaim.listOtherChunkLoader") != null
-        val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
-        val canUnloadOtherChunks = getPermission(bukkitPlayer, "VisualClaim.unloadChunksOther") != null
+        val canLoadChunks = hasPermission(bukkitPlayer, "visualclaim.loadChunks")
+        val listOtherPlayerChunkLoader = hasPermission(bukkitPlayer, "visualclaim.listOtherChunkLoader")
+        val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
+        val canUnloadOtherChunks = hasPermission(bukkitPlayer, "visualclaim.unloadChunksOther")
 
 
         return VCRestrictions(

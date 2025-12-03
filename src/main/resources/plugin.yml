@@ -10,54 +10,54 @@ commands:
   claim:
     description: Claim that chunk
     usage: /claim ["name"]
-    permission: visualclaim.command.claim
+    permission: visualclaim.claim
   unclaim:
     description: Unclaim that chunk
     usage: /unclaim
-    permission: visualclaim.command.unclaim
+    permission: visualclaim.unclaim
   deleteclaim:
     description: Delete a claim and unclaim all chunks in it
     usage: /deleteclaim "<name>"
-    permission: visualclaim.command.deleteclaim
+    permission: visualclaim.deleteclaim
   autoclaim:
     description: Toggle autoclaim for a claim
     usage: /autoclaim <"name"|off>
-    permission: visualclaim.command.autoclaim
+    permission: visualclaim.autoclaim
   claiminfo:
     description: See who claimed that chunk you are standing on
     usage: /claiminfo
-    permission: visualclaim.command.claiminfo
+    permission: visualclaim.claiminfo
   listclaims:
     description: List all claims your claims
     usage: /listclaims
-    permission: visualclaim.command.listclaims
+    permission: visualclaim.listclaims
   renameclaim:
     description: Rename a claim
     usage: /renameclaim "<oldname>" "<newname>"
-    permission: visualclaim.command.renameclaim
+    permission: visualclaim.renameclaim
   showclaim:
     description: Show the borders of a claim
     usage: /showclaim "<name>"
-    permission: visualclaim.command.showclaim
+    permission: visualclaim.showclaim
   claimlore:
     description: Lets you read and set lore for a given claim
     usage: /claimlore "<name>" ["<lore>"]
-    permission: visualclaim.command.claimlore
+    permission: visualclaim.claimlore
   claimcolor:
     description: Lets you set a color for your claim
     usage: /claimcolor "<name>" <color>
-    permission: visualclaim.command.claimcolor
+    permission: visualclaim.claimcolor
   chunkloader:
     description: Lets you load this chunk permanently
     usage: /chunkloader [add/remove/list]
-    permissions: visualclaim.command.chunkloader
+    permissions: visualclaim.chunkloader
 
 
 
 permissions:
   visualclaim.claim:
     description: "Allows claiming chunks"
-    default: true
+    default: false
   visualclaim.maxclaims:
     description: "Overrides the max claims per player limit if a number or -1 is specified behind it"
     default: false
@@ -90,4 +90,4 @@ permissions:
     default: false
   visualclaim.loadChunks:
     description: "Allows using chunkloaders"
-    default: true
+    default: false

@@ -59,17 +59,14 @@ class ListclaimsCommand(
                 if(betterArgs.isNotEmpty()){
                     if(context.restrictions.listOtherPlayerClaims){
 
+                        //TODO: this can only get online players currently. For offline support, we need to query the database directly.
                         val otherPlayer = getPlayer(betterArgs[0])
 
-                        otherPlayer?.let {
-                            preService.getCachedPlayerContext(it)?.let { targetContext ->
+                        otherPlayer?.let { p ->
+                            preService.getCachedPlayerContext(p)?.let { targetContext ->
                                 if (targetContext.claims.isEmpty()) {
                                     ms.send(realPlayer, "list-claims.no-claims-other", mapOf("player" to betterArgs[0]))
                                 } else {
-                                    realPlayer.sendMessage(
-                                        getStringFromConfig("messages.list-claims.header-other")
-                                            .replace("<player>", betterArgs[0])
-                                    )
                                     ms.send(realPlayer, "list-claims.header-other", mapOf("player" to betterArgs[0]))
                                     for (claim in targetContext.claims) {
                                         ms.send(realPlayer, "list-claims.entry", mapOf(
@@ -88,10 +85,10 @@ class ListclaimsCommand(
                                     )
                                 }
                             } ?: run {
-                                ms.send(realPlayer, "player-not-found", mapOf("player" to betterArgs[0]))
+                                ms.send(realPlayer, "player-not-found", mapOf("player_name" to betterArgs[0]))
                             }
                         }?: run {
-                            ms.send(realPlayer, "player-not-found", mapOf("player" to betterArgs[0]))
+                            ms.send(realPlayer, "player-not-found", mapOf("player_name" to betterArgs[0]))
                         }
                     }
                 }else{
