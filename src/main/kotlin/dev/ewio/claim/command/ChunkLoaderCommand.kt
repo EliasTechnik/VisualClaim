@@ -14,14 +14,15 @@ import org.bukkit.entity.Player
 import kotlin.math.roundToInt
 
 /**
- *  /chunkloader [add/remove/list]
+ *  /chunkloader add <name>
+ *  /chunkloader remove <name> [<player_name>]
+ *  /chunkloader list [<player_name>]
  */
 
 
 class ChunkLoaderCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String,
     private val ms: MessageService
 ): TabExecutor {
     override fun onCommand(
@@ -51,17 +52,21 @@ class ChunkLoaderCommand(
                         }
                         "remove" -> {
                             log("${realPlayer.name} issued /chunkloader remove")
-                            if(betterArgs.size >= 2){
+                            if(betterArgs.size == 2){
                                 preService.removeChunkLoader(context, betterArgs[1])
                             }else{
-                                ms.send(realPlayer, "usage.chunkloader")
-                                return@launch
+                                if(betterArgs.size == 3) {
+                                    preService.removeChunkLoader(context, betterArgs[1], betterArgs[2])
+                                }else{
+                                    ms.send(realPlayer, "usage.chunkloader")
+                                    return@launch
+                                }
                             }
 
                         }
                         "list" -> {
                             log("${realPlayer.name} issued /chunkloader list")
-                            if(betterArgs.size >= 2){
+                            if(betterArgs.size == 2){
                                 preService.listChunkLoader(context, betterArgs[1])
                             }else{
                                 preService.listChunkLoader(context)
@@ -117,6 +122,11 @@ class ChunkLoaderCommand(
                         }
                         is VCResult.RemoveChunkLoader.ChunkLoaderNotFound -> {
                             ms.send(realPlayer, "chunkloader.not-found")
+                        }
+                        is VCResult.RemoveChunkLoader.OtherPlayerNotFound -> {
+                            ms.send(realPlayer, "player-not-found", mapOf(
+                                "player_name" to result.other
+                            ))
                         }
 
                         //list

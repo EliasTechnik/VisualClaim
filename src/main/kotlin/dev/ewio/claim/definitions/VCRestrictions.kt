@@ -12,5 +12,5 @@ data class VCRestrictions(
     val listOtherPlayerChunkLoader: Boolean = false, //whether the player can list other players' chunk loaders
     val canLoadChunks: Boolean = false, //whether the player can load chunks
     val maxChunkLoaders: Int, //the maximum number of chunk loaders a player can have (-1 = unlimited)
-
+    val canUnloadOtherChunks: Boolean = false //whether the player can unload other players' chunks
 )

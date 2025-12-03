@@ -13,7 +13,6 @@ import org.bukkit.entity.Player
 class ShowClaimCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String,
     private val ms: MessageService
 ): TabExecutor {
 

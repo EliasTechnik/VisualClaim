@@ -223,7 +223,6 @@ class VisualClaim : JavaPlugin() {
             ClaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) },
                 ms = messageService
             )
         )
@@ -241,7 +240,6 @@ class VisualClaim : JavaPlugin() {
                 ClaiminfoCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) },
                     ms = messageService
             )
         )
@@ -250,7 +248,6 @@ class VisualClaim : JavaPlugin() {
             UnclaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) },
                 ms = messageService
             )
         )
@@ -283,7 +280,6 @@ class VisualClaim : JavaPlugin() {
             ShowClaimCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) },
                 ms = messageService
             )
         )
@@ -291,7 +287,6 @@ class VisualClaim : JavaPlugin() {
             ChunkLoaderCommand(
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
-                getStringFromConfig = { path -> getStringFormConfig(path) },
                 ms = messageService
             )
         )

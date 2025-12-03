@@ -40,22 +40,13 @@ VisualClaim works mostly by commands issued by players. The call chain (should) 
 Player issues command 
     |
     V
-CommandExecutor: Fetches player and command arguments 
+CommandExecutor: Fetches player cache and command arguments, decides which command to execute, evaluates VCResults and sends messages to player
     |
     V
-AsyncCommandHandler: Handles command asynchronously
-    |
-    V
-PermissionsGate: Checks if player has permission to execute the command
-    |
-    V
-PrerequisiteGate: Checks if all prerequisites are met (e.g. claim name is valid, chunk is not already claimed, etc)
-    |
-    V
-MapLock: Cares about updateing the map
-    |   /\ 
-    V    |
-ClaimService: Main service which handles claim logic
+PrerequsiteService: Executes commands and does prerequisite checks beforehand
+    |  /\
+    V  |
+ClaimService: Main service which talks to DB
     |
     V
 ClaimRepository: Handles data storage and retrieval
@@ -69,11 +60,18 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Permissions
 
-- ```VisualClaim.claim``` - Permission to claim, unlcaim and manage claims your own chunks. Only limited by the global config settings.
+- ```VisualClaim.claim``` - Permission to claim, unlcaim and manage claims your own.
 - ```VisualClaim.listOther``` - Permission to list other players' claims.
 - ```VisualClaim.maxClaims.<number>``` - Set the maximum number of claims a player can have. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
 - ```VisualClaim.maxChunks.<number>``` -  Set the maximum number of chunks a player can claim. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit.
-- ```VisualClaim.unclaimOther``` - Permission to unclaim chunks from other players' claims by using the `\unclaim force` command.
+- ```VisualClaim.maxclaimlength.<number>``` - Set the maximum length for claim names. Replace `<number>` with the desired limit. If multiple permissions are set, the lowest number will be used. If no permission is set, the default limit from the config will be used. Seting a high number here will break some ui elements like bossbars or markers on the map.
+- ```VisualClaim.unclaimOther``` - Permission to unclaim chunks from other players' claims by using the `\unclaim force` command. TODO: check if this is implemented correctly.
+- ```VisualClaim.deleteOther``` - Permission to delete other players' claims.
+- ```VisualClaim.renameOther``` - Permission to rename other players' claims.
+- ```VisualClaim.loadChunks``` - Permission to permanently load chunks. (the chunks don`t have to be claimed by the player)
+- ```VisualClaim.listOtherChunkLoader``` - Permission to list other players' chunk loaders.
+- ```VisualClaim.maxChunkLoaders.<number>``` - Set the maximum number of chunk loaders a player can have. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit. Use this with caution because it opens up the possibility of chunkloader abuse. (loading unlimited chunks can place artificial load on the server which cant be controlled by the server admin)`
+- ```VisualClaim.unloadChunksOther``` - Permission to remove other players' chunk loaders.
 
 ## Todo
 

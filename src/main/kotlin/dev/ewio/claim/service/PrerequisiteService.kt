@@ -651,17 +651,38 @@ class PrerequisiteService(
         }
     }
 
-    suspend fun removeChunkLoader(context: VCPlayerContext, name: String): VCResult {
-        log("Player ${context.player.name} (${context.player.mcUUID}) is trying to remove a chunkloader with name: $name")
-        //find chunkloader
-        val cl = context.chunkLoader.firstOrNull { it.name.equals(name, ignoreCase = true) }
-            ?: return VCResult.RemoveChunkLoader.ChunkLoaderNotFound
-        //proceed to remove chunkloader
-        val result = cc.updatePlayerContextCache(context.player.mcUUID) {
-            claimService.removeVCLoadedChunkByKey(cl.key)
-            VCResult.RemoveChunkLoader.ChunkLoaderRemoved(cl)
+    suspend fun removeChunkLoader(context: VCPlayerContext, name: String, targetPlayer: String? = null): VCResult {
+        if(targetPlayer != null){
+            //removing another player's chunkloader
+            //check permission
+            if(!context.restrictions.canUnloadOtherChunks){
+                return VCResult.MissingPermission
+            }
+            //get target player
+            val target = claimService.getPlayerByName(targetPlayer) ?: return VCResult.RemoveChunkLoader.OtherPlayerNotFound(targetPlayer)
+            val targetContext = claimService.getPlayerContextByKey(target.key) ?: return VCResult.UnknownFailure
+
+            //find chunkloader
+            val cl = targetContext.chunkLoader.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                ?: return VCResult.RemoveChunkLoader.ChunkLoaderNotFound
+
+            //proceed to remove chunkloader
+            val result = cc.updatePlayerContextCache(target.mcUUID) {
+                claimService.removeVCLoadedChunkByKey(cl.key)
+                VCResult.RemoveChunkLoader.ChunkLoaderRemoved(cl)
+            }
+            return result
+        }else{
+            //find chunkloader
+            val cl = context.chunkLoader.firstOrNull { it.name.equals(name, ignoreCase = true) }
+                ?: return VCResult.RemoveChunkLoader.ChunkLoaderNotFound
+            //proceed to remove chunkloader
+            val result = cc.updatePlayerContextCache(context.player.mcUUID) {
+                claimService.removeVCLoadedChunkByKey(cl.key)
+                VCResult.RemoveChunkLoader.ChunkLoaderRemoved(cl)
+            }
+            return result
         }
-        return result
     }
 
 }

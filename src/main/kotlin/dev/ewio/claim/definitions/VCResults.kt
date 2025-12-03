@@ -89,6 +89,7 @@ open class VCResult {
     sealed class RemoveChunkLoader{
         data class ChunkLoaderRemoved(val cl: VCLoadedChunk): Success()
         object ChunkLoaderNotFound: Failure()
+        data class OtherPlayerNotFound(val other: String): Failure()
     }
 
     sealed class ListChunkLoaders{

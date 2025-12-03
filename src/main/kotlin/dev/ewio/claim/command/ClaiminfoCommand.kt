@@ -16,7 +16,6 @@ import org.bukkit.command.TabExecutor
 class ClaiminfoCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val getStringFromConfig: (key: String) -> String,
     private val ms: MessageService
 ): TabExecutor {
     override fun onTabComplete(

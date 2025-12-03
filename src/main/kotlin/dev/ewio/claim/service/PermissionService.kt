@@ -43,17 +43,19 @@ class PermissionService(
     }
 
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {
+        val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
+        val listOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.listOther") != null
         val maxClaims = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaims.") ?: defaultVCRestrictions.maxClaims
         val maxChunks = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunks.") ?: defaultVCRestrictions.maxChunks
         val maxClaimNameLength = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxclaimnamelength.") ?: defaultVCRestrictions.maxClaimNameLength
-        val listOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.listOther") != null
-        val canClaim = getPermission(bukkitPlayer, "VisualClaim.claim") != null
         val unclaimOther = getPermission(bukkitPlayer, "VisualClaim.unclaimOther") != null
         val deleteclaimOther = getPermission(bukkitPlayer, "VisualClaim.deleteOther") != null
         val renameOtherPlayerClaims = getPermission(bukkitPlayer, "VisualClaim.renameOther") != null
+
         val canLoadChunks = getPermission(bukkitPlayer, "VisualClaim.loadChunks") != null
         val listOtherPlayerChunkLoader = getPermission(bukkitPlayer, "VisualClaim.listOtherChunkLoader") != null
         val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "VisualClaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
+        val canUnloadOtherChunks = getPermission(bukkitPlayer, "VisualClaim.unloadChunksOther") != null
 
 
         return VCRestrictions(
@@ -67,7 +69,8 @@ class PermissionService(
             renameOtherPlayerClaims = renameOtherPlayerClaims,
             listOtherPlayerChunkLoader = listOtherPlayerChunkLoader,
             canLoadChunks = canLoadChunks,
-            maxChunkLoaders = maxChunkLoaders
+            maxChunkLoaders = maxChunkLoaders,
+            canUnloadOtherChunks = canUnloadOtherChunks
         )
     }
 
