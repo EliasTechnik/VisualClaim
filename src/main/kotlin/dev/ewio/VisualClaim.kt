@@ -34,6 +34,7 @@ import dev.ewio.claim.map.NoopMapService
 import dev.ewio.claim.map.Pl3xMapService
 import dev.ewio.claim.repository.ChunkLoaderRepository
 import dev.ewio.claim.service.ChunkLoaderService
+import dev.ewio.claim.service.ColorService
 import dev.ewio.util.GL
 import dev.ewio.util.log
 import kotlinx.coroutines.runBlocking
@@ -57,6 +58,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var chunkLoaderService: ChunkLoaderService
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
+    lateinit var colorService: ColorService
 
     override fun onEnable() {
         // Plugin startup logic
@@ -86,8 +88,11 @@ class VisualClaim : JavaPlugin() {
         //init database
         VCDB.connect(File(dataFolder, "VisualClaim.db").absolutePath)
 
-
         //services
+        this.colorService = ColorService(
+            getStringFromConfig = {path -> getStringFormConfig(path)}
+        )
+
         this.messageService = MessageService(cfg)
         messageService.load()
 

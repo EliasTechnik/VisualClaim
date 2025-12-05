@@ -4,6 +4,7 @@ import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCColor
+import dev.ewio.claim.definitions.VCColorType
 import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCPoint
@@ -26,7 +27,8 @@ fun rowToVCClaim(row: ResultRow) = VCClaim(
     displayName = row[VCClaims.displayName],
     color = VCColor(
         hex = row[VCClaims.colorHex],
-        name = row[VCClaims.colorName]
+        name = row[VCClaims.colorName],
+        type = VCColorType.getByIdentifier(row[VCClaims.colorType])
     ),
     description = row[VCClaims.description],
     lastModified = row[VCClaims.lastModified]

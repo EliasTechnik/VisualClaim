@@ -26,6 +26,7 @@ object VCClaims : IntIdTable("vc_claim") {
     val displayName = varchar("display_name", 250)
     val colorHex = varchar("color_hex", 7).default("#00FF00")
     val colorName = varchar("color_name", 50).default("Green")
+    val colorType = varchar("color_type", 50).default("green")
     val description = text("description").default("")
     val lastModified = long("last_modified")
 

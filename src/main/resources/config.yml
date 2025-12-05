@@ -36,7 +36,7 @@ color:
     magenta: "§dMagenta"
     brown: "§6Braun"
     gold: "§6Gold"
-    silver: "§7Silber"
+    turquoise: "§bTürkis"
   values:
     red: "#FF0000"
     blue: "#0000FF"
@@ -54,7 +54,7 @@ color:
     magenta: "#FF00FF"
     brown: "#A52A2A"
     gold: "#FFD700"
-    silver: "#C0C0C0"
+    turquoise: "#40E0D0"
   transparency:
     stroke: 0.3
     fill: 0.6
