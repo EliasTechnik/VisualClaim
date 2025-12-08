@@ -98,4 +98,12 @@ open class VCResult {
         object NoChunkLoadersFound: Failure()
         object VCPlayerNotFound: Failure()
     }
+
+    sealed class ClaimLore{
+        data class LoreSet(val claim: VCClaim): Success()
+        data class LoreGet(val claim: VCClaim): Success()
+        object ClaimNotFound: Failure()
+        object ContainsInvalidCharacters: Failure()
+        data class LoreTooLong(val maxLength: Int): Failure()
+    }
 }

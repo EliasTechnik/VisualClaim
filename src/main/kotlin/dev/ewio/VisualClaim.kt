@@ -84,7 +84,8 @@ class VisualClaim : JavaPlugin() {
             renameOtherPlayerClaims = false,
             listOtherPlayerChunkLoader = false,
             canLoadChunks = false,
-            maxChunkLoaders = cfg.getInt("limits.max-chunk-loaders", 5)
+            maxChunkLoaders = cfg.getInt("limits.max-chunk-loaders", 5),
+            maxClaimLoreLength = 512
         )
 
         //init database
@@ -130,7 +131,8 @@ class VisualClaim : JavaPlugin() {
 
         this.permissionService = PermissionService(
             defaultVCRestrictions = defaultRestrictions,
-            triggerWords = triggerWordsFromConfig
+            triggerWords = triggerWordsFromConfig,
+            forbiddenCharset = listOf(';', '\'', '\\', '/', '<', '>', '|','%','&','$','#')
         )
         this.centralCache = CentralCache(
             coroutineScope = this.scope,

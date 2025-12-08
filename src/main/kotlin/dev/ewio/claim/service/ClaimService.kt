@@ -370,4 +370,15 @@ class ClaimService(
         }
     }
 
+    suspend fun updateClaimDescription(context: VCPlayerContext, claim: VCClaim, newDescription: String) {
+        val updatedClaim = claim.copy(
+            description = newDescription,
+            lastModified = System.currentTimeMillis()
+        )
+        claimRepo.upsert(updatedClaim)
+        deleteFromMap(context.chunks.filter { it.claimKey == claim.key })
+        placeOnMap(context.player, updatedClaim, context.chunks.filter { it.claimKey == claim.key })
+        notifyOnUpdate(context.chunks.filter { it.claimKey == claim.key }.map { it.plainChunk })
+    }
+
 }

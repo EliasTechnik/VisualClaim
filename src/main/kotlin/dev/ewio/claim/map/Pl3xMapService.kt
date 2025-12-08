@@ -75,7 +75,7 @@ class Pl3xMapService: MapService {
         val popupText = claim.description
 
         val popup = Popup()
-        popup.content = hoverText
+        popup.content = popupText.ifEmpty { hoverText }
 
         val fillColor = claim.color.getIntColorWithAlpha((255 * fillAlpha).toInt())
         val strokeColor = claim.color.getIntColorWithAlpha((255 * strokeAlpha).toInt())

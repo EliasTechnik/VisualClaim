@@ -688,4 +688,27 @@ class PrerequisiteService(
         }
     }
 
+    suspend fun updateClaimDescription(context: VCPlayerContext, claim: VCClaim, newDescription: String): VCResult {
+
+        //check length
+        if(newDescription.length > context.restrictions.maxClaimLoreLength && context.restrictions.maxClaimLoreLength != -1) {
+            return VCResult.ClaimLore.LoreTooLong(context.restrictions.maxClaimLoreLength)
+        }
+
+        //check characters
+        if(!permissionService.isLoreAllowed(newDescription)) {
+            return VCResult.ClaimLore.ContainsInvalidCharacters
+        }
+
+        return cc.updatePlayerContextCache(context.player.mcUUID){
+            claimService.updateClaimDescription(
+                context = context,
+                claim = claim,
+                newDescription = newDescription
+            )
+            VCResult.ClaimLore.LoreSet(
+                claim = claim.copy(description = newDescription)
+            )
+        }
+    }
 }

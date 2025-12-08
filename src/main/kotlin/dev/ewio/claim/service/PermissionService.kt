@@ -8,7 +8,8 @@ import org.bukkit.permissions.PermissionAttachmentInfo
 
 class PermissionService(
     val defaultVCRestrictions: VCRestrictions,
-    val triggerWords: List<String>
+    val triggerWords: List<String>,
+    val forbiddenCharset: List<Char>
 ) {
 
     private fun getPermissionSuffix(realPlayer: Player, permissionPrefix: String):String? {
@@ -49,7 +50,12 @@ class PermissionService(
 
     fun isNameAllowed(claimName: String):Boolean{
         //checks if a name is allowed and does not conflict with command keywords
-        return !triggerWords.any { it.equals(claimName, ignoreCase = true) }
+        return (!triggerWords.any { it.equals(claimName, ignoreCase = true) } && !claimName.any { forbiddenCharset.contains(it) })
+    }
+
+    fun isLoreAllowed(newDescription: String): Boolean {
+        //checks if a lore is allowed
+        return !newDescription.any { forbiddenCharset.contains(it) }
     }
 
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {
@@ -61,11 +67,11 @@ class PermissionService(
         val unclaimOther = hasPermission(bukkitPlayer, "visualclaim.unclaimOther")
         val deleteclaimOther = hasPermission(bukkitPlayer, "visualclaim.deleteOther")
         val renameOtherPlayerClaims = hasPermission(bukkitPlayer, "visualclaim.renameOther")
-
         val canLoadChunks = hasPermission(bukkitPlayer, "visualclaim.loadChunks")
         val listOtherPlayerChunkLoader = hasPermission(bukkitPlayer, "visualclaim.listOtherChunkLoader")
         val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
         val canUnloadOtherChunks = hasPermission(bukkitPlayer, "visualclaim.unloadChunksOther")
+        val maxClaimLoreLength = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxclaimlorelength.") ?: defaultVCRestrictions.maxClaimNameLength
 
 
         return VCRestrictions(
@@ -80,7 +86,8 @@ class PermissionService(
             listOtherPlayerChunkLoader = listOtherPlayerChunkLoader,
             canLoadChunks = canLoadChunks,
             maxChunkLoaders = maxChunkLoaders,
-            canUnloadOtherChunks = canUnloadOtherChunks
+            canUnloadOtherChunks = canUnloadOtherChunks,
+            maxClaimLoreLength = maxClaimLoreLength
         )
     }
 
