@@ -9,14 +9,11 @@ limits:
 
 chunkloader: true # set this to false if you dont want to use the chunkloader
 
-
 show-claim-duration-seconds: 60 # How long the claim border is shown when using /showclaim
 
-# Farben für Kartenmarker (ARGB Integer)
+# How big the border of a claimed chunk should be displayed on the map
 marker:
-stroke-color: 4278255360 # 0xFF00FF00 (grün)
-stroke-weight: 2
-fill-color: 1711276032 # 0x6600FF00 (halbtransparent grün)
+  stroke-weight: 2
 
 color:
   names:
@@ -143,9 +140,10 @@ messages:
     none: "§aKeine Claims zum Umbenennen verfügbar."
     merge-success: "§aDer Claim %claim_name% wurde mit %claim_new_name% zusammengeführt."
   claimlore:
-    get: "§cDer Claim %claim_name% hat folgende Beschreibung: &e%claim_lore%"
+    get: "§cDer Claim %claim_name% hat folgende Beschreibung: &e<hover:show_text:'Klick auf den Text um die Beschreibung zu kopieren.'><click:copy_to_clipboard:%claim_lore%>%claim_lore%</click>"
     set: "§aDie Beschreibung für den Claim %claim_name% wurde überschrieben."
     too-long: "§aDie Beschreibung darf maximal %max_length% Zeichen lang sein."
+    invalid-characters: "§aDie Beschreibung enthält ungültige Zeichen."
   claimcolor:
     set: "§aDie Farbe für den Claim %claim_name% wurde auf %color_name% gesetzt."
     invalid-color: "§aDie angegebene Farbe ist ungültig."

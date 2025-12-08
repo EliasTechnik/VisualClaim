@@ -1,5 +1,5 @@
 name: VisualClaim
-version: '0.3-SNAPSHOT'
+version: '1.1-BETA'
 main: dev.ewio.VisualClaim
 api-version: '1.21'
 author: Elias_Technik
@@ -90,4 +90,7 @@ permissions:
     default: false
   visualclaim.loadChunks:
     description: "Allows using chunkloaders"
+    default: false
+  visualclaim.maxchunkloaders:
+    description: "Overrides the max chunkloaders per player limit if a number or -1 is specified behind it"
     default: false

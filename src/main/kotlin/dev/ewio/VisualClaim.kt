@@ -22,6 +22,7 @@ import dev.ewio.claim.command.ChunkLoaderCommand
 import dev.ewio.claim.command.ClaimCommand
 import dev.ewio.claim.command.ClaimcolorCommand
 import dev.ewio.claim.command.ClaiminfoCommand
+import dev.ewio.claim.command.ClaimloreCommand
 import dev.ewio.claim.command.DeleteclaimCommand
 import dev.ewio.claim.command.ListclaimsCommand
 import dev.ewio.claim.command.RenameclaimCommand
@@ -83,7 +84,7 @@ class VisualClaim : JavaPlugin() {
             renameOtherPlayerClaims = false,
             listOtherPlayerChunkLoader = false,
             canLoadChunks = false,
-            maxChunkLoaders = cfg.getInt("limits.max-chunkloaders", 5)
+            maxChunkLoaders = cfg.getInt("limits.max-chunk-loaders", 5)
         )
 
         //init database
@@ -303,6 +304,13 @@ class VisualClaim : JavaPlugin() {
                 coroutineScope = this.scope,
                 ms = messageService,
                 colorService = this.colorService
+            )
+        )
+        getCommand("claimlore")?.setExecutor(
+            ClaimloreCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                ms = messageService
             )
         )
 

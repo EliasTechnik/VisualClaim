@@ -72,6 +72,7 @@ class Pl3xMapService: MapService {
         ) as SimpleLayer
 
         val hoverText = getHoverText(claim, player)
+        val popupText = claim.description
 
         val popup = Popup()
         popup.content = hoverText
@@ -103,6 +104,8 @@ class Pl3xMapService: MapService {
             "claim_name" to claim.displayName
         ))
     }
+
+
 
     private fun removeChunkMarker(chunk: VCChunk) {
         //get world
