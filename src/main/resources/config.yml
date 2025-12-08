@@ -168,6 +168,7 @@ messages:
   missing-permission: "§cDu hast nicht genug Berechtigungen um diesen Befehl auszuführen."
   player-not-found: "§cDer Spieler %player_name% wurde nicht gefunden."
   claim-not-found: "§cEinen Claim mit dem Namen %claim_name% wurde nicht gefunden."
+  not-implemented: "§cOh je! Diese Funktion ist noch nicht implementiert."
   showclaim:
     shown: "§aDie Grenzen des Claims %claim_name% werden für %show-claim-duration-seconds% Sekunden angezeigt."
   Pl3xMap:
@@ -175,9 +176,11 @@ messages:
     hover-text:
       named-claim: "%claim_name% von %owner%"
   ClaimBossBar:
-    title: "<green>Claim: %claim_name% | Besitzer: %owner%</green>"
+    # Do not use colors here, as it will be overridden by the color of the claim
+    title: "Claim: %claim_name% | Besitzer: %owner%"
   ChunkLoaderBossBar:
     title: "<yellow>ChunkLoader: %chunkloader_name% aktiv."
+
 
 
 

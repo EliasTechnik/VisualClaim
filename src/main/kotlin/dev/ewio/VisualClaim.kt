@@ -20,6 +20,7 @@ import dev.ewio.claim.service.UIService
 import dev.ewio.claim.command.AutoclaimCommand
 import dev.ewio.claim.command.ChunkLoaderCommand
 import dev.ewio.claim.command.ClaimCommand
+import dev.ewio.claim.command.ClaimcolorCommand
 import dev.ewio.claim.command.ClaiminfoCommand
 import dev.ewio.claim.command.DeleteclaimCommand
 import dev.ewio.claim.command.ListclaimsCommand
@@ -146,7 +147,8 @@ class VisualClaim : JavaPlugin() {
             permissionService = this.permissionService,
             coroutineScope = this.scope,
             cc = centralCache,
-            ui = this.uiService
+            ui = this.uiService,
+            colorService = this.colorService,
         )
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)
@@ -293,6 +295,14 @@ class VisualClaim : JavaPlugin() {
                 preService = prerequisiteService,
                 coroutineScope = this.scope,
                 ms = messageService
+            )
+        )
+        getCommand("claimcolor")?.setExecutor(
+            ClaimcolorCommand(
+                preService = prerequisiteService,
+                coroutineScope = this.scope,
+                ms = messageService,
+                colorService = this.colorService
             )
         )
 

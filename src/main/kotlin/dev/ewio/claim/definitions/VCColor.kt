@@ -1,5 +1,6 @@
 package dev.ewio.claim.definitions
 
+import dev.ewio.claim.service.ColorService
 import net.kyori.adventure.bossbar.BossBar
 
 enum class VCColorType(val identifier: String) {
@@ -42,4 +43,30 @@ data class VCColor(
         return "VCColor(type='$type' hex='$hex', name='$name')"
     }
 
+    fun getIntColor(): Int {
+        return Integer.parseInt(hex.removePrefix("#"), 16)
+    }
+
+    fun getIntColorWithAlpha(alpha: Int): Int {
+        val rgb = getIntColor()
+        return (alpha and 0xFF) shl 24 or (rgb and 0xFFFFFF)
+    }
+
+}
+
+object VCColorLookup{
+    private var colorService: ColorService? = null
+
+    fun initialize(service: ColorService){
+        colorService = service
+    }
+
+    fun colorFromIdentifier(identifier: String): VCColor {
+        val type = VCColorType.getByIdentifier(identifier)
+        return colorService?.colors?.get(type) ?: VCColor(
+            hex = "#FFFFFF",
+            name = "White",
+            type = VCColorType.WHITE
+        )
+    }
 }

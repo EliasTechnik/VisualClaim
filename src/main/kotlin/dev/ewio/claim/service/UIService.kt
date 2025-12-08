@@ -169,7 +169,8 @@ class UIService(
                 claimBossBarPackage.bossBar.name(ms.format("ClaimBossBar.title", mapOf(
                     "claim_name" to displayData.claim.displayName,
                     "owner" to displayData.ownerName
-                )
+                ),
+                    colorHex = displayData.claim.color.hex
                 ))
 
                 claimBossBarPackage.bossBar.color(claimBossBarColor)

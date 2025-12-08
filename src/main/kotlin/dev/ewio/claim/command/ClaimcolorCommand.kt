@@ -1,9 +1,11 @@
 package dev.ewio.claim.command
 
+import dev.ewio.claim.service.ColorService
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
 import dev.ewio.util.getCorrectlySplitArgs
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.TabExecutor
@@ -18,7 +20,8 @@ import org.bukkit.entity.Player
 class ClaimcolorCommand(
     private val preService: PrerequisiteService,
     private val coroutineScope: CoroutineScope,
-    private val ms: MessageService
+    private val ms: MessageService,
+    private val colorService: ColorService
 ): TabExecutor {
     override fun onCommand(
         sender: CommandSender,
@@ -26,6 +29,14 @@ class ClaimcolorCommand(
         label: String,
         args: Array<out String>
     ): Boolean {
+        coroutineScope.launch {
+            val betterArgs = getCorrectlySplitArgs(args.toList(), 0)
+
+            preService.getPlayerContext(sender)?.let {
+                var (context, realPlayer) = it
+                ms.send(realPlayer, "not-implemented")
+            }
+        }
         return true
     }
 
@@ -50,11 +61,11 @@ class ClaimcolorCommand(
                 return matchingClaimNames.toMutableList()
             }
             if(betterArgs.size == 2){
-                val colors = listOf("RED", "GREEN", "BLUE", "YELLOW", "PURPLE", "ORANGE", "WHITE", "BLACK")
+                val colors = colorService.colorsList
                 val partialColor = betterArgs[1].lowercase()
                 val matchingColors = colors.filter {
-                    it.lowercase().startsWith(partialColor)
-                }
+                    it.name.lowercase().startsWith(partialColor)
+                }.map { it.name }
                 return matchingColors.toMutableList()
             }
         }

@@ -23,16 +23,16 @@ import java.util.function.Supplier
 class Pl3xMapService: MapService {
     private var plugin: VisualClaim
     private val layers: MutableMap<UUID?, SimpleLayer?> = HashMap<UUID?, SimpleLayer?>() // pro Welt ein Layer
-    private var strokeColor = 0
+    private var strokeAlpha: Double = 0.7
     private var strokeWeight: Int = 0
-    private var fillColor: Int = 0
+    private var fillAlpha: Double = 0.4
 
     constructor(plugin: VisualClaim) {
         this.plugin = plugin
         val cfg: FileConfiguration = plugin.cfg
-        this.strokeColor = cfg.getInt("marker.stroke-color", -0xff0100)
+        this.strokeAlpha = cfg.getDouble("color.transparency.stroke", 0.3)
+        this.fillAlpha = cfg.getDouble("color.transparency.fill", 0.4)
         this.strokeWeight = cfg.getInt("marker.stroke-weight", 2)
-        this.fillColor = cfg.getInt("marker.fill-color", 0x6600FF00)
 
         // register layers per world
         val api = Pl3xMap.api()
@@ -75,6 +75,9 @@ class Pl3xMapService: MapService {
 
         val popup = Popup()
         popup.content = hoverText
+
+        val fillColor = claim.color.getIntColorWithAlpha((255 * fillAlpha).toInt())
+        val strokeColor = claim.color.getIntColorWithAlpha((255 * strokeAlpha).toInt())
 
 
         val bx: Int = chunk.plainChunk.x * 16

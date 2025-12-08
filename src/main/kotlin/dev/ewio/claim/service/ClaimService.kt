@@ -7,6 +7,7 @@ import dev.ewio.claim.repository.PlayerRepository
 import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCChunk
 import dev.ewio.claim.definitions.VCClaim
+import dev.ewio.claim.definitions.VCColor
 import dev.ewio.claim.definitions.VCLoadedChunk
 import dev.ewio.claim.definitions.VCPlayer
 import dev.ewio.claim.definitions.VCPlayerContext
@@ -89,12 +90,14 @@ class ClaimService(
 
     suspend fun createEmptyClaim(
         player: VCPlayer,
-        claimName: String
+        claimName: String,
+        color: VCColor
     ): VCClaim? {
         val claim = claimRepo.upsert(
             VCClaim(
                 playerKey = player.key,
-                displayName = claimName
+                displayName = claimName,
+                color = color
             )
         )
 

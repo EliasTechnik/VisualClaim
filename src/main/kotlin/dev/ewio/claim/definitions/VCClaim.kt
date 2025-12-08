@@ -5,17 +5,10 @@ data class VCClaim(
     val key: Int = -1,
     val playerKey: Int,
     val displayName: String,
-    val color: VCColor = VCColor.randomColor(),
+    val color: VCColor,
     val description: String = "",
     val lastModified: Long = System.currentTimeMillis()
 ) {
-    companion object {
-        fun dummy(): VCClaim = VCClaim(
-            -1,
-            -1,
-            "dummy",
-        )
-    }
 
     override fun toString(): String {
         return "VCClaim(key=$key, playerKey=$playerKey, displayName='$displayName', lastModified=$lastModified)"

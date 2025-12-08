@@ -20,7 +20,7 @@ private fun callerInfo(): String {
 }
 
 fun logInfo(message: String) {
-    GL.logger.info("[${callerInfo()}] $message")
+    //GL.logger.info("[${callerInfo()}] $message")
 }
 
 fun logWarning(message: String) {

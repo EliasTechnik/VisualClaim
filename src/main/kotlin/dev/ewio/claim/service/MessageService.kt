@@ -34,6 +34,15 @@ class MessageService(
         return mm.deserialize(s)
     }
 
+    fun format(key: String, placeholders: Map<String, String> = emptyMap(), colorHex: String): Component {
+        val template = templates[key] ?: return mm.deserialize("<red>Missing message: $key")
+        var s = "<color:$colorHex>$template</color>"
+        for ((k, v) in placeholders) {
+            s = s.replace("%$k%", v)
+        }
+        return mm.deserialize(s)
+    }
+
     fun send(player: Player, key: String, placeholders: Map<String, String> = emptyMap()) {
         val comp = format(key, placeholders)
         // wenn du BukkitAudiences benutzt, kannst du audiences.player(player).sendMessage(comp)

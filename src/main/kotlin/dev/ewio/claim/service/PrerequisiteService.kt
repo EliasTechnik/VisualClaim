@@ -24,7 +24,8 @@ class PrerequisiteService(
     private val permissionService: PermissionService,
     private val coroutineScope: CoroutineScope,
     private val cc: CentralCache,
-    private val ui: UIService
+    private val ui: UIService,
+    private val colorService: ColorService
 ) {
 
     private lateinit var movementService: MovementService
@@ -104,7 +105,8 @@ class PrerequisiteService(
             if(targetClaim == null) {
                 targetClaim = claimService.createEmptyClaim(
                     player = context.player,
-                    claimName = claimName
+                    claimName = claimName,
+                    color = colorService.getRandomColor()
                 )
             }
 
@@ -143,7 +145,8 @@ class PrerequisiteService(
                 //new claim
                 targetClaim = claimService.createEmptyClaim(
                     player = context.player,
-                    claimName = claimName
+                    claimName = claimName,
+                    color = colorService.getRandomColor()
                 ) ?: return VCResult.UnknownFailure
             }
 

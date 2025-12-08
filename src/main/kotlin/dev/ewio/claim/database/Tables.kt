@@ -24,9 +24,7 @@ object VCClaims : IntIdTable("vc_claim") {
         onUpdate = ReferenceOption.CASCADE
     )
     val displayName = varchar("display_name", 250)
-    val colorHex = varchar("color_hex", 7).default("#00FF00")
-    val colorName = varchar("color_name", 50).default("Green")
-    val colorType = varchar("color_type", 50).default("green")
+    val colorType = varchar("color_type", 50).default("white")
     val description = text("description").default("")
     val lastModified = long("last_modified")
 
