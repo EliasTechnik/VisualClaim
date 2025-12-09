@@ -29,6 +29,7 @@ import dev.ewio.claim.command.RenameclaimCommand
 import dev.ewio.claim.command.ShowClaimCommand
 import dev.ewio.claim.command.UnclaimCommand
 import dev.ewio.claim.database.VCDB
+import dev.ewio.claim.listener.BookEditListener
 import dev.ewio.claim.listener.JoinListener
 import dev.ewio.claim.listener.LeaveListener
 import dev.ewio.claim.map.MapService
@@ -38,6 +39,7 @@ import dev.ewio.claim.repository.ChunkLoaderRepository
 import dev.ewio.claim.service.ChunkLoaderService
 import dev.ewio.claim.service.ColorService
 import dev.ewio.util.GL
+import dev.ewio.util.LogLevel
 import dev.ewio.util.log
 import kotlinx.coroutines.runBlocking
 import org.bukkit.Bukkit
@@ -60,6 +62,7 @@ class VisualClaim : JavaPlugin() {
     lateinit var chunkLoaderService: ChunkLoaderService
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
+    lateinit var bookEditListener: BookEditListener
     lateinit var colorService: ColorService
 
     override fun onEnable() {
@@ -68,6 +71,12 @@ class VisualClaim : JavaPlugin() {
 
         saveDefaultConfig()
         cfg = config
+
+        when(cfg.getString("plugin-insights.log-level", "INFO")){
+            "INFO" -> { GL.level = LogLevel.INFO }
+            "WARN" -> { GL.level = LogLevel.WARNING }
+            "ERROR" -> { GL.level = LogLevel.SEVERE }
+        }
 
         val defaultRestrictions = VCRestrictions(
             maxClaims = cfg.getInt("limits.max-claims-per-player", 10),
@@ -210,6 +219,7 @@ class VisualClaim : JavaPlugin() {
             }
         )
         server.pluginManager.registerEvents(this.joinListner, this)
+
         this.leaveListener = LeaveListener(
             onLeave = { event ->
                 launch{
@@ -226,6 +236,17 @@ class VisualClaim : JavaPlugin() {
             }
         )
         server.pluginManager.registerEvents(this.leaveListener, this)
+
+        this.bookEditListener = BookEditListener(
+            onBookEdit = { event ->
+                launch{
+                    centralCache.getPlayerContext(event.player)?.let { context ->
+                        uiService.handleBookEditEvent(context, event)
+                    }
+                }
+            }
+        )
+        server.pluginManager.registerEvents(this.bookEditListener, this)
 
 
         // Commands

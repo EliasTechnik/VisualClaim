@@ -690,6 +690,8 @@ class PrerequisiteService(
 
     suspend fun updateClaimDescription(context: VCPlayerContext, claim: VCClaim, newDescription: String): VCResult {
 
+        ui.giveLoreBookToPlayer(context, claim, Bukkit.getPlayer(context.player.mcUUID)!!)
+        /*
         //check length
         if(newDescription.length > context.restrictions.maxClaimLoreLength && context.restrictions.maxClaimLoreLength != -1) {
             return VCResult.ClaimLore.LoreTooLong(context.restrictions.maxClaimLoreLength)
@@ -710,5 +712,8 @@ class PrerequisiteService(
                 claim = claim.copy(description = newDescription)
             )
         }
+
+         */
+        return VCResult.UnknownFailure
     }
 }

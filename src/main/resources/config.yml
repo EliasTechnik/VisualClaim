@@ -196,4 +196,8 @@ migration-name: "_renamed" # Should there be a conflict with the trigger words, 
 
 #Debugging
 plugin-insights:
-  enabled: true #Shows som additional debug information in the server console and when commands are executed.
+  log-level: "INFO"
+# Options:
+# INFO - Shows all logs (only useful for debugging),
+# WARN - Shows errors and warnings (less spammy than info)
+# ERROR - Shows only errors. Should be used for normal usage.

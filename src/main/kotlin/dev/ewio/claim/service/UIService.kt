@@ -1,17 +1,18 @@
 package dev.ewio.claim.service
 
-import dev.ewio.claim.definitions.VCChunk
-import dev.ewio.claim.definitions.VCClaim
-import dev.ewio.claim.definitions.VCClaimDisplayData
-import dev.ewio.claim.definitions.VCEdge2D
-import dev.ewio.claim.definitions.VCPlayerContext
+import dev.ewio.claim.definitions.*
 import dev.ewio.util.EdgeHelper
 import dev.ewio.util.log
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.bossbar.BossBar
+import net.kyori.adventure.text.Component
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.entity.Player
+import org.bukkit.event.player.PlayerEditBookEvent
+import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import kotlin.math.ceil
@@ -36,6 +37,12 @@ data class VCUIParticleData(
     val taskShouldStop: Boolean = false,
 )
 
+data class VCUIBookData(
+    val targetPlayer: Player,
+    val targetClaim: VCClaim,
+    val bookPages: List<String>
+)
+
 
 class UIService(
     private val cc: CentralCache,
@@ -52,6 +59,8 @@ class UIService(
     var clBossBarStyle: BossBar.Overlay
                             // uuid, VCUIParticleData
     val particleMap: MutableMap<String, VCUIParticleData> = mutableMapOf()
+
+    val bookMap: MutableMap<String, VCUIBookData> = mutableMapOf()
 
 
     init{
@@ -298,5 +307,54 @@ class UIService(
                 }
             }
         }.runTaskTimer(plugin, 0L, ticksBetween.toLong())
+    }
+
+
+    fun giveLoreBookToPlayer(context: VCPlayerContext, targetClaim: VCClaim, player: Player){
+        val pages = mutableListOf("Schreibe auf die folgenden Seiten die Lore für \"${targetClaim.displayName}\". Text auf Seite 1 wird ignoriert. Wenn du fertig bist schließe das Buch.")
+
+        pages.addAll(targetClaim.description.split("\n"))
+
+        val bookDisplayData = VCUIBookData(
+            targetPlayer = player,
+            targetClaim = targetClaim,
+            bookPages = pages
+        )
+
+
+        val book = ItemStack(Material.WRITABLE_BOOK)
+        val meta = book.itemMeta as BookMeta
+
+
+        meta.title = "Lore für ${targetClaim.displayName}"
+        meta.displayName(Component.text( "Lore für ${targetClaim.displayName}"))
+        meta.author = context.player.name
+        // Optional: bestehende Lore einfügen
+        pages.forEach {
+            meta.addPages(Component.text(it))
+        }
+
+        book.itemMeta = meta
+        bookMap[player.uniqueId.toString()] = bookDisplayData
+        player.inventory.addItem(book)
+
+        //force open book GUI
+        //player.openBook(book) -- only works with written book, not writable book
+    }
+
+    fun handleBookEditEvent(context: VCPlayerContext, event: PlayerEditBookEvent){
+
+        //check if this player has a book open that we gave them (might be a different book unrelated to claims)
+        val bookData = bookMap[event.player.uniqueId.toString()] ?: return
+
+        //remove book from player inventory
+        val bookInInventory = event.player.inventory.contents.find {
+            it != null && it.type == Material.WRITABLE_BOOK
+        }
+        bookInInventory?.let {
+            event.player.inventory.remove(it)
+        }
+        bookMap.remove(event.player.uniqueId.toString())
+
     }
 }

@@ -20,13 +20,13 @@ private fun callerInfo(): String {
 }
 
 fun logInfo(message: String) {
-    //GL.logger.info("[${callerInfo()}] $message")
+    if(GL.level == LogLevel.INFO) GL.logger.info("[${callerInfo()}] $message")
 }
 
 fun logWarning(message: String) {
-    GL.logger.warning("[${callerInfo()}][WARN] $message")
+    if(GL.level == LogLevel.INFO || GL.level == LogLevel.WARNING ) GL.logger.warning("[${callerInfo()}][WARN] $message")
 }
 
 fun logSevere(message: String) {
-    GL.logger.severe("[${callerInfo()}][SEVERE] $message")
+    if(GL.level == LogLevel.INFO || GL.level == LogLevel.WARNING || GL.level == LogLevel.SEVERE) GL.logger.severe("[${callerInfo()}][SEVERE] $message")
 }
