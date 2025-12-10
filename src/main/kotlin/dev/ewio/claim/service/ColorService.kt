@@ -45,4 +45,8 @@ class ColorService(
     fun getRandomColor(): VCColor {
         return colors.values.random()
     }
+
+    fun getColorByName(name: String): VCColor? {
+        return colors.values.firstOrNull { it.name.equals(name, ignoreCase = true) }
+    }
 }

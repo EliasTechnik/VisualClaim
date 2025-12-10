@@ -87,4 +87,9 @@ class CentralCache(
     fun cleanupCacheForPlayer(uuid: UUID) {
         contextCache.invalidate(uuid)
     }
+
+    suspend fun getPlayerContextForName(name: String): VCPlayerContext? {
+        val player = Bukkit.getPlayerExact(name) ?: return null
+        return getPlayerContext(player)
+    }
 }

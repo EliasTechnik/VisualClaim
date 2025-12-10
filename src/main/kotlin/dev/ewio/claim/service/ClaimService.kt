@@ -381,4 +381,15 @@ class ClaimService(
         notifyOnUpdate(context.chunks.filter { it.claimKey == claim.key }.map { it.plainChunk })
     }
 
+    suspend fun updateClaimColor(context: VCPlayerContext, claim: VCClaim, newColor: VCColor) {
+        val updatedClaim = claim.copy(
+            color = newColor,
+            lastModified = System.currentTimeMillis()
+        )
+        claimRepo.upsert(updatedClaim)
+        deleteFromMap(context.chunks.filter { it.claimKey == claim.key })
+        placeOnMap(context.player, updatedClaim, context.chunks.filter { it.claimKey == claim.key })
+        notifyOnUpdate(context.chunks.filter { it.claimKey == claim.key }.map { it.plainChunk })
+    }
+
 }

@@ -65,9 +65,9 @@ class DeleteclaimCommand(
                         }
                     }
                     2 -> {
-                        //claim name + confirmation or "-o" + playername
+                        //claim name + confirmation or "-p" + playername
 
-                        if(betterArgs[0].startsWith("-o")){
+                        if(betterArgs[0].startsWith("-p")){
                             //check if playername exists
                             VCResult.MalformedCommand //This is not very user friendly, but ok for now
                             //TODO: improve this so that admins get proper messages

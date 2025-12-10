@@ -593,7 +593,7 @@ class PrerequisiteService(
                 return VCResult.MissingPermission
             }
             //get target player
-            val targetPlayer = claimService.getPlayerByName(target) ?: return VCResult.ListChunkLoaders.VCPlayerNotFound
+            val targetPlayer = claimService.getPlayerByName(target) ?: return VCResult.VCPlayerNotFound(target)
             return VCResult.ListChunkLoaders.ChunkLoadersOtherFound(claimService.getVCLoadedChunksForPlayer(targetPlayer), targetPlayer.name)
         }
     }
@@ -666,7 +666,7 @@ class PrerequisiteService(
                 return VCResult.MissingPermission
             }
             //get target player
-            val target = claimService.getPlayerByName(targetPlayer) ?: return VCResult.RemoveChunkLoader.OtherPlayerNotFound(targetPlayer)
+            val target = claimService.getPlayerByName(targetPlayer) ?: return VCResult.VCPlayerNotFound(targetPlayer)
             val targetContext = claimService.getPlayerContextByKey(target.key) ?: return VCResult.UnknownFailure
 
             //find chunkloader
@@ -719,5 +719,58 @@ class PrerequisiteService(
 
          */
         return VCResult.UnknownFailure
+    }
+
+    suspend fun changeClaimColor(context: VCPlayerContext, claimName: String, colorName: String): VCResult {
+
+        val claim = context.claims.firstOrNull { it.displayName == claimName }
+            ?: return VCResult.ClaimColor.ClaimNotFound(claimName)
+
+        val color = colorService.getColorByName(colorName)?: return VCResult.ClaimColor.ColorNotFound
+
+        return cc.updatePlayerContextCache(context.player.mcUUID) {
+            claimService.updateClaimColor(
+                context = context,
+                claim = claim,
+                newColor = color
+            )
+            VCResult.ClaimColor.ColorSet(
+                claim = claim.copy(color = color),
+                color = color
+            )
+        }
+    }
+
+    suspend fun changeOtherPlayersClaimColor(
+        context: VCPlayerContext,
+        targetPlayerName: String,
+        claimName: String,
+        colorName: String
+    ): VCResult {
+
+        //check permission
+        if(!context.restrictions.claimColorOther){
+            return VCResult.MissingPermission
+        }
+
+        val targetContext = cc.getPlayerContextForName(targetPlayerName)
+            ?: return VCResult.VCPlayerNotFound(targetPlayerName)
+
+        val claim = targetContext.claims.firstOrNull { it.displayName == claimName }
+            ?: return VCResult.ClaimColor.ClaimNotFound(claimName)
+
+        val color = colorService.getColorByName(colorName)?: return VCResult.ClaimColor.ColorNotFound
+
+        return cc.updatePlayerContextCache(targetContext.player.mcUUID) {
+            claimService.updateClaimColor(
+                context = targetContext,
+                claim = claim,
+                newColor = color
+            )
+            VCResult.ClaimColor.ColorSet(
+                claim = claim.copy(color = color),
+                color = color
+            )
+        }
     }
 }

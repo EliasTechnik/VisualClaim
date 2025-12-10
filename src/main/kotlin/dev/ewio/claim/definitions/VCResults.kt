@@ -110,6 +110,6 @@ open class VCResult {
     sealed class ClaimColor{
         data class ColorSet(val claim: VCClaim, val color: VCColor): Success()
         object ColorNotFound: Failure()
-        object ClaimNotFound: Failure()
+        data class ClaimNotFound(val name: String): Failure()
     }
 }

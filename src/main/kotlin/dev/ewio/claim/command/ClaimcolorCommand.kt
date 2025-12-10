@@ -39,12 +39,87 @@ class ClaimcolorCommand(
                 val result = when(betterArgs.size){
                     2 -> {
                         // /claimcolor <claimName> <color>
+                        if(betterArgs[0].equals("-p", ignoreCase = true)) {
+                            VCResult.MalformedCommand
+                        }
+
+                        preService.changeClaimColor(
+                            context = context,
+                            claimName = betterArgs[0],
+                            colorName = betterArgs[1]
+                        )
                     }
                     4 -> {
                         // /claimcolor -p <playerName> <claimName> <color>
+
+                        if(betterArgs[0].equals("-p", ignoreCase = true)) {
+                           preService.changeOtherPlayersClaimColor(
+                               context = context,
+                               targetPlayerName = betterArgs[1],
+                               claimName = betterArgs[2],
+                               colorName = betterArgs[3]
+                           )
+                        } else {
+                            VCResult.MalformedCommand
+                        }
                     }
                     else -> {
                         VCResult.MalformedCommand
+                    }
+                }
+
+                when(result){
+                    is VCResult.ClaimColor.ColorSet -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "claimcolor.set",
+                            placeholders = mapOf(
+                                "claim_name" to result.claim.displayName,
+                                "color_name" to result.color.name
+                            )
+                        )
+                    }
+                    is VCResult.ClaimColor.ClaimNotFound -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "claim-not-found",
+                            placeholders = mapOf(
+                                "claim_name" to result.name
+                            )
+                        )
+                    }
+                    is VCResult.ClaimColor.ColorNotFound -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "claimcolor.invalid-color"
+                        )
+                    }
+                    is VCResult.MalformedCommand -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "usage.claimcolor"
+                        )
+                    }
+                    is VCResult.VCPlayerNotFound -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "player-not-found",
+                            placeholders = mapOf(
+                                "player_name" to result.playerName
+                            )
+                        )
+                    }
+                    is VCResult.MissingPermission -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "missing-permission"
+                        )
+                    }
+                    else -> {
+                        ms.send(
+                            player = realPlayer,
+                            key = "unknown-error"
+                        )
                     }
                 }
             }
@@ -71,27 +146,36 @@ class ClaimcolorCommand(
                     }.filter {
                         it.lowercase().startsWith(partialClaimName)
                     }.toMutableList()
-
-                    if(context.restrictions.)
-                    return matchingClaimNames.toMutableList()
+                    if(context.restrictions.claimColorOther) matchingClaimNames.add("-p")
+                    return matchingClaimNames
                 }
-            }
-            if(betterArgs.size == 1){
-                val partialClaimName = betterArgs[0].lowercase()
-                val matchingClaimNames = context.claims.map {
-                    it.displayName
-                }.filter {
-                    it.lowercase().startsWith(partialClaimName)
+                2 -> {
+                    if(betterArgs[0].equals("-p", ignoreCase = true) && context.restrictions.claimColorOther){
+                        val partialPlayerName = betterArgs[1].lowercase()
+                        val matchingPlayerNames = preService.getCachedPlayerNames().filter {
+                            it.lowercase().startsWith(partialPlayerName)
+                        }
+                        return matchingPlayerNames.toMutableList()
+                    } else {
+                        val colors = colorService.colorsList
+                        val partialColor = betterArgs[1].lowercase()
+                        val matchingColors = colors.filter {
+                            it.name.lowercase().startsWith(partialColor)
+                        }.map { it.name }
+                        return matchingColors.toMutableList()
+                    }
                 }
-                return matchingClaimNames.toMutableList()
-            }
-            if(betterArgs.size == 2){
-                val colors = colorService.colorsList
-                val partialColor = betterArgs[1].lowercase()
-                val matchingColors = colors.filter {
-                    it.name.lowercase().startsWith(partialColor)
-                }.map { it.name }
-                return matchingColors.toMutableList()
+                3 -> {
+                    if(betterArgs[0].equals("-p", ignoreCase = true) && context.restrictions.claimColorOther){
+                        val partialClaimName = betterArgs[2].lowercase()
+                        val matchingClaimNames = context.claims.map {
+                            it.displayName
+                        }.filter {
+                            it.lowercase().startsWith(partialClaimName)
+                        }
+                        return matchingClaimNames.toMutableList()
+                    }
+                 }
             }
         }
 

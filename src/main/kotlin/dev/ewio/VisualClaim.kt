@@ -343,7 +343,6 @@ class VisualClaim : JavaPlugin() {
         }
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
-        logger.info("VisualClaim activated.")
     }
 
     override fun onDisable() {

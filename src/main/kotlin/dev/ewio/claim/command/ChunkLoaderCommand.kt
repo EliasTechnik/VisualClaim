@@ -123,9 +123,9 @@ class ChunkLoaderCommand(
                         is VCResult.RemoveChunkLoader.ChunkLoaderNotFound -> {
                             ms.send(realPlayer, "chunkloader.not-found")
                         }
-                        is VCResult.RemoveChunkLoader.OtherPlayerNotFound -> {
+                        is VCResult.VCPlayerNotFound -> {
                             ms.send(realPlayer, "player-not-found", mapOf(
-                                "player_name" to result.other
+                                "player_name" to result.playerName
                             ))
                         }
 
@@ -180,7 +180,7 @@ class ChunkLoaderCommand(
                         is VCResult.ListChunkLoaders.NoChunkLoadersFound -> {
                             ms.send(realPlayer, "chunkloaderlist.no-chunkloaders")
                         }
-                        is VCResult.ListChunkLoaders.VCPlayerNotFound -> {
+                        is VCResult.VCPlayerNotFound -> {
                             ms.send(
                                 realPlayer, "player-not-found", mapOf(
                                     "player_name" to betterArgs[1]
