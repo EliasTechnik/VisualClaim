@@ -313,6 +313,10 @@ class PrerequisiteService(
             return VCResult.RenameClaim.ClaimNameTooLong(context.restrictions.maxClaimNameLength)
         }
 
+        if(!permissionService.isNameAllowed(newName)) {
+            return VCResult.RenameClaim.ClaimNameNotAllowed
+        }
+
         val owner = claimService.getOwnerOfClaim(claim) ?: return VCResult.UnknownFailure
         val claimsOfOwner = claimService.getPlayerContextByKey(owner.key)?.claims ?: return VCResult.UnknownFailure
 
