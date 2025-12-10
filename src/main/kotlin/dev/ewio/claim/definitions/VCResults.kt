@@ -13,6 +13,8 @@ open class VCResult {
 
     object MissingPermission: Failure()
 
+    data class VCPlayerNotFound(val playerName: String) : Failure()
+
     sealed class CreateClaim {
         data class ClaimCreatedSuccessfully(val claim: VCClaim, val chunk: VCChunk) : Success()
         data class ChunkTransferredToClaim(val claim: VCClaim, val chunk: PlainChunk) : Success() //The chunk was claimed previously, but now added to a different claim of the same player
@@ -89,14 +91,12 @@ open class VCResult {
     sealed class RemoveChunkLoader{
         data class ChunkLoaderRemoved(val cl: VCLoadedChunk): Success()
         object ChunkLoaderNotFound: Failure()
-        data class OtherPlayerNotFound(val other: String): Failure()
     }
 
     sealed class ListChunkLoaders{
         data class ChunkLoadersFound(val loaders: List<VCLoadedChunk>): Success()
         data class ChunkLoadersOtherFound(val loaders: List<VCLoadedChunk>, val owner: String ): Success()
         object NoChunkLoadersFound: Failure()
-        object VCPlayerNotFound: Failure()
     }
 
     sealed class ClaimLore{
@@ -105,5 +105,11 @@ open class VCResult {
         object ClaimNotFound: Failure()
         object ContainsInvalidCharacters: Failure()
         data class LoreTooLong(val maxLength: Int): Failure()
+    }
+
+    sealed class ClaimColor{
+        data class ColorSet(val claim: VCClaim, val color: VCColor): Success()
+        object ColorNotFound: Failure()
+        object ClaimNotFound: Failure()
     }
 }

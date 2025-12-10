@@ -15,25 +15,26 @@ show-claim-duration-seconds: 60 # How long the claim border is shown when using 
 marker:
   stroke-weight: 2
 
+# Note: Do not use colorcodes in the names below, as they may lead to issues.
 color:
   names:
-    red: "§cRot"
-    blue: "§9Blau"
-    green: "§aGrün"
-    yellow: "§eGelb"
-    purple: "§5Lila"
-    orange: "§6Orange"
-    white: "§fWeiß"
-    black: "§0Schwarz"
-    gray: "§7Grau"
-    pink: "§dPink"
-    cyan: "§bCyan"
-    lime: "§aLime"
-    light_blue: "§3Hellblau"
-    magenta: "§dMagenta"
-    brown: "§6Braun"
-    gold: "§6Gold"
-    turquoise: "§bTürkis"
+    red: "Rot"
+    blue: "Blau"
+    green: "Grün"
+    yellow: "Gelb"
+    purple: "Lila"
+    orange: "Orange"
+    white: "Weiß"
+    black: "Schwarz"
+    gray: "Grau"
+    pink: "Pink"
+    cyan: "Cyan"
+    lime: "Lime"
+    light_blue: "Hellblau"
+    magenta: "Magenta"
+    brown: "Braun"
+    gold: "Gold"
+    turquoise: "Türkis"
   values:
     red: "#FF0000"
     blue: "#0000FF"

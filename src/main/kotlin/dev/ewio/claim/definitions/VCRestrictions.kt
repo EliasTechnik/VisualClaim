@@ -14,4 +14,6 @@ data class VCRestrictions(
     val maxChunkLoaders: Int, //the maximum number of chunk loaders a player can have (-1 = unlimited)
     val canUnloadOtherChunks: Boolean = false, //whether the player can unload other players' chunks
     val maxClaimLoreLength: Int, //the maximum length of lore/description for a claim
+    val claimColorOther: Boolean = false //whether the player can change the color of other players' claims
+    val claimLoreOther: Boolean = false //whether the player can change the lore/description of other players' claims
 )

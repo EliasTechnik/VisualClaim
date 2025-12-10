@@ -1,5 +1,6 @@
 package dev.ewio.claim.command
 
+import dev.ewio.claim.definitions.VCResult
 import dev.ewio.claim.service.ColorService
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
@@ -34,7 +35,18 @@ class ClaimcolorCommand(
 
             preService.getPlayerContext(sender)?.let {
                 var (context, realPlayer) = it
-                ms.send(realPlayer, "not-implemented")
+
+                val result = when(betterArgs.size){
+                    2 -> {
+                        // /claimcolor <claimName> <color>
+                    }
+                    4 -> {
+                        // /claimcolor -p <playerName> <claimName> <color>
+                    }
+                    else -> {
+                        VCResult.MalformedCommand
+                    }
+                }
             }
         }
         return true
@@ -51,6 +63,19 @@ class ClaimcolorCommand(
 
         preService.getCachedPlayerContext(player)?.let { context ->
 
+            when(betterArgs.size){
+                1 -> {
+                    val partialClaimName = betterArgs[0].lowercase()
+                    val matchingClaimNames = context.claims.map {
+                        it.displayName
+                    }.filter {
+                        it.lowercase().startsWith(partialClaimName)
+                    }.toMutableList()
+
+                    if(context.restrictions.)
+                    return matchingClaimNames.toMutableList()
+                }
+            }
             if(betterArgs.size == 1){
                 val partialClaimName = betterArgs[0].lowercase()
                 val matchingClaimNames = context.claims.map {

@@ -73,6 +73,8 @@ The cache can be manually refreshed with every command execution. (even invalid 
 - ```VisualClaim.maxChunkLoaders.<number>``` - Set the maximum number of chunk loaders a player can have. Replace `<number>` with the desired limit. If multiple permissions are set, the highest number will be used. If no permission is set, the default limit from the config will be used. Replace `<number>` with `unlimited` for no limit. Use this with caution because it opens up the possibility of chunkloader abuse. (loading unlimited chunks can place artificial load on the server which cant be controlled by the server admin)`
 - ```VisualClaim.unloadChunksOther``` - Permission to remove other players' chunk loaders.
 - ```VisualClaim.maxclaimlorelength``` - Set the maximum length for claim lore. Replace `<number>` with the desired limit. If multiple permissions are set, the lowest number will be used. If no permission is set, the default limit from the config will be used.
+- ```VisualClaim.claimcolorother``` - Permission to set other players' claim colors.
+- ```VisualClaim.claimloreother``` - Permission to set other players' claim lore.
 
 ## Todo
 
