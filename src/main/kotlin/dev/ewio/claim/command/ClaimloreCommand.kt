@@ -12,8 +12,8 @@ import org.bukkit.command.TabExecutor
 import org.bukkit.entity.Player
 
 /**
- *  /claimlore get <claimname> - Retuns the lore of the specified claim as a cliackable text which copys it to the clipboard
- *  /claimlore set <claimname> <lore...> - Sets the lore of the specified claim
+ *  /claimlore get [-p] [>other_player>] <claimname> - Retuns the lore of the specified claim as a cliackable text which copys it to the clipboard
+ *  /claimlore set [-p] [<other_player>] <claimname> - Sets the lore of the specified claim (gives the player a link to click to set it)
  *
  */
 class ClaimloreCommand(
@@ -33,43 +33,43 @@ class ClaimloreCommand(
             preService.getPlayerContext(sender)?.let {
                 val (context, realPlayer) = it
 
-                val result = when(betterArgs.size){
-                    //get
-                    2 -> {
-                        if(betterArgs[0].equals("get", ignoreCase = true)){
+                val result = if(betterArgs.size == 2){
+                    //caller is target
 
-                            val claim = context.claims.find{ it.displayName.equals(betterArgs[1], ignoreCase = true) }
+                    if(betterArgs[0] == "get"){
+                        preService.getClaimLore(
+                            context = context,
+                            claimName = betterArgs[1]
+                        )
+                    }else if(betterArgs[0] == "set") {
+                        preService.setClaimLore(
+                            context = context,
+                            claimName = betterArgs[1]
+                        )
+                    }else{
+                        VCResult.MalformedCommand
+                    }
 
-                            if(claim != null){
-                                VCResult.ClaimLore.LoreGet(claim)
-                            }else{
-                                VCResult.ClaimLore.ClaimNotFound
-                            }
-                        }
-                        else{
+                }else{
+                    if(betterArgs.size == 4) {
+                        //other player target
+                        if(betterArgs[0] == "get" && betterArgs[1].equals("-p", ignoreCase = true)) {
+                            preService.getClaimLore(
+                                context = context,
+                                targetPlayerName = betterArgs[2],
+                                claimName = betterArgs[3]
+                            )
+                        } else if(betterArgs[0] == "set" && betterArgs[1].equals("-p", ignoreCase = true)) {
+                            preService.setClaimLore(
+                                context = context,
+                                targetPlayerName = betterArgs[2],
+                                claimName = betterArgs[3]
+                            )
+                        } else{
                             VCResult.MalformedCommand
                         }
                     }
-                    //set
-                    3 -> {
-                        if(betterArgs[0].equals("set", ignoreCase = true)){
-                            val claim = context.claims.find{ it.displayName.equals(betterArgs[1], ignoreCase = true) }
-
-                            if(claim != null){
-                                preService.updateClaimDescription(
-                                    context = context,
-                                    claim = claim,
-                                    newDescription = betterArgs[2]
-                                )
-                            }else{
-                                ms.send(realPlayer, "claim-not-found")
-                            }
-                        }
-                        else{
-                            VCResult.MalformedCommand
-                        }
-                    }
-                    else -> {
+                    else{
                         VCResult.MalformedCommand
                     }
                 }
@@ -84,7 +84,16 @@ class ClaimloreCommand(
                     is VCResult.ClaimLore.LoreSet -> {
                         ms.send(realPlayer, "claimlore.set", mapOf(
                             "claim_name" to result.claim.displayName,
-                            "claim_lore" to result.claim.description
+                            "edit_url" to result.linkToWebeditor,
+                            "token_lifetime_minutes" to result.lifetimeMinutes.toString()
+                        ))
+                    }
+                    is VCResult.ClaimLore.LoreSetOther -> {
+                        ms.send(realPlayer, "claimlore.set-other", mapOf(
+                            "claim_name" to result.claim.displayName,
+                            "edit_url" to result.linkToWebeditor,
+                            "player" to result.targetPlayerName,
+                            "token_lifetime_minutes" to result.lifetimeMinutes.toString()
                         ))
                     }
                     is VCResult.ClaimLore.LoreGet -> {
@@ -93,15 +102,26 @@ class ClaimloreCommand(
                             "claim_lore" to result.claim.description
                         ))
                     }
-                    is VCResult.ClaimLore.ClaimNotFound -> {
-                        ms.send(realPlayer, "claim-not-found")
+                    is VCResult.ClaimLore.LoreGetOther -> {
+                        ms.send(realPlayer, "claimlore.get-other", mapOf(
+                            "claim_name" to result.claim.displayName,
+                            "claim_lore" to result.claim.description,
+                            "player" to result.targetPlayerName
+                        ))
                     }
-                    is VCResult.ClaimLore.ContainsInvalidCharacters -> {
-                        ms.send(realPlayer, "claimlore.invalid-characters")
+                    is VCResult.VCClaimNotFound -> {
+                        ms.send(realPlayer, "claim-not-found", mapOf(
+                            "claim_name" to result.claimName
+                        ))
                     }
                     is VCResult.ClaimLore.LoreTooLong -> {
                         ms.send(realPlayer, "claimlore.lore-too-long", mapOf(
                             "max_length" to result.maxLength.toString()
+                        ))
+                    }
+                    is VCResult.VCPlayerNotFound -> {
+                        ms.send(realPlayer, "player-not-found", mapOf(
+                            "player_name" to result.playerName
                         ))
                     }
                     else -> {

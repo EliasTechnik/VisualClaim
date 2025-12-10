@@ -40,6 +40,13 @@ dependencies {
 
     //Mini-message
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
+
+    //Embedded Web Server
+    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
+    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
+    implementation("io.ktor:ktor-server-html-builder-jvm:2.3.7")
+    implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
+    implementation("io.ktor:ktor-serialization-jackson:2.3.7")
 }
 
 tasks {

@@ -38,6 +38,7 @@ import dev.ewio.claim.map.Pl3xMapService
 import dev.ewio.claim.repository.ChunkLoaderRepository
 import dev.ewio.claim.service.ChunkLoaderService
 import dev.ewio.claim.service.ColorService
+import dev.ewio.claim.service.WebService
 import dev.ewio.util.GL
 import dev.ewio.util.LogLevel
 import dev.ewio.util.log
@@ -46,6 +47,11 @@ import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.util.UUID
 
 
@@ -64,12 +70,13 @@ class VisualClaim : JavaPlugin() {
     lateinit var leaveListener: LeaveListener
     lateinit var bookEditListener: BookEditListener
     lateinit var colorService: ColorService
+    lateinit var webService: WebService
 
     override fun onEnable() {
         // Plugin startup logic
         GL.init(this)
 
-        saveDefaultConfig()
+        initPluginDataFolder()
         cfg = config
 
         when(cfg.getString("plugin-insights.log-level", "INFO")){
@@ -154,6 +161,14 @@ class VisualClaim : JavaPlugin() {
             plugin = this,
             getStringFromConfig = { path -> getStringFormConfig(path) }
         )
+        this.webService = WebService(
+            port = cfg.getInt("webserver.port", 8085),
+            onLoreEdited = {newLore, oldClaim -> handleOnLoreEdited(newLore, oldClaim) },
+            tokenLifetimeMinutes = cfg.getInt("webserver.token-lifetime-minutes", 20),
+            webAddress = cfg.getString("webserver.web-address")?: "http://localhost:${cfg.getInt("webserver.port", 8085)}",
+            cssFile = File(dataFolder, "public/style.css").readText()
+        )
+        this.webService.start()
         this.prerequisiteService = PrerequisiteService(
             claimService = this.claimService,
             permissionService = this.permissionService,
@@ -161,6 +176,7 @@ class VisualClaim : JavaPlugin() {
             cc = centralCache,
             ui = this.uiService,
             colorService = this.colorService,
+            webService = this.webService,
         )
         this.mapService = if(isPl3xMapPresent()) {
             Pl3xMapService(this)
@@ -343,6 +359,79 @@ class VisualClaim : JavaPlugin() {
         }
 
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
+    }
+
+    private fun initPluginDataFolder() {
+        val dataFolder = this.dataFolder
+        if (!dataFolder.exists()) {
+            val created = dataFolder.mkdirs()
+            if (!created) {
+                GL.logger.severe("Could not create plugin data folder at ${dataFolder.absolutePath}")
+            }
+
+            //extract default config
+            this.saveDefaultConfig()
+
+            //extract other default files if needed
+            val target = dataFolder.toPath().resolve("public")
+            if (Files.notExists(target)) {
+                copyResourceDir("public", target)
+            }
+        }else{
+            //ensure default config values are present
+            this.saveDefaultConfig()
+
+            //extract other default files if needed
+            val target = dataFolder.toPath().resolve("public")
+            if (Files.notExists(target)) {
+                copyResourceDir("public", target)
+            }
+
+        }
+    }
+
+    private fun copyResourceDir(resourcePath: String, targetDir: Path) {
+        val cl = javaClass.classLoader
+        val resPath = resourcePath.trimStart('/')
+        val url = cl.getResource(resPath) ?: return
+
+        if (url.protocol == "jar") {
+            // Ressourcen aus JAR lesen
+            val uri = url.toURI()
+            FileSystems.newFileSystem(uri, mapOf<String, Any>()).use { fs ->
+                val jarRoot = fs.getPath("/$resPath")
+                Files.walk(jarRoot).forEach { p ->
+                    val rel = jarRoot.relativize(p).toString()
+                    val dest = targetDir.resolve(rel)
+                    if (Files.isDirectory(p)) Files.createDirectories(dest)
+                    else {
+                        Files.createDirectories(dest.parent)
+                        Files.copy(p, dest, StandardCopyOption.REPLACE_EXISTING)
+                    }
+                }
+            }
+        } else {
+            // Exploded resources (IDE)
+            val dir = Paths.get(url.toURI())
+            Files.walk(dir).forEach { p ->
+                val rel = dir.relativize(p).toString()
+                val dest = targetDir.resolve(rel)
+                if (Files.isDirectory(p)) Files.createDirectories(dest)
+                else {
+                    Files.createDirectories(dest.parent)
+                    Files.copy(p, dest, StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+        }
+    }
+
+    private fun handleOnLoreEdited(newLore: String, oldClaim: VCClaim) {
+        launch {
+            claimService.updateClaimLore(
+                claim = oldClaim,
+                newLore = newLore
+            )
+        }
     }
 
     override fun onDisable() {

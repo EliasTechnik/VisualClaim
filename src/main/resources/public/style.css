@@ -1,0 +1,25 @@
+body {
+    background-color: #3c3936;
+    font-family: 'Minecraftia', sans-serif;
+    color: #e0e0e0;
+    padding: 20px;
+}
+
+textarea {
+    width: 600px;
+    height: 300px;
+    font-family: monospace;
+    background-color: #1e1c1a;
+    color: #cfcfcf;
+    border: 2px solid #555;
+}
+
+button {
+    background: #4caf50;
+    color: white;
+    padding: 10px;
+    border: 0;
+    cursor: pointer;
+    margin-top: 10px;
+    font-size: 14px;
+}

@@ -370,17 +370,6 @@ class ClaimService(
         }
     }
 
-    suspend fun updateClaimDescription(context: VCPlayerContext, claim: VCClaim, newDescription: String) {
-        val updatedClaim = claim.copy(
-            description = newDescription,
-            lastModified = System.currentTimeMillis()
-        )
-        claimRepo.upsert(updatedClaim)
-        deleteFromMap(context.chunks.filter { it.claimKey == claim.key })
-        placeOnMap(context.player, updatedClaim, context.chunks.filter { it.claimKey == claim.key })
-        notifyOnUpdate(context.chunks.filter { it.claimKey == claim.key }.map { it.plainChunk })
-    }
-
     suspend fun updateClaimColor(context: VCPlayerContext, claim: VCClaim, newColor: VCColor) {
         val updatedClaim = claim.copy(
             color = newColor,
@@ -390,6 +379,18 @@ class ClaimService(
         deleteFromMap(context.chunks.filter { it.claimKey == claim.key })
         placeOnMap(context.player, updatedClaim, context.chunks.filter { it.claimKey == claim.key })
         notifyOnUpdate(context.chunks.filter { it.claimKey == claim.key }.map { it.plainChunk })
+    }
+
+    suspend fun updateClaimLore(claim: VCClaim, newLore: String) {
+        val updatedClaim = claim.copy(
+            description = newLore,
+            lastModified = System.currentTimeMillis()
+        )
+        claimRepo.upsert(updatedClaim)
+        val chunks = chunkRepo.listByClaim(claim.key)
+        deleteFromMap(chunks)
+        placeOnMap(getPlayerByKey(claim.playerKey)!!, updatedClaim, chunks)
+        notifyOnUpdate(chunks.map { it.plainChunk })
     }
 
 }

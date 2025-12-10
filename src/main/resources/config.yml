@@ -143,9 +143,11 @@ messages:
     merge-success: "§aDer Claim %claim_name% wurde mit %claim_new_name% zusammengeführt."
   claimlore:
     get: "§aDer Claim %claim_name% hat folgende Beschreibung: &e<hover:show_text:'Klick auf den Text um die Beschreibung zu kopieren.'><click:copy_to_clipboard:%claim_lore%>\"%claim_lore%\"</click>"
-    set: "§aDie Beschreibung für den Claim %claim_name% wurde überschrieben."
+    get-other: "§aDer Claim %claim_name% von %player% hat folgende Beschreibung: &e<hover:show_text:'Klick auf den Text um die Beschreibung zu kopieren.'><click:copy_to_clipboard:%claim_lore%>\"%claim_lore%\"</click>"
+    set: "§aKlicke auf diesen Link um die Beschreibung für den Claim %claim_name% zu bearbeiten: &e<hover:show_text:'Link öffnen'><click:open_url:'%edit_url%'>%edit_url%</click></hover>§a Der Link ist %token_lifetime_minutes% Minuten gültig."
+    set-other: "§aKlicke auf diesen Link um die Beschreibung für den Claim %claim_name% von %player% zu bearbeiten: &e<hover:show_text:'Link öffnen'><click:open_url:'%edit_url%'>%edit_url%</click></hover> §aDer Link ist %token_lifetime_minutes% Minuten gültig."
+    set-final: "§aDie Beschreibung für den Claim %claim_name% wurde bearbeitet."
     too-long: "§aDie Beschreibung darf maximal %max_length% Zeichen lang sein."
-    invalid-characters: "§aDie Beschreibung enthält ungültige Zeichen."
   claimcolor:
     set: "§aDie Farbe für den Claim %claim_name% wurde auf %color_name% gesetzt."
     invalid-color: "§aDie angegebene Farbe ist ungültig."
@@ -194,6 +196,12 @@ trigger-words:
     autoclaim-off: "off"
 
 migration-name: "_renamed" # Should there be a conflict with the trigger words, inside the DB the objects will be renamed to this name.
+
+# WebServer settings for the claimlore command (Webeditor)
+webserver:
+  port: 8085 # the port the webserver listens on
+  web-adress: "http://localhost:8085" # Domain used in the URL sent to players. Change this to your IP. Or if you are using a reverse proxy to your domain name. Make sure to include http:// or https:// and the correct port.
+  token-lifetime-minutes: 5 # How long the edit token is valid
 
 #Debugging
 plugin-insights:

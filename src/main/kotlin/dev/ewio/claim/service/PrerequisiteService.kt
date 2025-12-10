@@ -25,7 +25,8 @@ class PrerequisiteService(
     private val coroutineScope: CoroutineScope,
     private val cc: CentralCache,
     private val ui: UIService,
-    private val colorService: ColorService
+    private val colorService: ColorService,
+    private val webService: WebService
 ) {
 
     private lateinit var movementService: MovementService
@@ -224,7 +225,7 @@ class PrerequisiteService(
             val claim = claimService.getClaimByNameAndPlayerName(
                 claimName = claimName,
                 playerName = playerName
-            ) ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
+            ) ?: return VCResult.VCClaimNotFound(claimName)
 
             if(pretestAdmin){
                 return VCResult.DeleteClaim.ConfirmOtherPlayerClaimRequired(claimName)
@@ -239,7 +240,7 @@ class PrerequisiteService(
         } else {
             //normal deletion
             val claim = context.claims.firstOrNull { it.displayName == claimName }
-                ?: return VCResult.DeleteClaim.VCClaimNotFound(claimName)
+                ?: return VCResult.VCClaimNotFound(claimName)
             return cc.updatePlayerContextCache(context.player.mcUUID, {claimService.deleteClaim(claim)})
 
         }
@@ -692,39 +693,73 @@ class PrerequisiteService(
         }
     }
 
-    suspend fun updateClaimDescription(context: VCPlayerContext, claim: VCClaim, newDescription: String): VCResult {
+    suspend fun getClaimLore(context: VCPlayerContext, claimName: String, targetPlayerName: String? = null): VCResult{
 
-        ui.giveLoreBookToPlayer(context, claim, Bukkit.getPlayer(context.player.mcUUID)!!)
-        /*
-        //check length
-        if(newDescription.length > context.restrictions.maxClaimLoreLength && context.restrictions.maxClaimLoreLength != -1) {
-            return VCResult.ClaimLore.LoreTooLong(context.restrictions.maxClaimLoreLength)
-        }
+        if(targetPlayerName == null){
+            val claim = context.claims.firstOrNull { it.displayName == claimName }
+                ?: return VCResult.VCClaimNotFound(claimName)
 
-        //check characters
-        if(!permissionService.isLoreAllowed(newDescription)) {
-            return VCResult.ClaimLore.ContainsInvalidCharacters
-        }
+            return VCResult.ClaimLore.LoreGet(claim = claim)
+        }else{
+            if(!context.restrictions.claimLoreOther){
+                return VCResult.MissingPermission
+            }
 
-        return cc.updatePlayerContextCache(context.player.mcUUID){
-            claimService.updateClaimDescription(
-                context = context,
+            val targetContext = cc.getPlayerContextForName(targetPlayerName)
+                ?: return VCResult.VCPlayerNotFound(targetPlayerName)
+
+            val claim = targetContext.claims.firstOrNull { it.displayName == claimName }
+                ?: return VCResult.VCClaimNotFound(claimName)
+
+            return VCResult.ClaimLore.LoreGetOther(
                 claim = claim,
-                newDescription = newDescription
-            )
-            VCResult.ClaimLore.LoreSet(
-                claim = claim.copy(description = newDescription)
+                targetPlayerName = targetPlayerName
             )
         }
+    }
 
-         */
-        return VCResult.UnknownFailure
+    suspend fun setClaimLore(context: VCPlayerContext, claimName: String, targetPlayerName: String? = null): VCResult{
+
+        if(targetPlayerName == null){
+            val claim = context.claims.firstOrNull { it.displayName == claimName }
+                ?: return VCResult.VCClaimNotFound(claimName)
+
+            return VCResult.ClaimLore.LoreSet(
+                linkToWebeditor = webService.createLoreTokenLink(
+                    context = context,
+                    targetClaim = claim,
+                ),
+                claim = claim,
+                lifetimeMinutes = webService.tokenLifetimeMinutes
+            )
+        }else{
+
+            if(!context.restrictions.claimLoreOther){
+                return VCResult.MissingPermission
+            }
+
+            val targetContext = cc.getPlayerContextForName(targetPlayerName)
+                ?: return VCResult.VCPlayerNotFound(targetPlayerName)
+
+            val claim = targetContext.claims.firstOrNull { it.displayName == claimName }
+                ?: return VCResult.VCClaimNotFound(claimName)
+
+            return VCResult.ClaimLore.LoreSetOther(
+                linkToWebeditor = webService.createLoreTokenLink(
+                    context = context,
+                    targetClaim = claim,
+                ),
+                claim = claim,
+                lifetimeMinutes = webService.tokenLifetimeMinutes,
+                targetPlayerName = targetPlayerName
+            )
+        }
     }
 
     suspend fun changeClaimColor(context: VCPlayerContext, claimName: String, colorName: String): VCResult {
 
         val claim = context.claims.firstOrNull { it.displayName == claimName }
-            ?: return VCResult.ClaimColor.ClaimNotFound(claimName)
+            ?: return VCResult.VCClaimNotFound(claimName)
 
         val color = colorService.getColorByName(colorName)?: return VCResult.ClaimColor.ColorNotFound
 
@@ -757,7 +792,7 @@ class PrerequisiteService(
             ?: return VCResult.VCPlayerNotFound(targetPlayerName)
 
         val claim = targetContext.claims.firstOrNull { it.displayName == claimName }
-            ?: return VCResult.ClaimColor.ClaimNotFound(claimName)
+            ?: return VCResult.VCClaimNotFound(claimName)
 
         val color = colorService.getColorByName(colorName)?: return VCResult.ClaimColor.ColorNotFound
 

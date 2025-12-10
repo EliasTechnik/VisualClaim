@@ -58,7 +58,7 @@ class DeleteclaimCommand(
                         }else {
                             //check if claim exists
                             if (context.claims.firstOrNull { it.displayName == betterArgs[0] } == null) {
-                                VCResult.DeleteClaim.VCClaimNotFound(betterArgs[0])
+                                VCResult.VCClaimNotFound(betterArgs[0])
                             } else {
                                 VCResult.DeleteClaim.ConfirmationRequired(betterArgs[0])
                             }
@@ -74,7 +74,7 @@ class DeleteclaimCommand(
                         }else{
                             //check if claim exists
                             if (context.claims.firstOrNull { it.displayName == betterArgs[0] } == null) {
-                                VCResult.DeleteClaim.VCClaimNotFound(betterArgs[0])
+                                VCResult.VCClaimNotFound(betterArgs[0])
                             } else {
                                 if(betterArgs[1].equals(getStringFromConfig("trigger-words.deleteclaim-confirm"), ignoreCase = true)) {
                                     //proceed with deletion
@@ -155,7 +155,7 @@ class DeleteclaimCommand(
                         ms.send(realPlayer, "deleteclaim.success", mapOf("claim_name" to result.claimName))
                         //preService.updateBossbarAfterClaim(realPlayer, context, null) //TODO: remove if notify callchain works
                     }
-                    is VCResult.DeleteClaim.VCClaimNotFound -> {
+                    is VCResult.VCClaimNotFound -> {
                         ms.send(realPlayer, "claim-not-found", mapOf("claim_name" to result.claimName))
                     }
                     is VCResult.DeleteClaim.ConfirmationRequired -> {

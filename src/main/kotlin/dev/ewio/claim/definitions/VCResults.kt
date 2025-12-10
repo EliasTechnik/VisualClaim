@@ -13,6 +13,8 @@ open class VCResult {
 
     object MissingPermission: Failure()
 
+    data class VCClaimNotFound(val claimName: String) : Failure()
+
     data class VCPlayerNotFound(val playerName: String) : Failure()
 
     sealed class CreateClaim {
@@ -24,7 +26,6 @@ open class VCResult {
         data class ClaimLimitReached(val maxClaims: Int) : Failure()
         object ChunkCanNotBeClaimed: Failure()
         object NoExistingClaimFound : Failure()
-        //object ClaimCouldNotBeCreated : Failure()
         data class ClaimNameTooLong(val maxLength: Int): Failure()
         object ClaimNameNotAllowed: Failure()
     }
@@ -43,7 +44,6 @@ open class VCResult {
 
     sealed class DeleteClaim{
         data class RemovedSuccessful(val claimName: String) : Success()
-        data class VCClaimNotFound(val claimName: String) : Failure()  //"No claim found with the given name."
         data class NotOwnerOfClaim(val claimName: String) : Failure() //"You do not own this claim."
         data class ConfirmationRequired(val claimName: String) : Failure() //"You must confirm the deletion of this claim."
         data class ConfirmOtherPlayerClaimRequired(val claimName: String) : Failure() //"You must confirm the deletion of another player's claim."
@@ -100,16 +100,15 @@ open class VCResult {
     }
 
     sealed class ClaimLore{
-        data class LoreSet(val claim: VCClaim): Success()
+        data class LoreSet(val linkToWebeditor: String, val lifetimeMinutes: Int, val claim: VCClaim) : Success()
+        data class LoreSetOther(val linkToWebeditor: String, val lifetimeMinutes: Int, val targetPlayerName: String, val claim:VCClaim) : Success()
         data class LoreGet(val claim: VCClaim): Success()
-        object ClaimNotFound: Failure()
-        object ContainsInvalidCharacters: Failure()
+        data class LoreGetOther(val claim: VCClaim, val targetPlayerName: String): Success()
         data class LoreTooLong(val maxLength: Int): Failure()
     }
 
     sealed class ClaimColor{
         data class ColorSet(val claim: VCClaim, val color: VCColor): Success()
         object ColorNotFound: Failure()
-        data class ClaimNotFound(val name: String): Failure()
     }
 }

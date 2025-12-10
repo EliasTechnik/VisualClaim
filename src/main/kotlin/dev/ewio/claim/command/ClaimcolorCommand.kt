@@ -79,12 +79,12 @@ class ClaimcolorCommand(
                             )
                         )
                     }
-                    is VCResult.ClaimColor.ClaimNotFound -> {
+                    is VCResult.VCClaimNotFound -> {
                         ms.send(
                             player = realPlayer,
                             key = "claim-not-found",
                             placeholders = mapOf(
-                                "claim_name" to result.name
+                                "claim_name" to result.claimName
                             )
                         )
                     }

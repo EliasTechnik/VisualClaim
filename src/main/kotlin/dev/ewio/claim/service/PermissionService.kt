@@ -58,6 +58,14 @@ class PermissionService(
         return !newDescription.any { forbiddenCharset.contains(it) }
     }
 
+    fun removeForbiddenCharsFromString(input: String):String{
+        var output = input
+        forbiddenCharset.forEach {
+            output = output.replace(it.toString(), "")
+        }
+        return output
+    }
+
     fun getRestrictionsForPlayer(player: VCPlayer, bukkitPlayer: Player): VCRestrictions {
         val canClaim = hasPermission(bukkitPlayer, "visualclaim.claim")
         val listOtherPlayerClaims = hasPermission(bukkitPlayer, "visualclaim.listOther")
