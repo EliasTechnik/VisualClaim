@@ -3,6 +3,7 @@ package dev.ewio.claim.service
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.util.log
+import io.ktor.http.ContentDisposition.Companion.File
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.call
@@ -10,10 +11,14 @@ import io.ktor.server.application.install
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.html.respondHtml
+import io.ktor.server.http.content.files
+import io.ktor.server.http.content.static
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
+import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -28,14 +33,23 @@ import kotlinx.html.style
 import kotlinx.html.textArea
 import kotlinx.html.title
 import kotlinx.html.unsafe
+import java.io.File
 import java.util.UUID
 
+/**
+ * The WebService uses predefined web pages and injects runtime data into the before serving them.
+ * For this to work the following files have to be present in the webRoot folder:
+ * - claimlore.html : The main HTML page for editing the lore of a claim.
+ * - default.html : A default HTML page to serve as the root. (Telling the user that they need to use a specific link)
+ * - tokenexpired.html : A page to show when the token has expired.
+ *
+ */
 class WebService(
     val port: Int = 8085,
     val onLoreEdited: (newLore: String, oldClaim: VCClaim) -> Unit,
     val tokenLifetimeMinutes: Int,
     val webAddress: String,
-    val cssFile: String
+    val webRoot: File
 ){
     private val tokenStore = mutableMapOf<String, TokenData>()
 
@@ -53,6 +67,13 @@ class WebService(
 
             routing {
 
+                // Static routing für HTML/CSS/JS/Bilder
+                staticResources("/public", basePackage = "default.html") {
+                    files(webRoot)               // alle Dateien direkt verfügbar
+                    default("claimlore.html")  // Standardseite
+                }
+
+
                 // Seite anzeigen
                 get("/claim/edit/{token}") {
                     val token = call.parameters["token"] ?: return@get call.respondText(
@@ -61,41 +82,21 @@ class WebService(
 
                     val data = tokenStore[token]
                     if (data == null || System.currentTimeMillis() > data.expiresAt) {
-                        return@get call.respondText("Token expired.", status = HttpStatusCode.Forbidden)
+                        return@get call.respondFile(File(webRoot, "tokenexpired.html"))
                     }
 
-                    val claim = data.claim
-                    val lore = claim.description
 
-                    call.respondHtml {
-                        head {
-                            title { +"Claim Lore bearbeiten" }
-                            style { + cssFile}
-                        }
-                        body {
-                            h2 { +"Claim: ${data.claim.displayName}" }
-                            textArea {
-                                attributes["id"] = "lore"
-                                +lore
-                            }
-                            br()
-                            button {
-                                attributes["onclick"] = "saveLore()"
-                                +"Speichern"
-                            }
-                            script {
-                                unsafe {
-                                    +"""
-                                        function saveLore() {
-                                            fetch('/claim/save/$token', {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({ lore: document.getElementById('lore').value })
-                                            }).then(r => alert("Gespeichert!"));
-                                        }
-                                    """.trimIndent()
-                                }
-                            }
+                    var editor = File(webRoot, "claimlore.html").readText()
+
+                    //inject data into HTML
+                    editor = editor.replace("%claim_name%", data.claim.displayName)
+                    editor = editor.replace("%lore_content%", data.claim.description)
+                    editor = editor.replace("%token%", token)
+                    editor = editor.replace("%web_address%", webAddress)
+
+                    call.respondHtml(HttpStatusCode.OK) {
+                        unsafe {
+                            +editor
                         }
                     }
                 }
@@ -106,7 +107,7 @@ class WebService(
 
                     val data = tokenStore[token]
                     if (data == null || System.currentTimeMillis() > data.expiresAt) {
-                        return@post call.respond(HttpStatusCode.Forbidden)
+                        return@post call.respond(HttpStatusCode.OK, mapOf("status" to "error"))
                     }
 
                     val payload = call.receive<Map<String, String>>()
@@ -114,7 +115,7 @@ class WebService(
 
                     onLoreEdited(lore,data.claim)
 
-                    call.respond(HttpStatusCode.OK)
+                    call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
                 }
             }
         }

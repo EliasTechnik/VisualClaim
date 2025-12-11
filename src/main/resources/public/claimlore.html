@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="%web_address%/minecraft-css-framework-v-1.0.0.css">
+    <title>Claim Lore Editor</title>
+    <script>
+        function saveLore() {
+            var token = document.getElementById('token').innerText;
+            fetch('/claim/save/' + token, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ lore: document.getElementById('lore').value })
+            }).then(r => r.json()).then(data => {
+                document.getElementById('result-ok').style.display = 'block';
+            }).catch(err => {
+                document.getElementById('result-error').style.display = 'block';
+            });
+        }
+
+        function closeOKModal() {
+            document.getElementById('result-ok').style.display = 'none';
+        }
+
+        function closeErrorModal() {
+            document.getElementById('result-error').style.display = 'none';
+        }
+    </script>
+</head>
+<body class="bg-primary text-secondary">
+    <hidden id="token">%token%</hidden>
+
+    <div class="row">
+      <div class="col-6">
+        <div class="card">
+            <div class="card-header">
+                <h1>Claim-Lore bearbeiten.</h1>
+            </div>
+            <div class="card-body">
+                <p>Trage in das Textfeld die Lore für den Claim %claim_name% ein. Wenn du fertig bist dann drücke auf speichern. Bedenke das dieser Editor nur begrenzt lang gültig ist.</p>
+                <label for="lore">Lore:</label>
+                <textarea class="form-input" id="lore" style="height: 30em;">%claim_lore%</textarea>
+                <div class="card-footer">
+                    <hr class="no-padding">
+                    <button class="button button-normal" onClick="saveLore()">Speichern</button>
+                </div>
+
+                <div id="result-ok" class="modal">
+                    <div class="modal-header">Gespeichert</div>
+                    <div class="modal-body">Die Lore wurde gespeichert. Kehre zum Spiel zurück oder nehme weitere änderungen vor.</div>
+                    <div class="modal-footer">
+                        <button class="button button-primary" onClick="closeOKModal()">Okay</button>
+                    </div>
+                </div>
+                <div id="result-error" class="modal">
+                    <div class="modal-header">Fehler</div>
+                    <div class="modal-body">Die Lore konnte nicht gespeichert werden. Das kan daran liegen das der Link abgelaufen ist oder ein interner Fehler vorliegt. Bitte erstelle einen neuen Link und versuche es erneut</div>
+                    <div class="modal-footer">
+                        <button class="button button-primary" onClick="closeErrorModal()">Okay</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    
+</body>
+</html>

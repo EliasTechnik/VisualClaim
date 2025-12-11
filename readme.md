@@ -78,7 +78,6 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
-- filter "<" and ">" from claim names to prevent minimessage injection
 - add offline support for listclaims other: see TODO in ListClaimsCommand
 - debug list other
 - make claim visualize on each interaction

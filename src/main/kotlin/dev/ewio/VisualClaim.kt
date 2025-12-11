@@ -166,7 +166,7 @@ class VisualClaim : JavaPlugin() {
             onLoreEdited = {newLore, oldClaim -> handleOnLoreEdited(newLore, oldClaim) },
             tokenLifetimeMinutes = cfg.getInt("webserver.token-lifetime-minutes", 20),
             webAddress = cfg.getString("webserver.web-address")?: "http://localhost:${cfg.getInt("webserver.port", 8085)}",
-            cssFile = File(dataFolder, "public/style.css").readText()
+            webRoot = File(dataFolder, "public")
         )
         this.webService.start()
         this.prerequisiteService = PrerequisiteService(
