@@ -9,9 +9,11 @@ data class VCPlayer(
     val resolvedNameAt: Long,
     val autoClaim: Boolean = false,
     val autoClaimTargetClaimKey: Int = -1,
-    val bossbar: Boolean = true
+    val bossbar: Boolean = true,
+    val showLore: Boolean = true,
+    val additionalData: String = "", // for future use
 ){
     override fun toString(): String {
-        return "VCPlayer(key=$key, mcUUID=$mcUUID, name='$name', resolvedNameAt=$resolvedNameAt, autoClaim=$autoClaim, autoClaimTargetClaimKey=$autoClaimTargetClaimKey, bossbar=$bossbar)"
+        return "VCPlayer(key=$key, mcUUID=$mcUUID, name='$name', resolvedNameAt=$resolvedNameAt, autoClaim=$autoClaim, autoClaimTargetClaimKey=$autoClaimTargetClaimKey, bossbar=$bossbar, showLore=$showLore, additionalData='$additionalData')"
     }
 }

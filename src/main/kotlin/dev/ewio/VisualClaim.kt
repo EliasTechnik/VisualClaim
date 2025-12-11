@@ -30,6 +30,7 @@ import dev.ewio.claim.command.ShowClaimCommand
 import dev.ewio.claim.command.UnclaimCommand
 import dev.ewio.claim.database.VCDB
 import dev.ewio.claim.definitions.VCPlayerContext
+import dev.ewio.claim.definitions.VCResult
 import dev.ewio.claim.listener.BookEditListener
 import dev.ewio.claim.listener.JoinListener
 import dev.ewio.claim.listener.LeaveListener
@@ -42,7 +43,9 @@ import dev.ewio.claim.service.ColorService
 import dev.ewio.claim.service.WebService
 import dev.ewio.util.GL
 import dev.ewio.util.LogLevel
+import dev.ewio.util.error
 import dev.ewio.util.log
+import dev.ewio.util.warn
 import kotlinx.coroutines.runBlocking
 import org.bukkit.Bukkit
 import org.bukkit.configuration.file.FileConfiguration
@@ -63,13 +66,11 @@ class VisualClaim : JavaPlugin() {
     lateinit var prerequisiteService: PrerequisiteService
     lateinit var movementService: MovementService
     lateinit var centralCache: CentralCache
-    lateinit var cfg: FileConfiguration
     lateinit var messageService: MessageService
     lateinit var uiService: UIService
     lateinit var chunkLoaderService: ChunkLoaderService
     lateinit var joinListner: JoinListener
     lateinit var leaveListener: LeaveListener
-    lateinit var bookEditListener: BookEditListener
     lateinit var colorService: ColorService
     lateinit var webService: WebService
 
@@ -78,19 +79,23 @@ class VisualClaim : JavaPlugin() {
         GL.init(this)
 
         initPluginDataFolder()
-        cfg = config
+        migratefromOlderVersion(2) //the target config version
 
-        when(cfg.getString("plugin-insights.log-level", "INFO")){
+
+        when(config.getString("plugin-insights.log-level", "INFO")){
             "INFO" -> { GL.level = LogLevel.INFO }
             "WARN" -> { GL.level = LogLevel.WARNING }
             "ERROR" -> { GL.level = LogLevel.SEVERE }
         }
+        log("normal test log")
+        warn("warn test log")
+        error("error test log")
 
         val defaultRestrictions = VCRestrictions(
-            maxClaims = cfg.getInt("limits.max-claims-per-player", 10),
-            maxChunks = cfg.getInt("limits.max-chunks-per-player", 100),
-            maxClaimNameLength = if (cfg.getInt("limits.max-claim-name-length", 32) <= 250) {
-                cfg.getInt("limits.max-claim-name-length", 32)
+            maxClaims = config.getInt("limits.max-claims-per-player", 10),
+            maxChunks = config.getInt("limits.max-chunks-per-player", 100),
+            maxClaimNameLength = if (config.getInt("limits.max-claim-name-length", 32) <= 250) {
+                config.getInt("limits.max-claim-name-length", 32)
             } else {
                 250 //database limit
             },
@@ -101,8 +106,8 @@ class VisualClaim : JavaPlugin() {
             renameOtherPlayerClaims = false,
             listOtherPlayerChunkLoader = false,
             canLoadChunks = false,
-            maxChunkLoaders = cfg.getInt("limits.max-chunk-loaders", 5),
-            maxClaimLoreLength = 512
+            maxChunkLoaders = config.getInt("limits.max-chunk-loaders", 5),
+            maxClaimLoreLength = config.getInt("limits.max-lore-length", 512)
         )
 
         //init database
@@ -113,7 +118,7 @@ class VisualClaim : JavaPlugin() {
             getStringFromConfig = {path -> getStringFormConfig(path)}
         )
 
-        this.messageService = MessageService(cfg)
+        this.messageService = MessageService(config)
         messageService.load()
 
         this.chunkLoaderService = ChunkLoaderService()
@@ -131,16 +136,16 @@ class VisualClaim : JavaPlugin() {
         )
 
         val triggerWordsFromConfig = mutableListOf<String>()
-        cfg.getString("trigger-words.deleteclaim-confirm")?.let{
+        config.getString("trigger-words.deleteclaim-confirm")?.let{
             triggerWordsFromConfig.add(it)
         }
-        cfg.getString("trigger-words.renameclaim-confirm")?.let{
+        config.getString("trigger-words.renameclaim-confirm")?.let{
             triggerWordsFromConfig.add(it)
         }
-        cfg.getString("trigger-words.autoclaim-off")?.let{
+        config.getString("trigger-words.autoclaim-off")?.let{
             triggerWordsFromConfig.add(it)
         }
-        cfg.getString("migration-name")?.let{
+        config.getString("migration-name")?.let{
             triggerWordsFromConfig.add(it)
         }
 
@@ -163,11 +168,11 @@ class VisualClaim : JavaPlugin() {
             getStringFromConfig = { path -> getStringFormConfig(path) }
         )
         this.webService = WebService(
-            port = cfg.getInt("webserver.port", 8085),
+            port = config.getInt("webserver.port", 8085),
             onLoreEdited = {newLore, oldClaim, uuid -> handleOnLoreEdited(newLore, oldClaim, uuid) },
-            tokenLifetimeMinutes = cfg.getInt("webserver.token-lifetime-minutes", 20),
-            webAddress = cfg.getString("webserver.web-address")?: "http://localhost:${cfg.getInt("webserver.port", 8085)}",
-            webRoot = File(dataFolder, "public")
+            tokenLifetimeMinutes = config.getInt("webserver.token-lifetime-minutes", 20),
+            webAddress = config.getString("webserver.web-address")?: "http://localhost:${config.getInt("webserver.port", 8085)}",
+            webRoot = File(dataFolder, "public"),
         )
         this.webService.start()
         this.prerequisiteService = PrerequisiteService(
@@ -189,7 +194,7 @@ class VisualClaim : JavaPlugin() {
         launch{
             val count = claimService.removeTriggerWordsFromClaims(
                 permissionService.triggerWords,
-                cfg.getString("migration-name")?: "_renamed"
+                config.getString("migration-name")?: "_renamed"
             )
             if(count > 0){
                 log("Renamed $count claims with conflicting names. This happens when trigger-words are changed. Please restart the server to see the changes on the map.")
@@ -253,18 +258,6 @@ class VisualClaim : JavaPlugin() {
             }
         )
         server.pluginManager.registerEvents(this.leaveListener, this)
-
-        this.bookEditListener = BookEditListener(
-            onBookEdit = { event ->
-                launch{
-                    centralCache.getPlayerContext(event.player)?.let { context ->
-                        uiService.handleBookEditEvent(context, event)
-                    }
-                }
-            }
-        )
-        server.pluginManager.registerEvents(this.bookEditListener, this)
-
 
         // Commands
         getCommand("claim")?.setExecutor(
@@ -362,6 +355,31 @@ class VisualClaim : JavaPlugin() {
         logger.info("VisualClaim activated. Pl3xMap: " + (if (mapService.isActive()) "active" else "not found"))
     }
 
+    private fun migratefromOlderVersion(targetConfigVersion: Int): VCResult{
+        //check if we have to migrate from an older version
+        val configVersion = config.getInt("config-version", 1)
+
+        if(configVersion == targetConfigVersion) return VCResult.PluginMigration.NoMigrationNeeded //no migration needed
+
+        //backup complete data folder
+        val backupFolder = File(this.dataFolder.parentFile, "VisualClaim-backup-${System.currentTimeMillis()}")
+        val dataFolder = this.dataFolder
+        dataFolder.copyRecursively(backupFolder, overwrite = true)
+        log("Backed up existing data folder to ${backupFolder.absolutePath}")
+
+        //do a config upgrade, delete old config and replace with new one
+        val configFile = File(this.dataFolder, "config.yml")
+        val renamedOldConfigFile = File(this.dataFolder, "config-v${configVersion}-backup-${System.currentTimeMillis()}.yml")
+        val renamed = configFile.renameTo(renamedOldConfigFile)
+        if(!renamed){
+            error("Could not rename old config file for migration. Aborting migration.")
+            return VCResult.PluginMigration.MigrationFailed("Could not rename old config file.")
+        }
+        this.saveDefaultConfig()
+
+        return VCResult.PluginMigration.MigrationSuccessful
+    }
+
     private fun initPluginDataFolder() {
         val dataFolder = this.dataFolder
         if (!dataFolder.exists()) {
@@ -435,6 +453,10 @@ class VisualClaim : JavaPlugin() {
                     newLore = newLore
                 )
             }
+            val player = Bukkit.getPlayer(uuid) ?: return@launch
+            messageService.send(player, "claimlore.set-final", mapOf(
+                "claim_name" to oldClaim.displayName
+            ))
         }
     }
 
@@ -468,7 +490,7 @@ class VisualClaim : JavaPlugin() {
     }
 
     private fun getStringFormConfig(path: String): String {
-        return cfg.getString(path) ?: path
+        return config.getString(path) ?: path
     }
 
     private suspend fun updateUI(player: UUID, chunk: PlainChunk){

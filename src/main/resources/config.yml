@@ -10,6 +10,7 @@ limits:
 chunkloader: true # set this to false if you dont want to use the chunkloader
 
 show-claim-duration-seconds: 60 # How long the claim border is shown when using /showclaim
+claim-lore-delivery-timeout: 30 # How long (in seconds) the plugin should wait before delivering another claim lore when the previous one was delivered. Increase this to keep chat-spam low but players might miss out on some lore
 
 # How big the border of a claimed chunk should be displayed on the map
 marker:
@@ -96,7 +97,7 @@ messages:
     claimcolor: "§aMit §e/claimcolor \"<claim-name>\" <farbe>§a änderst du die Farbe der Markierung für deine Claims auf der Karte."
     showclaim: "§aMit §e/showclaim \"claim-name\"§a werden die Grenzen des Claims für eine bestimmte Zeit angezeigt."
     chunkloader: "§aMit §e/chunkloader add <name>§a lädst du den Chunk in dem du stehst permanent. Mit §e/chunkloader remove <name>§a entfernst du den Chunk-Loader wieder. Mit §e/chunkloader list§a siehst du eine Liste deiner Chunk-Loader."
-    claimlore: "§aMit §e/claimlore set \"<claim-name>\" <beschreibung>§a kannst du eine Beschreibung für deinen Claim festlegen. Mit §e/claimlore get \"<claim-name>\"§a kannst du die aktuelle Beschreibung anzeigen lassen."
+    claimlore: "§aMit §e/claimlore set \"<claim-name>\" §a kannst du eine Beschreibung für deinen Claim festlegen. Mit §e/claimlore get \"<claim-name>\"§a kannst du die aktuelle Beschreibung anzeigen lassen."
   # command results
   claim:
     success: "§aChunk %chunk_x%,%chunk_z% wurde für %player% geclaimt. Er gehört nun zum/zur %claim_name%"
@@ -148,6 +149,13 @@ messages:
     set-other: "§aKlicke auf diesen Link um die Beschreibung für den Claim %claim_name% von %player% zu bearbeiten: &e<hover:show_text:'Link öffnen'><click:open_url:'%edit_url%'>%edit_url%</click></hover> §aDer Link ist %token_lifetime_minutes% Minuten gültig."
     set-final: "§aDie Beschreibung für den Claim %claim_name% wurde bearbeitet."
     too-long: "§aDie Beschreibung darf maximal %max_length% Zeichen lang sein."
+    no-lore-at-location: "§aFür diesen Ort gibt es keine Beschreibung."
+    toggle-on: "§aDu siehst ab jetzt wieder Claim-Beschreibungen."
+    toggle-off: "§aClaim-Beschreibungen werden ab jetzt ausgeblendet."
+    auto-delivery:
+      header: "§a------------------------------"
+      content: "§6 %claim_name%: \"%claim_lore%\""
+      footer: "§a------------------------------"
   claimcolor:
     set: "§aDie Farbe für den Claim %claim_name% wurde auf %color_name% gesetzt."
     invalid-color: "§aDie angegebene Farbe ist ungültig."
@@ -201,7 +209,7 @@ migration-name: "_renamed" # Should there be a conflict with the trigger words, 
 webserver:
   port: 8085 # the port the webserver listens on
   web-adress: "http://localhost:8085" # Domain used in the URL sent to players. Change this to your IP. Or if you are using a reverse proxy to your domain name. Make sure to include http:// or https:// and the correct port.
-  token-lifetime-minutes: 5 # How long the edit token is valid
+  token-lifetime-minutes: 10 # How long the edit token is valid
 
 #Debugging
 plugin-insights:
@@ -210,3 +218,6 @@ plugin-insights:
 # INFO - Shows all logs (only useful for debugging),
 # WARN - Shows errors and warnings (less spammy than info)
 # ERROR - Shows only errors. Should be used for normal usage.
+
+# Do not change this value. This is used to complete version migrations.
+config-version: 2

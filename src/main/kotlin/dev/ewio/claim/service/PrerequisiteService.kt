@@ -718,6 +718,17 @@ class PrerequisiteService(
         }
     }
 
+    suspend fun getClaimLore(chunk: PlainChunk): VCResult{
+        val claim = claimService.getClaimAtChunk(chunk)
+            ?: return VCResult.ClaimLore.NoLoreAtThisLocation
+
+        return if(claim.description.isNotEmpty() && claim.description.isNotBlank() && claim.description != claim.displayName){
+            VCResult.ClaimLore.LoreGetAtLocation(claim = claim)
+        } else{
+            VCResult.ClaimLore.NoLoreAtThisLocation
+        }
+    }
+
     suspend fun setClaimLore(context: VCPlayerContext, claimName: String, targetPlayerName: String? = null): VCResult{
 
         if(targetPlayerName == null){
@@ -806,6 +817,27 @@ class PrerequisiteService(
                 claim = claim.copy(color = color),
                 color = color
             )
+        }
+    }
+
+    suspend fun handleClaimLoreOnMove(player: Player, context: VCPlayerContext, fromBukkitChunk: PlainChunk) {
+        val claim = claimService.getClaimAtChunk(fromBukkitChunk) ?: return
+        ui.deliverClaimLore(context, claim, player)
+    }
+
+    suspend fun toggleAutoDeliveryClaimLore(context: VCPlayerContext): VCResult {
+        val newValue = !context.player.showLore
+        cc.updatePlayerContextCache(context.player.mcUUID) {
+            claimService.updatePlayer(
+                context.player.copy(
+                    showLore = newValue
+                )
+            )
+        }
+        return if(newValue){
+            VCResult.ClaimLore.LoreToggleOn
+        }else{
+            VCResult.ClaimLore.LoreToggleOff
         }
     }
 }

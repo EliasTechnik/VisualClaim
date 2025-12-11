@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
+import java.util.UUID
 import kotlin.math.ceil
 
 /**
@@ -43,6 +44,13 @@ data class VCUIBookData(
     val bookPages: List<String>
 )
 
+//in order to prevent spamming lore, we store the last delivered lore (key of claim) and the time of delivery
+data class VCUILoreHistoryEntry(
+    val targetPlayer: Player,
+    val lastDeliveredLoreKey: Int,
+    val timeOfDelivery: Long
+)
+
 
 class UIService(
     private val cc: CentralCache,
@@ -51,16 +59,18 @@ class UIService(
     private val getStringFromConfig: (key: String) -> String?
 ) {
                             // uuid, VCUIBossBarData
-    val claimBossBarMap: MutableMap<String, VCUIBossBarData> = mutableMapOf()
-    val clBossBarMap: MutableMap<String, VCUIBossBarData> = mutableMapOf()
+    val claimBossBarMap: MutableMap<UUID, VCUIBossBarData> = mutableMapOf()
+    val clBossBarMap: MutableMap<UUID, VCUIBossBarData> = mutableMapOf()
     var claimBossBarColor: BossBar.Color
     var claimBossBarStyle: BossBar.Overlay
     var clBossBarColor: BossBar.Color
     var clBossBarStyle: BossBar.Overlay
                             // uuid, VCUIParticleData
-    val particleMap: MutableMap<String, VCUIParticleData> = mutableMapOf()
+    val particleMap: MutableMap<UUID, VCUIParticleData> = mutableMapOf()
 
-    val bookMap: MutableMap<String, VCUIBookData> = mutableMapOf()
+    val loreHistory: MutableMap<UUID, VCUILoreHistoryEntry> = mutableMapOf()
+
+    var loreDeliveryCooldownMillis: Long = 60000 // 1 minute
 
 
     init{
@@ -104,6 +114,8 @@ class UIService(
             else -> BossBar.Overlay.PROGRESS
         }
 
+        loreDeliveryCooldownMillis = (getStringFromConfig("claim-lore-delivery-timeout")?.toLongOrNull() ?: 60L) * 1000L
+
     }
 
     /**
@@ -143,8 +155,8 @@ class UIService(
             showBossBar = context.player.bossbar
         )
 
-        claimBossBarMap[player.uniqueId.toString()] = dataClaim
-        clBossBarMap[player.uniqueId.toString()] = dataChunkLoader
+        claimBossBarMap[player.uniqueId] = dataClaim
+        clBossBarMap[player.uniqueId] = dataChunkLoader
     }
 
 
@@ -156,15 +168,15 @@ class UIService(
      */
     fun removeBossBarReceiver(player: Player){
 
-        val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
-        val chunkLoaderBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+        val claimBossBarPackage = claimBossBarMap[player.uniqueId] ?: return
+        val chunkLoaderBossBarPackage = clBossBarMap[player.uniqueId] ?: return
 
         //hide bossbar
         claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
         chunkLoaderBossBarPackage.audience.hideBossBar(chunkLoaderBossBarPackage.bossBar)
 
-        claimBossBarMap.remove(player.uniqueId.toString())
-        clBossBarMap.remove(player.uniqueId.toString())
+        claimBossBarMap.remove(player.uniqueId)
+        clBossBarMap.remove(player.uniqueId)
     }
 
     /**
@@ -174,7 +186,7 @@ class UIService(
         if(context.player.bossbar) {
             if(displayData.claim != null && displayData.ownerName != null){
                 //show a bossbar with claim info
-                val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+                val claimBossBarPackage = claimBossBarMap[player.uniqueId] ?: return
                 claimBossBarPackage.bossBar.name(ms.format("ClaimBossBar.title", mapOf(
                     "claim_name" to displayData.claim.displayName,
                     "owner" to displayData.ownerName
@@ -187,13 +199,13 @@ class UIService(
 
                 claimBossBarPackage.audience.showBossBar(claimBossBarPackage.bossBar)
             }else{
-                val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
+                val claimBossBarPackage = claimBossBarMap[player.uniqueId] ?: return
                 claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
             }
 
             if(displayData.chunkloader != null){
                 //show a bossbar with chunkloader info
-                val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+                val clBossBarPackage = clBossBarMap[player.uniqueId] ?: return
                 clBossBarPackage.bossBar.name(ms.format("ChunkLoaderBossBar.title", mapOf(
                     "chunkloader_name" to displayData.chunkloader.name
                 )
@@ -204,14 +216,14 @@ class UIService(
 
                 clBossBarPackage.audience.showBossBar(clBossBarPackage.bossBar)
             }else{
-                val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+                val clBossBarPackage = clBossBarMap[player.uniqueId] ?: return
                 clBossBarPackage.audience.hideBossBar(clBossBarPackage.bossBar)
             }
 
         }else{
             //hide bossbar
-            val claimBossBarPackage = claimBossBarMap[player.uniqueId.toString()] ?: return
-            val clBossBarPackage = clBossBarMap[player.uniqueId.toString()] ?: return
+            val claimBossBarPackage = claimBossBarMap[player.uniqueId] ?: return
+            val clBossBarPackage = clBossBarMap[player.uniqueId] ?: return
             claimBossBarPackage.audience.hideBossBar(claimBossBarPackage.bossBar)
             clBossBarPackage.audience.hideBossBar(clBossBarPackage.bossBar)
         }
@@ -231,7 +243,7 @@ class UIService(
             return
         }
 
-        particleMap[player.uniqueId.toString()] = VCUIParticleData(
+        particleMap[player.uniqueId] = VCUIParticleData(
             targetPlayer = player,
             particleLines = edges
         )
@@ -245,7 +257,7 @@ class UIService(
      * The Runnable task that spawns particles around the player calls this to indicate that the particles ended.
      */
     fun particlesEnded(player: Player){
-        particleMap.remove(player.uniqueId.toString())
+        particleMap.remove(player.uniqueId)
     }
 
     fun showParticlesAroundPlayerForEdges(
@@ -269,13 +281,13 @@ class UIService(
         object : BukkitRunnable() {
             var runs = 0
             override fun run() {
-                if (runs++ >= iterations || uiService.particleMap[player.uniqueId.toString()] == null) {
+                if (runs++ >= iterations || uiService.particleMap[player.uniqueId] == null) {
                     uiService.particlesEnded(player)
                     cancel()
                     return
                 }
 
-                val edges = uiService.particleMap[player.uniqueId.toString()]?.particleLines ?: run {
+                val edges = uiService.particleMap[player.uniqueId]?.particleLines ?: run {
                     uiService.particlesEnded(player)
                     cancel()
                     return
@@ -309,7 +321,35 @@ class UIService(
         }.runTaskTimer(plugin, 0L, ticksBetween.toLong())
     }
 
+    fun deliverClaimLore(context: VCPlayerContext, claim: VCClaim, player: Player){
 
+        val historyEntry = loreHistory[context.player.mcUUID]
+        val currentTime = System.currentTimeMillis()
+        if(historyEntry != null){
+            //check if the same lore was delivered within the last 2 minutes
+            if((historyEntry.lastDeliveredLoreKey == claim.key && (currentTime - historyEntry.timeOfDelivery) < loreDeliveryCooldownMillis) || (currentTime - historyEntry.timeOfDelivery) < loreDeliveryCooldownMillis ){
+                //do not deliver lore again
+                return
+            }
+        }
+
+        if(claim.description.isNotEmpty() && claim.description.isNotBlank() && claim.description != claim.displayName){
+            ms.send(player, "claimlore.auto-delivery.header")
+            ms.send(player, "claimlore.auto-delivery.content", mapOf(
+                "claim_name" to claim.displayName,
+                "claim_lore" to claim.description
+            ))
+            ms.send(player, "claimlore.auto-delivery.footer")
+            //update history
+            loreHistory[context.player.mcUUID] = VCUILoreHistoryEntry(
+                targetPlayer = player,
+                lastDeliveredLoreKey = claim.key,
+                timeOfDelivery = currentTime
+            )
+        }
+    }
+
+    /*
     fun giveLoreBookToPlayer(context: VCPlayerContext, targetClaim: VCClaim, player: Player){
         val pages = mutableListOf("Schreibe auf die folgenden Seiten die Lore für \"${targetClaim.displayName}\". Text auf Seite 1 wird ignoriert. Wenn du fertig bist schließe das Buch.")
 
@@ -342,6 +382,9 @@ class UIService(
         //player.openBook(book) -- only works with written book, not writable book
     }
 
+     */
+
+    /*
     fun handleBookEditEvent(context: VCPlayerContext, event: PlayerEditBookEvent){
 
         //check if this player has a book open that we gave them (might be a different book unrelated to claims)
@@ -357,4 +400,6 @@ class UIService(
         bookMap.remove(event.player.uniqueId.toString())
 
     }
+
+     */
 }

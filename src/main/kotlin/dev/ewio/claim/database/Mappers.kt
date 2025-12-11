@@ -19,7 +19,9 @@ fun rowToVCPlayer(row: ResultRow) = VCPlayer(
     resolvedNameAt = row[VCPlayers.resolvedNameAt],
     autoClaim = row[VCPlayers.autoClaim],
     autoClaimTargetClaimKey = row[VCPlayers.autoClaimTargetClaimKey],
-    bossbar = row[VCPlayers.bossbar]
+    bossbar = row[VCPlayers.bossbar],
+    showLore = row[VCPlayers.showLore],
+    additionalData = row[VCPlayers.additionalData]
 )
 
 fun rowToVCClaim(row: ResultRow) = VCClaim(

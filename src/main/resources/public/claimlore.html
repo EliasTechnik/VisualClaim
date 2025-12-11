@@ -28,32 +28,6 @@
             document.getElementById('result-error').style.display = 'none';
         }
 
-        // Backend-Platzhalter wird hier ersetzt
-    const expiresAt = parseInt("%expires_At%", 10);
-
-    function updateCountdown() {
-        const now = Date.now();
-        const diff = expiresAt - now;
-
-        const el = document.getElementById("countdown");
-
-        if (diff <= 0) {
-            el.textContent = "❌ Token abgelaufen. Speichern nicht mehr möglich.";
-            el.style.color = "#ff4444";
-            return;
-        }
-
-        const minutes = Math.floor(diff / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-
-        el.textContent = `Lore speichern. Editor nochg gültig für: ${minutes}m ${seconds}s`;
-    }
-
-    // Initialer Aufruf
-    updateCountdown();
-
-    // Alle 1 Sekunde aktualisieren
-    setInterval(updateCountdown, 1000);
     </script>
 </head>
 <body class="bg-primary text-secondary">
@@ -63,15 +37,18 @@
       <div class="col-6">
         <div class="card">
             <div class="card-header">
-                <h1>Claim-Lore bearbeiten.</h1>
+                <h1>Claim-Lore bearbeiten</h1>
             </div>
             <div class="card-body">
                 <p>Trage in das Textfeld die Lore für den Claim %claim_name% ein. Wenn du fertig bist dann drücke auf speichern. Bedenke das dieser Editor nur begrenzt lang gültig ist.</p>
                 <label for="lore">Lore:</label>
                 <textarea class="form-input" id="lore" style="height: 30em;">%claim_lore%</textarea>
+                <div class="text-right text-sm text-muted">
+                    <span id="charCount">0</span> / %max_characters% Zeichen
+                </div>
                 <div class="card-footer">
                     <hr class="no-padding">
-                    <button id="countdown" class="button button-normal" onClick="saveLore()"></button>
+                    <button id="countdown" class="button button-tertiary" onClick="saveLore()"></button>
                 </div>
             
 
@@ -94,6 +71,48 @@
         </div>
     </div>
 
-    
+    <script>
+        const expiresAt = parseInt("%expires_at%", 10);
+
+        function updateCountdown() {
+            const now = Date.now();
+            const diff = expiresAt - now;
+
+            const el = document.getElementById("countdown");
+
+            if (diff <= 0) {
+                el.textContent = "❌ Token abgelaufen. Speichern nicht mehr möglich.";
+                el.style.color = "#ff4444";
+                el.disabled = true;
+                return;
+            }
+
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+
+            el.textContent = `Lore speichern. Editor noch gültig für: ${minutes}m ${seconds}s`;
+        }
+
+        // Initialer Aufruf
+        updateCountdown();
+
+        // Alle 1 Sekunde aktualisieren
+        setInterval(updateCountdown, 1000);
+
+    </script>
+    <script>
+        const maxCharacters = %max_characters%;
+
+        const loreTextarea = document.getElementById('lore');
+        const charCountDisplay = document.getElementById('charCount');
+        charCountDisplay.textContent = loreTextarea.value.length;
+        loreTextarea.addEventListener('input', () => {
+            const currentLength = loreTextarea.value.length;
+            if (currentLength > maxCharacters) {
+                loreTextarea.value = loreTextarea.value.substring(0, maxCharacters);
+            }
+            charCountDisplay.textContent = loreTextarea.value.length;
+        });
+    </script>
 </body>
 </html>

@@ -11,6 +11,8 @@ object VCPlayers : IntIdTable("vc_player") {
     val autoClaim = bool("auto_claim").default(false)
     val autoClaimTargetClaimKey = integer("autoClaimTargetClaimKey").default(-1)
     val bossbar = bool("boss_bar").default(true)
+    val showLore = bool("show_lore").default(true)
+    val additionalData = text("additional_data").default("")
 
     //override val primaryKey = PrimaryKey(key)
 }
@@ -72,3 +74,4 @@ object VCLoadedChunks : IntIdTable("vc_loaded_chunk") {
         index(isUnique = true, columns = arrayOf(playerKey, chunk))
     }
 }
+

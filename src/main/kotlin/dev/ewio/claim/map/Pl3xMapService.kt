@@ -29,7 +29,7 @@ class Pl3xMapService: MapService {
 
     constructor(plugin: VisualClaim) {
         this.plugin = plugin
-        val cfg: FileConfiguration = plugin.cfg
+        val cfg: FileConfiguration = plugin.config
         this.strokeAlpha = cfg.getDouble("color.transparency.stroke", 0.3)
         this.fillAlpha = cfg.getDouble("color.transparency.fill", 0.4)
         this.strokeWeight = cfg.getInt("marker.stroke-weight", 2)

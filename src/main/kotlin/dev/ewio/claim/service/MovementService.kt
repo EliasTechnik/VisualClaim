@@ -125,6 +125,9 @@ class MovementService(
                 if(context.player.bossbar){
                     preService.updateBossbar(event.player, context, PlainChunk.fromBukkitChunk(event.to.chunk))
                 }
+                if(context.player.showLore){
+                    preService.handleClaimLoreOnMove(event.player, context, PlainChunk.fromBukkitChunk(event.to.chunk))
+                }
             }
         }
     }

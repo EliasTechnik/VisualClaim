@@ -180,13 +180,6 @@ class ChunkLoaderCommand(
                         is VCResult.ListChunkLoaders.NoChunkLoadersFound -> {
                             ms.send(realPlayer, "chunkloaderlist.no-chunkloaders")
                         }
-                        is VCResult.VCPlayerNotFound -> {
-                            ms.send(
-                                realPlayer, "player-not-found", mapOf(
-                                    "player_name" to betterArgs[1]
-                                )
-                            )
-                        }
 
                         is VCResult.MissingPermission -> {
                             ms.send(realPlayer, "missing-permission")

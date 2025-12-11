@@ -3,7 +3,6 @@ package dev.ewio.claim.service
 import dev.ewio.claim.definitions.VCClaim
 import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.util.log
-import io.ktor.http.ContentDisposition.Companion.File
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.jackson.jackson
 import io.ktor.server.application.call
@@ -12,26 +11,16 @@ import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.html.respondHtml
 import io.ktor.server.http.content.files
-import io.ktor.server.http.content.static
+import io.ktor.server.http.content.staticFiles
 import io.ktor.server.http.content.staticResources
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.response.respondFile
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import kotlinx.html.body
-import kotlinx.html.br
-import kotlinx.html.button
-import kotlinx.html.h2
-import kotlinx.html.head
-import kotlinx.html.script
-import kotlinx.html.style
-import kotlinx.html.textArea
-import kotlinx.html.title
 import kotlinx.html.unsafe
 import java.io.File
 import java.util.UUID
@@ -49,14 +38,15 @@ class WebService(
     val onLoreEdited: (newLore: String, oldClaim: VCClaim, uuid: UUID) -> Unit,
     val tokenLifetimeMinutes: Int,
     val webAddress: String,
-    val webRoot: File
+    val webRoot: File,
 ){
     private val tokenStore = mutableMapOf<String, TokenData>()
 
     data class TokenData(
         val uuid: UUID,
         val claim: VCClaim,
-        val expiresAt: Long
+        val expiresAt: Long,
+        val maxCharacters: Int
     )
 
     private lateinit var server: ApplicationEngine
@@ -69,7 +59,7 @@ class WebService(
 
                 // Static routing für HTML/CSS/JS/Bilder
                 staticResources("/public", basePackage = "default.html") {
-                    files(webRoot)               // alle Dateien direkt verfügbar
+                    staticFiles("", webRoot)               // alle Dateien direkt verfügbar
                     default("claimlore.html")  // Standardseite
                 }
 
@@ -82,7 +72,14 @@ class WebService(
 
                     val data = tokenStore[token]
                     if (data == null || System.currentTimeMillis() > data.expiresAt) {
-                        return@get call.respondFile(File(webRoot, "tokenexpired.html"))
+                        var response = File(webRoot, "tokenexpired.html").readText()
+                        response = response.replace("%web_address%", webAddress)
+                        return@get call.respondHtml(HttpStatusCode.OK) {
+                            unsafe {
+                                +response
+                            }
+                        }
+
                     }
 
 
@@ -93,6 +90,8 @@ class WebService(
                     editor = editor.replace("%claim_lore%", data.claim.description)
                     editor = editor.replace("%token%", token)
                     editor = editor.replace("%web_address%", webAddress)
+                    editor = editor.replace("%expires_at%", data.expiresAt.toString())
+                    editor = editor.replace("%max_characters%", data.maxCharacters.toString())
 
                     call.respondHtml(HttpStatusCode.OK) {
                         unsafe {
@@ -113,6 +112,10 @@ class WebService(
                     val payload = call.receive<Map<String, String>>()
                     val lore = payload["lore"] ?: ""
 
+                    if(lore.length > data.maxCharacters){
+                        return@post call.respond(HttpStatusCode.OK, mapOf("status" to "error"))
+                    }
+
                     onLoreEdited(lore,data.claim, data.uuid)
 
                     call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
@@ -129,7 +132,8 @@ class WebService(
         tokenStore[token] = TokenData(
             uuid = context.player.mcUUID,
             claim = targetClaim,
-            expiresAt = System.currentTimeMillis() + (tokenLifetimeMinutes*60*1000)
+            expiresAt = System.currentTimeMillis() + (tokenLifetimeMinutes*60*1000),
+            maxCharacters = context.restrictions.maxClaimLoreLength
         )
         return "$webAddress/claim/edit/$token"
     }

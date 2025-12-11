@@ -103,12 +103,22 @@ open class VCResult {
         data class LoreSet(val linkToWebeditor: String, val lifetimeMinutes: Int, val claim: VCClaim) : Success()
         data class LoreSetOther(val linkToWebeditor: String, val lifetimeMinutes: Int, val targetPlayerName: String, val claim:VCClaim) : Success()
         data class LoreGet(val claim: VCClaim): Success()
+        data class LoreGetAtLocation(val claim: VCClaim): Success()
         data class LoreGetOther(val claim: VCClaim, val targetPlayerName: String): Success()
         data class LoreTooLong(val maxLength: Int): Failure()
+        object NoLoreAtThisLocation: Failure()
+        object LoreToggleOn: Success()
+        object LoreToggleOff: Success()
     }
 
     sealed class ClaimColor{
         data class ColorSet(val claim: VCClaim, val color: VCColor): Success()
         object ColorNotFound: Failure()
+    }
+
+    sealed class PluginMigration{
+        object NoMigrationNeeded: Success()
+        object MigrationSuccessful: Success()
+        data class MigrationFailed(val reason: String): Failure()
     }
 }

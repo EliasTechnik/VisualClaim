@@ -79,7 +79,7 @@ class PermissionService(
         val listOtherPlayerChunkLoader = hasPermission(bukkitPlayer, "visualclaim.listOtherChunkLoader")
         val maxChunkLoaders = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxchunkloaders.") ?: defaultVCRestrictions.maxChunkLoaders
         val canUnloadOtherChunks = hasPermission(bukkitPlayer, "visualclaim.unloadChunksOther")
-        val maxClaimLoreLength = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.maxclaimlorelength.") ?: defaultVCRestrictions.maxClaimNameLength
+        val maxClaimLoreLength = getUpperLimitFromPermission(bukkitPlayer, "visualclaim.max-lore-length.") ?: defaultVCRestrictions.maxClaimLoreLength
 
 
         return VCRestrictions(

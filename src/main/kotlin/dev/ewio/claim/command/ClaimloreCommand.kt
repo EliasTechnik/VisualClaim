@@ -1,5 +1,6 @@
 package dev.ewio.claim.command
 
+import dev.ewio.claim.definitions.PlainChunk
 import dev.ewio.claim.definitions.VCResult
 import dev.ewio.claim.service.MessageService
 import dev.ewio.claim.service.PrerequisiteService
@@ -49,7 +50,6 @@ class ClaimloreCommand(
                     }else{
                         VCResult.MalformedCommand
                     }
-
                 }else{
                     if(betterArgs.size == 4) {
                         //other player target
@@ -68,8 +68,19 @@ class ClaimloreCommand(
                         } else{
                             VCResult.MalformedCommand
                         }
+                    }else if(betterArgs.isEmpty()) {
+                        val chunk = PlainChunk.fromBukkitChunk(realPlayer.location.chunk)
+                        preService.getClaimLore(chunk)
                     }
-                    else{
+                    else if(betterArgs.size == 1){
+                        if(betterArgs[0] == "toggle"){
+                            preService.toggleAutoDeliveryClaimLore(
+                                context = context
+                            )
+                        }else {
+                            VCResult.MalformedCommand
+                        }
+                    }else{
                         VCResult.MalformedCommand
                     }
                 }
@@ -124,6 +135,23 @@ class ClaimloreCommand(
                             "player_name" to result.playerName
                         ))
                     }
+                    is VCResult.ClaimLore.NoLoreAtThisLocation -> {
+                        ms.send(realPlayer, "claimlore.no-lore-at-location")
+                    }
+                    is VCResult.ClaimLore.LoreGetAtLocation -> {
+                        ms.send(realPlayer, "claimlore.auto-delivery.header", mapOf())
+                        ms.send(realPlayer, "claimlore.auto-delivery.content", mapOf(
+                            "claim_name" to result.claim.displayName,
+                            "claim_lore" to result.claim.description
+                        ))
+                        ms.send(realPlayer, "claimlore.auto-delivery.footer", mapOf())
+                    }
+                    is VCResult.ClaimLore.LoreToggleOn -> {
+                        ms.send(realPlayer, "claimlore.toggle-on")
+                    }
+                    is VCResult.ClaimLore.LoreToggleOff -> {
+                        ms.send(realPlayer, "claimlore.toggle-off")
+                    }
                     else -> {
                         ms.send(realPlayer, "unknown-error")
                     }
@@ -147,7 +175,7 @@ class ClaimloreCommand(
 
             when (betterArgs.size) {
                 1 -> {
-                    val subcommands = listOf("get", "set")
+                    val subcommands = listOf("get", "set", "toggle")
                     return subcommands.filter { it.startsWith(betterArgs[0], ignoreCase = true) }.toMutableList()
                 }
 

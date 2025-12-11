@@ -142,7 +142,7 @@ class ClaimcolorCommand(
                 1 -> {
                     val partialClaimName = betterArgs[0].lowercase()
                     val matchingClaimNames = context.claims.map {
-                        it.displayName
+                        "\"${it.displayName}\""
                     }.filter {
                         it.lowercase().startsWith(partialClaimName)
                     }.toMutableList()
