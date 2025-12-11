@@ -5,14 +5,9 @@ import dev.ewio.util.EdgeHelper
 import dev.ewio.util.log
 import net.kyori.adventure.audience.Audience
 import net.kyori.adventure.bossbar.BossBar
-import net.kyori.adventure.text.Component
 import org.bukkit.Location
-import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.entity.Player
-import org.bukkit.event.player.PlayerEditBookEvent
-import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.plugin.Plugin
 import org.bukkit.scheduler.BukkitRunnable
 import java.util.UUID
@@ -325,10 +320,17 @@ class UIService(
 
         val historyEntry = loreHistory[context.player.mcUUID]
         val currentTime = System.currentTimeMillis()
-        if(historyEntry != null){
+
+        if(historyEntry != null) {
+            val timeSinceLastDelivery = currentTime - historyEntry.timeOfDelivery
             //check if the same lore was delivered within the last 2 minutes
-            if((historyEntry.lastDeliveredLoreKey == claim.key && (currentTime - historyEntry.timeOfDelivery) < loreDeliveryCooldownMillis) || (currentTime - historyEntry.timeOfDelivery) < loreDeliveryCooldownMillis ){
+            if (timeSinceLastDelivery < loreDeliveryCooldownMillis) {
                 //do not deliver lore again
+                return
+            }
+
+            if (historyEntry.lastDeliveredLoreKey == claim.key) {
+                //do not deliver the same lore twice in a row
                 return
             }
         }

@@ -208,7 +208,7 @@ migration-name: "_renamed" # Should there be a conflict with the trigger words, 
 # WebServer settings for the claimlore command (Webeditor)
 webserver:
   port: 8085 # the port the webserver listens on
-  web-adress: "http://localhost:8085" # Domain used in the URL sent to players. Change this to your IP. Or if you are using a reverse proxy to your domain name. Make sure to include http:// or https:// and the correct port.
+  web-address: "http://localhost:8085" # Domain used in the URL sent to players. Change this to your IP. Or if you are using a reverse proxy to your domain name. Make sure to include http:// or https:// and the correct port.
   token-lifetime-minutes: 10 # How long the edit token is valid
 
 #Debugging
