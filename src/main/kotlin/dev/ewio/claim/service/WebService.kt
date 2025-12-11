@@ -46,7 +46,7 @@ import java.util.UUID
  */
 class WebService(
     val port: Int = 8085,
-    val onLoreEdited: (newLore: String, oldClaim: VCClaim) -> Unit,
+    val onLoreEdited: (newLore: String, oldClaim: VCClaim, uuid: UUID) -> Unit,
     val tokenLifetimeMinutes: Int,
     val webAddress: String,
     val webRoot: File
@@ -90,7 +90,7 @@ class WebService(
 
                     //inject data into HTML
                     editor = editor.replace("%claim_name%", data.claim.displayName)
-                    editor = editor.replace("%lore_content%", data.claim.description)
+                    editor = editor.replace("%claim_lore%", data.claim.description)
                     editor = editor.replace("%token%", token)
                     editor = editor.replace("%web_address%", webAddress)
 
@@ -113,7 +113,7 @@ class WebService(
                     val payload = call.receive<Map<String, String>>()
                     val lore = payload["lore"] ?: ""
 
-                    onLoreEdited(lore,data.claim)
+                    onLoreEdited(lore,data.claim, data.uuid)
 
                     call.respond(HttpStatusCode.OK, mapOf("status" to "ok"))
                 }

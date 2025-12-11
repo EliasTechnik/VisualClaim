@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="%web_address%/minecraft-css-framework-v-1.0.0.css">
+    <link rel="stylesheet" href="minecraft-css-framework-v-1.0.0.css">
     <title>Claim Lore Editor</title>
     <script>
         function saveLore() {
@@ -26,10 +27,37 @@
         function closeErrorModal() {
             document.getElementById('result-error').style.display = 'none';
         }
+
+        // Backend-Platzhalter wird hier ersetzt
+    const expiresAt = parseInt("%expires_At%", 10);
+
+    function updateCountdown() {
+        const now = Date.now();
+        const diff = expiresAt - now;
+
+        const el = document.getElementById("countdown");
+
+        if (diff <= 0) {
+            el.textContent = "❌ Token abgelaufen. Speichern nicht mehr möglich.";
+            el.style.color = "#ff4444";
+            return;
+        }
+
+        const minutes = Math.floor(diff / 60000);
+        const seconds = Math.floor((diff % 60000) / 1000);
+
+        el.textContent = `Lore speichern. Editor nochg gültig für: ${minutes}m ${seconds}s`;
+    }
+
+    // Initialer Aufruf
+    updateCountdown();
+
+    // Alle 1 Sekunde aktualisieren
+    setInterval(updateCountdown, 1000);
     </script>
 </head>
 <body class="bg-primary text-secondary">
-    <hidden id="token">%token%</hidden>
+    <div id="token" hidden>%token%</div>
 
     <div class="row">
       <div class="col-6">
@@ -43,12 +71,13 @@
                 <textarea class="form-input" id="lore" style="height: 30em;">%claim_lore%</textarea>
                 <div class="card-footer">
                     <hr class="no-padding">
-                    <button class="button button-normal" onClick="saveLore()">Speichern</button>
+                    <button id="countdown" class="button button-normal" onClick="saveLore()"></button>
                 </div>
+            
 
                 <div id="result-ok" class="modal">
                     <div class="modal-header">Gespeichert</div>
-                    <div class="modal-body">Die Lore wurde gespeichert. Kehre zum Spiel zurück oder nehme weitere änderungen vor.</div>
+                    <div class="modal-body">Die Lore wurde gespeichert. Kehre zum Spiel zurück oder nehme weitere Änderungen vor.</div>
                     <div class="modal-footer">
                         <button class="button button-primary" onClick="closeOKModal()">Okay</button>
                     </div>

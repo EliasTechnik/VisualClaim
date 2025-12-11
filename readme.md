@@ -78,6 +78,9 @@ The cache can be manually refreshed with every command execution. (even invalid 
 
 ## Todo
 
+- /claimlore gibt die lore am aktuellen standort aus
+- /claimsummary gibt DB statistik aus
+- token countdown
 - add offline support for listclaims other: see TODO in ListClaimsCommand
 - debug list other
 - make claim visualize on each interaction

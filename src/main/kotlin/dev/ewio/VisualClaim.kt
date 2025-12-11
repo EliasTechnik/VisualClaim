@@ -29,6 +29,7 @@ import dev.ewio.claim.command.RenameclaimCommand
 import dev.ewio.claim.command.ShowClaimCommand
 import dev.ewio.claim.command.UnclaimCommand
 import dev.ewio.claim.database.VCDB
+import dev.ewio.claim.definitions.VCPlayerContext
 import dev.ewio.claim.listener.BookEditListener
 import dev.ewio.claim.listener.JoinListener
 import dev.ewio.claim.listener.LeaveListener
@@ -163,7 +164,7 @@ class VisualClaim : JavaPlugin() {
         )
         this.webService = WebService(
             port = cfg.getInt("webserver.port", 8085),
-            onLoreEdited = {newLore, oldClaim -> handleOnLoreEdited(newLore, oldClaim) },
+            onLoreEdited = {newLore, oldClaim, uuid -> handleOnLoreEdited(newLore, oldClaim, uuid) },
             tokenLifetimeMinutes = cfg.getInt("webserver.token-lifetime-minutes", 20),
             webAddress = cfg.getString("webserver.web-address")?: "http://localhost:${cfg.getInt("webserver.port", 8085)}",
             webRoot = File(dataFolder, "public")
@@ -425,12 +426,15 @@ class VisualClaim : JavaPlugin() {
         }
     }
 
-    private fun handleOnLoreEdited(newLore: String, oldClaim: VCClaim) {
+    private fun handleOnLoreEdited(newLore: String, oldClaim: VCClaim, uuid: UUID) {
+        log("Handling lore edit for claim ${oldClaim.displayName}. New lore: $newLore")
         launch {
-            claimService.updateClaimLore(
-                claim = oldClaim,
-                newLore = newLore
-            )
+            centralCache.updatePlayerContextCache(uuid){
+                claimService.updateClaimLore(
+                    claim = oldClaim,
+                    newLore = newLore
+                )
+            }
         }
     }
 
